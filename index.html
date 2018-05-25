@@ -598,42 +598,30 @@
           
             <h1 id="关于比特币"><a href="#关于比特币" class="headerlink" title="关于比特币"></a>关于比特币</h1><p>比特币作为一个2009年诞生的点对点的支付系统，在几乎无人运维的情况下运转到了如今，很多人为之赋予了各种意义。现在我们尝试着剥离资本的面纱，看看这个元祖虚拟币是怎么工作的。</p>
 <h2 id="1-数据结构"><a href="#1-数据结构" class="headerlink" title="1.数据结构"></a>1.数据结构</h2><p>在这里，我们尝试从两方面来了解比特币，区块链以及UTXO(Unspent Transaction Output，未花费的交易输出)</p>
-<h3 id="1-1-区块链"><a href="#1-1-区块链" class="headerlink" title="1.1 区块链"></a>1.1 区块链</h3><p>在比特币中，存储数据的数据结构是区块链，顾名思义就是区块形成的链，区块中的数据结构大致如下图所示<br>| 数据名称          | 数据说明            |<br>| —————|:——————:|<br>| Time             | 当前区块生成的时间 |<br>| Nonce            | 随机数，用于工作量证明 |<br>| PrevousHash      | 前一个区块的哈希 |<br>| &lt; transactions &gt; | 区块中包含的交易列表 |</p>
+<h3 id="1-1-区块链"><a href="#1-1-区块链" class="headerlink" title="1.1 区块链"></a>1.1 区块链</h3><p>在比特币中，存储数据的数据结构是区块链，顾名思义就是区块形成的链，区块中的数据结构大致如下图所示    </p>
 <table>
 <thead>
 <tr>
-<th>参数</th>
-<th style="text-align:center">说明</th>
+<th>数据名称</th>
+<th style="text-align:left">数据说明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>host</td>
-<td style="text-align:center">远程主机的地址</td>
+<td>Time</td>
+<td style="text-align:left">当前区块生成的时间</td>
 </tr>
 <tr>
-<td>user</td>
-<td style="text-align:center">使用者名称</td>
+<td>Nonce</td>
+<td style="text-align:left">随机数，用于工作量证明</td>
 </tr>
 <tr>
-<td>root</td>
-<td style="text-align:center">远程主机的根目录</td>
+<td>PrevousHash</td>
+<td style="text-align:left">前一个区块的哈希</td>
 </tr>
 <tr>
-<td>port</td>
-<td style="text-align:center">端口</td>
-</tr>
-<tr>
-<td>delete</td>
-<td style="text-align:center">删除远程主机上的旧文件</td>
-</tr>
-<tr>
-<td>verbose</td>
-<td style="text-align:center">显示调试信息</td>
-</tr>
-<tr>
-<td>ignore_errors</td>
-<td style="text-align:center">忽略错误</td>
+<td>&lt; transactions &gt;</td>
+<td style="text-align:left">区块中包含的交易列表</td>
 </tr>
 </tbody>
 </table>
