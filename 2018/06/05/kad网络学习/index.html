@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="区块链，以太坊，p2p网络," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述 源自论文 《Kademlia: A peerto -peer information system based onthe XOR metric》 https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf  Kademlia算法是一种通过分布式哈希表(DHT)技术实现的协议算法,Kad算法通过独特的以异或算法（">
+<meta name="keywords" content="区块链，以太坊，p2p网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kad网络学习">
+<meta property="og:url" content="https://remark31.github.io/2018/06/05/kad网络学习/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="概述 源自论文 《Kademlia: A peerto -peer information system based onthe XOR metric》 https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf  Kademlia算法是一种通过分布式哈希表(DHT)技术实现的协议算法,Kad算法通过独特的以异或算法（">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/kad_router.png">
+<meta property="og:updated_time" content="2018-06-06T11:44:48.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="kad网络学习">
+<meta name="twitter:description" content="概述 源自论文 《Kademlia: A peerto -peer information system based onthe XOR metric》 https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf  Kademlia算法是一种通过分布式哈希表(DHT)技术实现的协议算法,Kad算法通过独特的以异或算法（">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/kad_router.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/06/05/kad网络学习/"/>
+
+
+
+
+
+  <title>kad网络学习 | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/06/05/kad网络学习/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">kad网络学习</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-06-05T18:13:39+08:00">
+                2018-06-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><blockquote>
+<p>源自论文 《Kademlia: A peerto -peer information system based onthe XOR metric》 <a href="https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf" target="_blank" rel="noopener">https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf</a></p>
+</blockquote>
+<p>Kademlia算法是一种通过分布式哈希表(DHT)技术实现的协议算法,Kad算法通过独特的以异或算法（XOR）为距离度量基础，建立了一种全新的DHT拓扑结构，相比于其他算法，大大提高了路由查询速度。</p>
+<ul>
+<li>通讯方式：UDP</li>
+<li>身份标识：一组数字(节点ID)，同样用来进行值定位</li>
+<li>搜索方式：<ul>
+<li>知道与这些值的相关键</li>
+<li>分布在网络开始搜索</li>
+<li>搜索到节点的ID直接返回搜索值或者无法再找到与键更接近的节点ID时停止搜索</li>
+<li>仅能访问O(log(n))个节点</li>
+</ul>
+</li>
+</ul>
+<p>选择XOR的原始是通过它计算的距离享有几何距离公式的一些特征</p>
+<ul>
+<li>节点和它本身之间的异或距离是0</li>
+<li>异或距离是对称的：即从A到B的异或距离与从B到A的异或距离是等同的</li>
+<li>异或距离符合三角形不等式：给定三个顶点A、B、C，假如AC之间的XOR距离最大,那么AC之间的XOR距离必小于或等于AB XOR距离和BC XOR距离之和. </li>
+</ul>
+<p>接下来详细分析在以太坊p2p网络中对于kad协议的实现。</p>
+<h1 id="路由表"><a href="#路由表" class="headerlink" title="路由表"></a>路由表</h1><h2 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h2><p>在kad网络中，路由表是由：</p>
+<ul>
+<li>1.多个列表，每个列表对应节点ID的一位</li>
+<li><p>2.包含多个条目，条目中包含定位其他节点所必要的一些数据</p>
+<ul>
+<li>2.1 IP地址，</li>
+<li>2.2 端口</li>
+<li>2.3 节点ID </li>
+</ul>
+</li>
+<li><p>3.节点的第n个列表中所找到的节点的第n位与该节点的第n位肯定不同，而前n-1位相同</p>
+</li>
+<li>4.列表的容量是由系统变量决定的(又被称为K桶)</li>
+<li>5.当K桶满时，又发现了新的节点<ul>
+<li>5.1 首先检查K桶中最早访问的节点</li>
+<li>5.2 假如该节点仍然存活：新节点就被安排到一个附属列表中</li>
+<li>5.3 假如该节点停止响应：替代cache才被使用</li>
+<li>5.4 新发现的节点只有在老的节点消失后才被使用</li>
+</ul>
+</li>
+</ul>
+<p><img src="/imgs/kad_router.png" alt="kad网络k桶图"></p>
+<h2 id="以太坊实现"><a href="#以太坊实现" class="headerlink" title="以太坊实现"></a>以太坊实现</h2><p>主要代码位于 p2p/discover/table.go中：</p>
+<p>节点数据结构<br><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Node <span class="keyword">struct</span> &#123;</span><br><span class="line">	IP       net.IP <span class="comment">// 节点IP</span></span><br><span class="line">	UDP, TCP <span class="keyword">uint16</span> <span class="comment">// 节点端口</span></span><br><span class="line">	ID       NodeID <span class="comment">// 节点公钥</span></span><br><span class="line"></span><br><span class="line">	sha common.Hash <span class="comment">//节点ID的sha3 hash，用于计算节点距离</span></span><br><span class="line"></span><br><span class="line">	addedAt time.Time <span class="comment">//节点被加入到网络表的时间</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>桶的数据结构<br><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> bucket <span class="keyword">struct</span> &#123;</span><br><span class="line">	entries      []*Node <span class="comment">// 目前存活的节点，根据活跃度排序</span></span><br><span class="line">	replacements []*Node <span class="comment">// 缓存中的可能被用于替换的节点</span></span><br><span class="line">	ips          netutil.DistinctNetSet  <span class="comment">// 可能的前缀集</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 发现表的数据结构</span></span><br><span class="line"><span class="keyword">type</span> Table <span class="keyword">struct</span> &#123;</span><br><span class="line">	mutex   sync.Mutex        <span class="comment">// 锁，用于保护桶等不被同步执行</span></span><br><span class="line">	buckets [nBuckets]*bucket <span class="comment">// index of known nodes by distance</span></span><br><span class="line">	nursery []*Node           <span class="comment">// 初始节点列表</span></span><br><span class="line">	rand    *mrand.Rand       <span class="comment">// 随机数</span></span><br><span class="line">	ips     netutil.DistinctNetSet <span class="comment">//可能的前缀集</span></span><br><span class="line"></span><br><span class="line">	db         *nodeDB <span class="comment">// 已知节点的数据库存储</span></span><br><span class="line">	refreshReq <span class="keyword">chan</span> <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line">	initDone   <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line">	closeReq   <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line">	closed     <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">	bondmu    sync.Mutex</span><br><span class="line">	bonding   <span class="keyword">map</span>[NodeID]*bondproc</span><br><span class="line">	bondslots <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125; <span class="comment">// 限制了整体连接上的进程总数</span></span><br><span class="line"></span><br><span class="line">	nodeAddedHook <span class="function"><span class="keyword">func</span><span class="params">(*Node)</span> // 测试使用方法</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">	<span class="title">net</span>  <span class="title">transport</span></span></span><br><span class="line"><span class="function">	<span class="title">self</span> *<span class="title">Node</span> // 本地节点的<span class="title">metadata</span></span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// 搜寻随机目标的节点保持桶是满的</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(tab *Table)</span> <span class="title">doRefresh</span><span class="params">(done <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="built_in">close</span>(done)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 插入随机种子.</span></span><br><span class="line">	tab.loadSeedNodes(<span class="literal">true</span>)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 搜寻新的邻居节点</span></span><br><span class="line">	tab.lookup(tab.self.ID, <span class="literal">false</span>)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 此处并不符合Kademlia论文中指明的桶必须使用最近使用过的令牌来刷新，这里选用了随机目标寻找来替代</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">3</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">var</span> target NodeID</span><br><span class="line">		crand.Read(target[:])</span><br><span class="line">		tab.lookup(target, <span class="literal">false</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 此处删除了db中的老旧的不响应节点，对应5.4</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db *nodeDB)</span> <span class="title">ensureExpirer</span><span class="params">()</span></span> &#123;</span><br><span class="line">	db.runner.Do(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; <span class="keyword">go</span> db.expirer() &#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 处理K桶中的最末的随机节点，如果不响应了，替换或者删除。</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(tab *Table)</span> <span class="title">doRevalidate</span><span class="params">(done <span class="keyword">chan</span>&lt;- <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; done &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125; &#125;()</span><br><span class="line"></span><br><span class="line">	last, bi := tab.nodeToRevalidate()</span><br><span class="line">	<span class="keyword">if</span> last == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="comment">// 全是空桶</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 对最末节点进行一次PING操作，确认存活</span></span><br><span class="line">	err := tab.ping(last.ID, last.addr())</span><br><span class="line"></span><br><span class="line">	tab.mutex.Lock()</span><br><span class="line">	<span class="keyword">defer</span> tab.mutex.Unlock()</span><br><span class="line">	b := tab.buckets[bi]</span><br><span class="line">	<span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="comment">// 节点响应，将其放在最前部分</span></span><br><span class="line">		log.Debug(<span class="string">"Revalidated node"</span>, <span class="string">"b"</span>, bi, <span class="string">"id"</span>, last.ID)</span><br><span class="line">		b.bump(last)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 节点不响应，则对其进行替换或者删除</span></span><br><span class="line">	<span class="keyword">if</span> r := tab.replace(b, last); r != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Debug(<span class="string">"Replaced dead node"</span>, <span class="string">"b"</span>, bi, <span class="string">"id"</span>, last.ID, <span class="string">"ip"</span>, last.IP, <span class="string">"r"</span>, r.ID, <span class="string">"rip"</span>, r.IP)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		log.Debug(<span class="string">"Removed dead node"</span>, <span class="string">"b"</span>, bi, <span class="string">"id"</span>, last.ID, <span class="string">"ip"</span>, last.IP)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="协议消息"><a href="#协议消息" class="headerlink" title="协议消息"></a>协议消息</h1><h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>一共有四种协议消息</p>
+<ul>
+<li><ol>
+<li>PING：用来测试节点是否在线</li>
+</ol>
+</li>
+<li><ol start="2">
+<li>STORE：在某个节点中存储一个键值对</li>
+</ol>
+</li>
+<li><ol start="3">
+<li>FIND_NODE：消息请求的接收者将返回自己桶中离请求键值最近的K个节点</li>
+</ol>
+</li>
+<li><ol start="4">
+<li>FIND_VALUE：消息请求的接收者将返回自己桶中相应键的值</li>
+</ol>
+</li>
+<li><ol start="5">
+<li>每一个RPC消息中都包含一个发起者加入的随机值，这一点确保响应消息在收到的时候能够与前面发送的请求消息匹配。</li>
+</ol>
+</li>
+</ul>
+<h2 id="以太坊实现-1"><a href="#以太坊实现-1" class="headerlink" title="以太坊实现"></a>以太坊实现</h2><p>主要代码位于p2p/discover/udp.go中：<br>整体的upd包在loop()中拿到消息放在队列中，在readLoop对包进行rlp解析以及处理</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 此处实现了 1 中的PING方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *udp)</span> <span class="title">ping</span><span class="params">(toid NodeID, toaddr *net.UDPAddr)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	req := &amp;ping&#123;</span><br><span class="line">		Version:    Version,</span><br><span class="line">		From:       t.ourEndpoint,</span><br><span class="line">		To:         makeEndpoint(toaddr, <span class="number">0</span>),</span><br><span class="line">		Expiration: <span class="keyword">uint64</span>(time.Now().Add(expiration).Unix()),</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 此处进行了rlp编码以及签名，生成了新的数据包</span></span><br><span class="line">	packet, hash, err := encodePacket(t.priv, pingPacket, req)</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 使用回调方法来处理对于findnode方法的多次包回应</span></span><br><span class="line">	errc := t.pending(toid, pongPacket, <span class="function"><span class="keyword">func</span><span class="params">(p <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">		<span class="keyword">return</span> bytes.Equal(p.(*pong).ReplyTok, hash)</span><br><span class="line">	&#125;)</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 发送UDP请求</span></span><br><span class="line">	t.write(toaddr, req.name(), packet)</span><br><span class="line">	<span class="keyword">return</span> &lt;-errc</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//此处实现了对PING的回应</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(req *ping)</span> <span class="title">handle</span><span class="params">(t *udp, from *net.UDPAddr, fromID NodeID, mac []<span class="keyword">byte</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> expired(req.Expiration) &#123;</span><br><span class="line">		<span class="keyword">return</span> errExpired</span><br><span class="line">	&#125;</span><br><span class="line">	t.send(from, pongPacket, &amp;pong&#123;</span><br><span class="line">		To:         makeEndpoint(from, req.From.TCP),</span><br><span class="line">		ReplyTok:   mac,</span><br><span class="line">		Expiration: <span class="keyword">uint64</span>(time.Now().Add(expiration).Unix()),</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="keyword">if</span> !t.handleReply(fromID, pingPacket, req) &#123;</span><br><span class="line">		<span class="comment">// Note: we're ignoring the provided IP address right now</span></span><br><span class="line">		<span class="comment">// 保证了本地节点与远程节点产生了联系，bond必须在findnode请求之前建立。</span></span><br><span class="line">		</span><br><span class="line">		<span class="keyword">go</span> t.bond(<span class="literal">true</span>, fromID, from, req.From.TCP)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 此处实现了3中的FIND_NODE方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *udp)</span> <span class="title">findnode</span><span class="params">(toid NodeID, toaddr *net.UDPAddr, target NodeID)</span> <span class="params">([]*Node, error)</span></span> &#123;</span><br><span class="line">	nodes := <span class="built_in">make</span>([]*Node, <span class="number">0</span>, bucketSize)</span><br><span class="line">	nreceived := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 增加回调方法，返回临近节点</span></span><br><span class="line">	errc := t.pending(toid, neighborsPacket, <span class="function"><span class="keyword">func</span><span class="params">(r <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">		reply := r.(*neighbors)</span><br><span class="line">		<span class="keyword">for</span> _, rn := <span class="keyword">range</span> reply.Nodes &#123;</span><br><span class="line">			nreceived++</span><br><span class="line">			n, err := t.nodeFromRPC(toaddr, rn)</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				log.Trace(<span class="string">"Invalid neighbor node received"</span>, <span class="string">"ip"</span>, rn.IP, <span class="string">"addr"</span>, toaddr, <span class="string">"err"</span>, err)</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125;</span><br><span class="line">			nodes = <span class="built_in">append</span>(nodes, n)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> nreceived &gt;= bucketSize</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="comment">// 发送请求</span></span><br><span class="line">	t.send(toaddr, findnodePacket, &amp;findnode&#123;</span><br><span class="line">		Target:     target,</span><br><span class="line">		Expiration: <span class="keyword">uint64</span>(time.Now().Add(expiration).Unix()),</span><br><span class="line">	&#125;)</span><br><span class="line">	err := &lt;-errc</span><br><span class="line">	<span class="keyword">return</span> nodes, err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 处理find_node方法的回应</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(req *findnode)</span> <span class="title">handle</span><span class="params">(t *udp, from *net.UDPAddr, fromID NodeID, mac []<span class="keyword">byte</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> expired(req.Expiration) &#123;</span><br><span class="line">		<span class="keyword">return</span> errExpired</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> !t.db.hasBond(fromID) &#123;</span><br><span class="line">		<span class="comment">// findnode时无链接存在，无法处理这个包</span></span><br><span class="line">		<span class="keyword">return</span> errUnknownNode</span><br><span class="line">	&#125;</span><br><span class="line">	target := crypto.Keccak256Hash(req.Target[:])</span><br><span class="line">	t.mutex.Lock()</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 获取当前桶中距离目标最近的集</span></span><br><span class="line">	closest := t.closest(target, bucketSize).entries</span><br><span class="line">	t.mutex.Unlock()</span><br><span class="line"></span><br><span class="line">	p := neighbors&#123;Expiration: <span class="keyword">uint64</span>(time.Now().Add(expiration).Unix())&#125;</span><br><span class="line">	<span class="keyword">var</span> sent <span class="keyword">bool</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 从最近的集中选择桶中需要的邻居数量发送</span></span><br><span class="line">	<span class="keyword">for</span> _, n := <span class="keyword">range</span> closest &#123;</span><br><span class="line">		<span class="keyword">if</span> netutil.CheckRelayIP(from.IP, n.IP) == <span class="literal">nil</span> &#123;</span><br><span class="line">			p.Nodes = <span class="built_in">append</span>(p.Nodes, nodeToRPC(n))</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(p.Nodes) == maxNeighbors &#123;</span><br><span class="line">			t.send(from, neighborsPacket, &amp;p)</span><br><span class="line">			p.Nodes = p.Nodes[:<span class="number">0</span>]</span><br><span class="line">			sent = <span class="literal">true</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 不满足数量，只要大于0就发送吧</span></span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(p.Nodes) &gt; <span class="number">0</span> || !sent &#123;</span><br><span class="line">		t.send(from, neighborsPacket, &amp;p)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="定位节点"><a href="#定位节点" class="headerlink" title="定位节点"></a>定位节点</h1><h2 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h2><p>获得局部网络中离被搜索键值最近的K个节点</p>
+<ul>
+<li>可以同步查询，也可以异步查询</li>
+<li>向自己K桶中离所查询的键值最近的K个节发起FIND_NODE请求</li>
+<li>请求接受者在收到消息后在自己K桶查询，如果他们知道离被查键更近的节点，他们就返回这些节点（最多K个）</li>
+<li>请求者收到响应后用响应结果来更新它的结果列表，这个结果列表保持K个响应FIND_NODE消息请求的最优节点</li>
+<li>果本次响应结果中的节点没有比前次响应结果中的节点离被搜索键值更近了，这个查询迭代也就终止了</li>
+</ul>
+<h2 id="以太坊实现-2"><a href="#以太坊实现-2" class="headerlink" title="以太坊实现"></a>以太坊实现</h2><h1 id="定位资源"><a href="#定位资源" class="headerlink" title="定位资源"></a>定位资源</h1><h2 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h2><ul>
+<li>通过把资源信息与键进行映射，资源即可进行定位。</li>
+<li>定位资源时，如果一个节点存有相应的资源的值的时候，它就返回该资源，搜索便结束了，除了该点以外，定位资源与定位离键最近的节点的过程相似。</li>
+</ul>
+<h2 id="以太坊实现-3"><a href="#以太坊实现-3" class="headerlink" title="以太坊实现"></a>以太坊实现</h2><h1 id="加入网络"><a href="#加入网络" class="headerlink" title="加入网络"></a>加入网络</h1><h2 id="原理-3"><a href="#原理-3" class="headerlink" title="原理"></a>原理</h2><p>想要加入网络的节点首先要经历一个引导过程。在引导过程中，节点需要知道其他已加入该网络的某个节点的IP地址和端口号（可从用户或者存储的列表中获得）(bootnode)</p>
+<ul>
+<li>正在加入kad网络的节点在它的某个K桶中插入引导节点</li>
+<li>向它的引导节点发起NODE_LOOKUP操作请求来定位自己</li>
+<li>这一自查询过程使得新加入节点自引导节点所在的那个K桶开始，由远及近，逐个得到刷新，这种刷新只需通过位于K桶范围内的一个随机键的定位便可达到。</li>
+</ul>
+<p>新节点的K桶分裂机制</p>
+<ul>
+<li>节点仅有一个K桶（覆盖所有的ID范围），当有新节点需要插入该K桶时，如果K桶已满，K桶就开始分裂</li>
+<li>分裂发生在节点的K桶的覆盖范围（表现为二叉树某部分从左至右的所有值）包含了该节点本身的ID的时候</li>
+</ul>
+<p>[此处需要一个图来说明]</p>
+<h2 id="以太坊实现-4"><a href="#以太坊实现-4" class="headerlink" title="以太坊实现"></a>以太坊实现</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">通过初始化bootnode节点来对K桶插入引导节点</span><br><span class="line">func (tab *Table) setFallbackNodes(nodes []*Node) error &#123;</span><br><span class="line">	for _, n := range nodes &#123;</span><br><span class="line">		if err := n.validateComplete(); err != nil &#123;</span><br><span class="line">			return fmt.Errorf(&quot;bad bootstrap/fallback node %q (%v)&quot;, n, err)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	tab.nursery = make([]*Node, 0, len(nodes))</span><br><span class="line">	for _, n := range nodes &#123;</span><br><span class="line">		cpy := *n</span><br><span class="line">		cpy.sha = crypto.Keccak256Hash(n.ID[:])</span><br><span class="line">		tab.nursery = append(tab.nursery, &amp;cpy)</span><br><span class="line">	&#125;</span><br><span class="line">	return nil</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="查询加速"><a href="#查询加速" class="headerlink" title="查询加速"></a>查询加速</h1><h2 id="原理-4"><a href="#原理-4" class="headerlink" title="原理"></a>原理</h2><ul>
+<li>Kademlia的路由表可以建在单个bit之上，即可使用位组（多个位联合）来构建路由表</li>
+<li>位组可以用来表示相应的K桶，它有个专业术语叫做前缀，对一个m位的前缀来说，可对应2^m-1个K桶</li>
+</ul>
+<h2 id="以太坊实现-5"><a href="#以太坊实现-5" class="headerlink" title="以太坊实现"></a>以太坊实现</h2>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/区块链，以太坊，p2p网络/" rel="tag"># 区块链，以太坊，p2p网络</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/31/以太坊交易流转过程/" rel="next" title="以太坊交易流转过程(一)">
+                <i class="fa fa-chevron-left"></i> 以太坊交易流转过程(一)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/06/默克尔树的重复交易攻击/" rel="prev" title="默克尔树的重复交易攻击">
+                默克尔树的重复交易攻击 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#路由表"><span class="nav-number">2.</span> <span class="nav-text">路由表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本原理"><span class="nav-number">2.1.</span> <span class="nav-text">基本原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#以太坊实现"><span class="nav-number">2.2.</span> <span class="nav-text">以太坊实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#协议消息"><span class="nav-number">3.</span> <span class="nav-text">协议消息</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原理"><span class="nav-number">3.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#以太坊实现-1"><span class="nav-number">3.2.</span> <span class="nav-text">以太坊实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#定位节点"><span class="nav-number">4.</span> <span class="nav-text">定位节点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原理-1"><span class="nav-number">4.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#以太坊实现-2"><span class="nav-number">4.2.</span> <span class="nav-text">以太坊实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#定位资源"><span class="nav-number">5.</span> <span class="nav-text">定位资源</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原理-2"><span class="nav-number">5.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#以太坊实现-3"><span class="nav-number">5.2.</span> <span class="nav-text">以太坊实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#加入网络"><span class="nav-number">6.</span> <span class="nav-text">加入网络</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原理-3"><span class="nav-number">6.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#以太坊实现-4"><span class="nav-number">6.2.</span> <span class="nav-text">以太坊实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查询加速"><span class="nav-number">7.</span> <span class="nav-text">查询加速</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原理-4"><span class="nav-number">7.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#以太坊实现-5"><span class="nav-number">7.2.</span> <span class="nav-text">以太坊实现</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

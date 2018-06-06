@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="区块链,以太坊,交易," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="用户转账最近在看以太坊代码，对以太坊交易的运作和最终写入DB的过程很感兴趣，尝试去分析了一些，这里做一下简单的记录 命令 此处是在geth中的整体过程   解锁账号  1personal.unlockAccount(eth.accounts[0],passwd)  发送交易  1eth.sendTransaction(&amp;#123;from:eth.accounts[0],to:eth.accoun">
+<meta name="keywords" content="区块链,以太坊,交易">
+<meta property="og:type" content="article">
+<meta property="og:title" content="以太坊交易流转过程(一)">
+<meta property="og:url" content="https://remark31.github.io/2018/05/31/以太坊交易流转过程/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="用户转账最近在看以太坊代码，对以太坊交易的运作和最终写入DB的过程很感兴趣，尝试去分析了一些，这里做一下简单的记录 命令 此处是在geth中的整体过程   解锁账号  1personal.unlockAccount(eth.accounts[0],passwd)  发送交易  1eth.sendTransaction(&amp;#123;from:eth.accounts[0],to:eth.accoun">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/ethtxprocess.png">
+<meta property="og:updated_time" content="2018-06-06T11:44:48.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="以太坊交易流转过程(一)">
+<meta name="twitter:description" content="用户转账最近在看以太坊代码，对以太坊交易的运作和最终写入DB的过程很感兴趣，尝试去分析了一些，这里做一下简单的记录 命令 此处是在geth中的整体过程   解锁账号  1personal.unlockAccount(eth.accounts[0],passwd)  发送交易  1eth.sendTransaction(&amp;#123;from:eth.accounts[0],to:eth.accoun">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/ethtxprocess.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/05/31/以太坊交易流转过程/"/>
+
+
+
+
+
+  <title>以太坊交易流转过程(一) | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/05/31/以太坊交易流转过程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">以太坊交易流转过程(一)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-31T12:17:46+08:00">
+                2018-05-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="用户转账"><a href="#用户转账" class="headerlink" title="用户转账"></a>用户转账</h1><p>最近在看以太坊代码，对以太坊交易的运作和最终写入DB的过程很感兴趣，尝试去分析了一些，这里做一下简单的记录</p>
+<h2 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h2><blockquote>
+<p>此处是在geth中的整体过程</p>
+</blockquote>
+<ul>
+<li>解锁账号</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">personal.unlockAccount(eth.accounts[0],passwd)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>发送交易</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eth.sendTransaction(&#123;from:eth.accounts[0],to:eth.accounts[1],value:web3.toWei(1,&quot;ether&quot;)&#125;)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>挖矿启动</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">web3.miner.start()</span><br></pre></td></tr></table></figure>
+<ul>
+<li>挖矿停止</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">web3.miner.stop()</span><br></pre></td></tr></table></figure>
+<p>接下来就能看到账号0中的1个eth转移到了账号1中</p>
+<h2 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h2><p>先给个整体结论</p>
+<p>这里简单看下流程图</p>
+<p><img src="/imgs/ethtxprocess.png" alt="以太坊交易流程图"></p>
+<p>可以看到以太坊的架构是非常清晰的，简单来说这个geth console中的转账会涉及到4个部分代码的调用，internal,txpool,worker,agent。</p>
+<ul>
+<li>internal：jsvm通过RPC实际调用的以太坊内部的一些方法，发送交易的初始方法就在这里被触发</li>
+<li>txpool：txpool里面存放的是还未被打包的交易以及等待被打包的交易</li>
+<li>worker：区块产生者，将txpool中等待打包的交易包装成工作发送给挖矿代理生成区块并且提交区块并广播</li>
+<li>agent：挖矿工作者，根据共识引擎以及worker分配的工作填写实际区块的内容，并且将结果返回给worker</li>
+</ul>
+<p>可以看到，整体区块的生成主要流程是在worker上，整体的线性的工作安排是十分有趣的，接下来我们就可以详细分析代码，是很枯燥的部分，对此不感兴趣的同学可以略过不看</p>
+<h2 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h2><h3 id="交易发送"><a href="#交易发送" class="headerlink" title="交易发送"></a>交易发送</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// 根据已有参数创建一个交易，签名并且提交到交易池中</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *PublicTransactionPoolAPI)</span> <span class="title">SendTransaction</span><span class="params">(ctx context.Context, args SendTxArgs)</span> <span class="params">(common.Hash, error)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 寻找包含需要签名的钱包</span></span><br><span class="line">	account := accounts.Account&#123;Address: args.From&#125;</span><br><span class="line"></span><br><span class="line">	wallet, err := s.b.AccountManager().Find(account)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> common.Hash&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> args.Nonce == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="comment">// 锁定住当前钱包地址，防止多个交易进入</span></span><br><span class="line">		s.nonceLock.LockAddr(args.From)</span><br><span class="line">		<span class="keyword">defer</span> s.nonceLock.UnlockAddr(args.From)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 将参数中的未填写部分设置上默认值</span></span><br><span class="line">	<span class="keyword">if</span> err := args.setDefaults(ctx, s.b); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> common.Hash&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//构建新的交易/合约</span></span><br><span class="line">	tx := args.toTransaction()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> chainID *big.Int</span><br><span class="line">	<span class="keyword">if</span> config := s.b.ChainConfig(); config.IsEIP155(s.b.CurrentBlock().Number()) &#123;</span><br><span class="line">		chainID = config.ChainId</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//对交易签名，返回签名后的交易</span></span><br><span class="line">	signed, err := wallet.SignTx(account, tx, chainID)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> common.Hash&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//提交交易</span></span><br><span class="line">	<span class="keyword">return</span> submitTransaction(ctx, s.b, signed)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//提交交易到交易池中并返回结果log</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">submitTransaction</span><span class="params">(ctx context.Context, b Backend, tx *types.Transaction)</span> <span class="params">(common.Hash, error)</span></span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//发送交易到txpool中</span></span><br><span class="line">	<span class="keyword">if</span> err := b.SendTx(ctx, tx); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> common.Hash&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//如果交易没有目的地址，则是一个合约部署交易，返回合约地址</span></span><br><span class="line">	<span class="keyword">if</span> tx.To() == <span class="literal">nil</span> &#123;</span><br><span class="line">		signer := types.MakeSigner(b.ChainConfig(), b.CurrentBlock().Number())</span><br><span class="line">		from, err := types.Sender(signer, tx)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> common.Hash&#123;&#125;, err</span><br><span class="line">		&#125;</span><br><span class="line">		addr := crypto.CreateAddress(from, tx.Nonce())</span><br><span class="line">		log.Info(<span class="string">"Submitted contract creation"</span>, <span class="string">"fullhash"</span>, tx.Hash().Hex(), <span class="string">"contract"</span>, addr.Hex())</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	<span class="comment">// 普通交易，返回普通地址</span></span><br><span class="line">		log.Info(<span class="string">"Submitted transaction"</span>, <span class="string">"fullhash"</span>, tx.Hash().Hex(), <span class="string">"recipient"</span>, tx.To())</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> tx.Hash(), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// 将交易从未来的队列移动到等待交易集合中，在这个过程中将删除所有的非法交易(nounce过低，余额过低等等)。</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pool *TxPool)</span> <span class="title">promoteExecutables</span><span class="params">(accounts []common.Address)</span></span> &#123;</span><br><span class="line">	<span class="comment">// Gather all the accounts potentially needing updates</span></span><br><span class="line">	<span class="keyword">if</span> accounts == <span class="literal">nil</span> &#123;</span><br><span class="line">		accounts = <span class="built_in">make</span>([]common.Address, <span class="number">0</span>, <span class="built_in">len</span>(pool.queue))</span><br><span class="line">		<span class="keyword">for</span> addr := <span class="keyword">range</span> pool.queue &#123;</span><br><span class="line">			accounts = <span class="built_in">append</span>(accounts, addr)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 遍历所有的账号并且将所有合法的交易推送到等待交易队列中</span></span><br><span class="line">	<span class="keyword">for</span> _, addr := <span class="keyword">range</span> accounts &#123;</span><br><span class="line">		list := pool.queue[addr]</span><br><span class="line">		<span class="keyword">if</span> list == <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">continue</span> <span class="comment">// Just in case someone calls with a non existing account</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 除去所有的过老的交易(nonce过低)</span></span><br><span class="line">		<span class="keyword">for</span> _, tx := <span class="keyword">range</span> list.Forward(pool.currentState.GetNonce(addr)) &#123;</span><br><span class="line">			hash := tx.Hash()</span><br><span class="line">			log.Trace(<span class="string">"Removed old queued transaction"</span>, <span class="string">"hash"</span>, hash)</span><br><span class="line">			<span class="built_in">delete</span>(pool.all, hash)</span><br><span class="line">			pool.priced.Removed()</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 除去所有的out of gas的以及余额不足的交易</span></span><br><span class="line">		drops, _ := list.Filter(pool.currentState.GetBalance(addr), pool.currentMaxGas)</span><br><span class="line">		<span class="keyword">for</span> _, tx := <span class="keyword">range</span> drops &#123;</span><br><span class="line">			hash := tx.Hash()</span><br><span class="line">			log.Trace(<span class="string">"Removed unpayable queued transaction"</span>, <span class="string">"hash"</span>, hash)</span><br><span class="line">			<span class="built_in">delete</span>(pool.all, hash)</span><br><span class="line">			pool.priced.Removed()</span><br><span class="line">			queuedNofundsCounter.Inc(<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 收集所有的可执行的交易，并且推送到等待队列中</span></span><br><span class="line">		<span class="keyword">for</span> _, tx := <span class="keyword">range</span> list.Ready(pool.pendingState.GetNonce(addr)) &#123;</span><br><span class="line">			hash := tx.Hash()</span><br><span class="line">			log.Trace(<span class="string">"Promoting queued transaction"</span>, <span class="string">"hash"</span>, hash)</span><br><span class="line">			<span class="comment">//推送交易</span></span><br><span class="line">			pool.promoteTx(addr, hash, tx)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 删除所有的超出限制的交易</span></span><br><span class="line">		<span class="keyword">if</span> !pool.locals.contains(addr) &#123;</span><br><span class="line">			<span class="keyword">for</span> _, tx := <span class="keyword">range</span> list.Cap(<span class="keyword">int</span>(pool.config.AccountQueue)) &#123;</span><br><span class="line">				hash := tx.Hash()</span><br><span class="line">				<span class="built_in">delete</span>(pool.all, hash)</span><br><span class="line">				pool.priced.Removed()</span><br><span class="line">				queuedRateLimitCounter.Inc(<span class="number">1</span>)</span><br><span class="line">				log.Trace(<span class="string">"Removed cap-exceeding queued transaction"</span>, <span class="string">"hash"</span>, hash)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 如果变空了，删除剩下的地址</span></span><br><span class="line">		<span class="keyword">if</span> list.Empty() &#123;</span><br><span class="line">			<span class="built_in">delete</span>(pool.queue, addr)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// If the pending limit is overflown, start equalizing allowances</span></span><br><span class="line">	pending := <span class="keyword">uint64</span>(<span class="number">0</span>)</span><br><span class="line">	<span class="keyword">for</span> _, list := <span class="keyword">range</span> pool.pending &#123;</span><br><span class="line">		pending += <span class="keyword">uint64</span>(list.Len())</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> pending &gt; pool.config.GlobalSlots &#123;</span><br><span class="line">		pendingBeforeCap := pending</span><br><span class="line">		<span class="comment">// Assemble a spam order to penalize large transactors first</span></span><br><span class="line">		spammers := prque.New()</span><br><span class="line">		<span class="keyword">for</span> addr, list := <span class="keyword">range</span> pool.pending &#123;</span><br><span class="line">			<span class="comment">// Only evict transactions from high rollers</span></span><br><span class="line">			<span class="keyword">if</span> !pool.locals.contains(addr) &amp;&amp; <span class="keyword">uint64</span>(list.Len()) &gt; pool.config.AccountSlots &#123;</span><br><span class="line">				spammers.Push(addr, <span class="keyword">float32</span>(list.Len()))</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// Gradually drop transactions from offenders</span></span><br><span class="line">		offenders := []common.Address&#123;&#125;</span><br><span class="line">		<span class="keyword">for</span> pending &gt; pool.config.GlobalSlots &amp;&amp; !spammers.Empty() &#123;</span><br><span class="line">			<span class="comment">// Retrieve the next offender if not local address</span></span><br><span class="line">			offender, _ := spammers.Pop()</span><br><span class="line">			offenders = <span class="built_in">append</span>(offenders, offender.(common.Address))</span><br><span class="line"></span><br><span class="line">			<span class="comment">// Equalize balances until all the same or below threshold</span></span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">len</span>(offenders) &gt; <span class="number">1</span> &#123;</span><br><span class="line">				<span class="comment">// Calculate the equalization threshold for all current offenders</span></span><br><span class="line">				threshold := pool.pending[offender.(common.Address)].Len()</span><br><span class="line"></span><br><span class="line">				<span class="comment">// Iteratively reduce all offenders until below limit or threshold reached</span></span><br><span class="line">				<span class="keyword">for</span> pending &gt; pool.config.GlobalSlots &amp;&amp; pool.pending[offenders[<span class="built_in">len</span>(offenders)<span class="number">-2</span>]].Len() &gt; threshold &#123;</span><br><span class="line">					<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(offenders)<span class="number">-1</span>; i++ &#123;</span><br><span class="line">						list := pool.pending[offenders[i]]</span><br><span class="line">						<span class="keyword">for</span> _, tx := <span class="keyword">range</span> list.Cap(list.Len() - <span class="number">1</span>) &#123;</span><br><span class="line">							<span class="comment">// Drop the transaction from the global pools too</span></span><br><span class="line">							hash := tx.Hash()</span><br><span class="line">							<span class="built_in">delete</span>(pool.all, hash)</span><br><span class="line">							pool.priced.Removed()</span><br><span class="line"></span><br><span class="line">							<span class="comment">// Update the account nonce to the dropped transaction</span></span><br><span class="line">							<span class="keyword">if</span> nonce := tx.Nonce(); pool.pendingState.GetNonce(offenders[i]) &gt; nonce &#123;</span><br><span class="line">								pool.pendingState.SetNonce(offenders[i], nonce)</span><br><span class="line">							&#125;</span><br><span class="line">							log.Trace(<span class="string">"Removed fairness-exceeding pending transaction"</span>, <span class="string">"hash"</span>, hash)</span><br><span class="line">						&#125;</span><br><span class="line">						pending--</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// If still above threshold, reduce to limit or min allowance</span></span><br><span class="line">		<span class="keyword">if</span> pending &gt; pool.config.GlobalSlots &amp;&amp; <span class="built_in">len</span>(offenders) &gt; <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">for</span> pending &gt; pool.config.GlobalSlots &amp;&amp; <span class="keyword">uint64</span>(pool.pending[offenders[<span class="built_in">len</span>(offenders)<span class="number">-1</span>]].Len()) &gt; pool.config.AccountSlots &#123;</span><br><span class="line">				<span class="keyword">for</span> _, addr := <span class="keyword">range</span> offenders &#123;</span><br><span class="line">					list := pool.pending[addr]</span><br><span class="line">					<span class="keyword">for</span> _, tx := <span class="keyword">range</span> list.Cap(list.Len() - <span class="number">1</span>) &#123;</span><br><span class="line">						<span class="comment">// Drop the transaction from the global pools too</span></span><br><span class="line">						hash := tx.Hash()</span><br><span class="line">						<span class="built_in">delete</span>(pool.all, hash)</span><br><span class="line">						pool.priced.Removed()</span><br><span class="line"></span><br><span class="line">						<span class="comment">// Update the account nonce to the dropped transaction</span></span><br><span class="line">						<span class="keyword">if</span> nonce := tx.Nonce(); pool.pendingState.GetNonce(addr) &gt; nonce &#123;</span><br><span class="line">							pool.pendingState.SetNonce(addr, nonce)</span><br><span class="line">						&#125;</span><br><span class="line">						log.Trace(<span class="string">"Removed fairness-exceeding pending transaction"</span>, <span class="string">"hash"</span>, hash)</span><br><span class="line">					&#125;</span><br><span class="line">					pending--</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		pendingRateLimitCounter.Inc(<span class="keyword">int64</span>(pendingBeforeCap - pending))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// If we've queued more transactions than the hard limit, drop oldest ones</span></span><br><span class="line">	queued := <span class="keyword">uint64</span>(<span class="number">0</span>)</span><br><span class="line">	<span class="keyword">for</span> _, list := <span class="keyword">range</span> pool.queue &#123;</span><br><span class="line">		queued += <span class="keyword">uint64</span>(list.Len())</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> queued &gt; pool.config.GlobalQueue &#123;</span><br><span class="line">		<span class="comment">// Sort all accounts with queued transactions by heartbeat</span></span><br><span class="line">		addresses := <span class="built_in">make</span>(addresssByHeartbeat, <span class="number">0</span>, <span class="built_in">len</span>(pool.queue))</span><br><span class="line">		<span class="keyword">for</span> addr := <span class="keyword">range</span> pool.queue &#123;</span><br><span class="line">			<span class="keyword">if</span> !pool.locals.contains(addr) &#123; <span class="comment">// don't drop locals</span></span><br><span class="line">				addresses = <span class="built_in">append</span>(addresses, addressByHeartbeat&#123;addr, pool.beats[addr]&#125;)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		sort.Sort(addresses)</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Drop transactions until the total is below the limit or only locals remain</span></span><br><span class="line">		<span class="keyword">for</span> drop := queued - pool.config.GlobalQueue; drop &gt; <span class="number">0</span> &amp;&amp; <span class="built_in">len</span>(addresses) &gt; <span class="number">0</span>; &#123;</span><br><span class="line">			addr := addresses[<span class="built_in">len</span>(addresses)<span class="number">-1</span>]</span><br><span class="line">			list := pool.queue[addr.address]</span><br><span class="line"></span><br><span class="line">			addresses = addresses[:<span class="built_in">len</span>(addresses)<span class="number">-1</span>]</span><br><span class="line"></span><br><span class="line">			<span class="comment">// Drop all transactions if they are less than the overflow</span></span><br><span class="line">			<span class="keyword">if</span> size := <span class="keyword">uint64</span>(list.Len()); size &lt;= drop &#123;</span><br><span class="line">				<span class="keyword">for</span> _, tx := <span class="keyword">range</span> list.Flatten() &#123;</span><br><span class="line">					pool.removeTx(tx.Hash())</span><br><span class="line">				&#125;</span><br><span class="line">				drop -= size</span><br><span class="line">				queuedRateLimitCounter.Inc(<span class="keyword">int64</span>(size))</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// Otherwise drop only last few transactions</span></span><br><span class="line">			txs := list.Flatten()</span><br><span class="line">			<span class="keyword">for</span> i := <span class="built_in">len</span>(txs) - <span class="number">1</span>; i &gt;= <span class="number">0</span> &amp;&amp; drop &gt; <span class="number">0</span>; i-- &#123;</span><br><span class="line">				pool.removeTx(txs[i].Hash())</span><br><span class="line">				drop--</span><br><span class="line">				queuedRateLimitCounter.Inc(<span class="number">1</span>)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="交易集合打包"><a href="#交易集合打包" class="headerlink" title="交易集合打包"></a>交易集合打包</h3><p>在miner进程初始化时，会启动一个newWorker的初始化</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 交易池更新，提交网络</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newWorker</span><span class="params">(config *params.ChainConfig, engine consensus.Engine, coinbase common.Address, eth Backend, mux *event.TypeMux)</span> *<span class="title">worker</span></span> &#123;</span><br><span class="line">	worker := &amp;worker&#123;</span><br><span class="line">		config:         config,</span><br><span class="line">		engine:         engine,</span><br><span class="line">		eth:            eth,</span><br><span class="line">		mux:            mux,</span><br><span class="line">		txCh:           <span class="built_in">make</span>(<span class="keyword">chan</span> core.TxPreEvent, txChanSize),</span><br><span class="line">		chainHeadCh:    <span class="built_in">make</span>(<span class="keyword">chan</span> core.ChainHeadEvent, chainHeadChanSize),</span><br><span class="line">		chainSideCh:    <span class="built_in">make</span>(<span class="keyword">chan</span> core.ChainSideEvent, chainSideChanSize),</span><br><span class="line">		chainDb:        eth.ChainDb(),</span><br><span class="line">		recv:           <span class="built_in">make</span>(<span class="keyword">chan</span> *Result, resultQueueSize),</span><br><span class="line">		chain:          eth.BlockChain(),</span><br><span class="line">		proc:           eth.BlockChain().Validator(),</span><br><span class="line">		possibleUncles: <span class="built_in">make</span>(<span class="keyword">map</span>[common.Hash]*types.Block),</span><br><span class="line">		coinbase:       coinbase,</span><br><span class="line">		agents:         <span class="built_in">make</span>(<span class="keyword">map</span>[Agent]<span class="keyword">struct</span>&#123;&#125;),</span><br><span class="line">		unconfirmed:    newUnconfirmedBlocks(eth.BlockChain(), miningLogAtDepth),</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 订阅交易池中的交易前事件</span></span><br><span class="line">	worker.txSub = eth.TxPool().SubscribeTxPreEvent(worker.txCh)</span><br><span class="line">	<span class="comment">// 订阅区块事件</span></span><br><span class="line">	worker.chainHeadSub = eth.BlockChain().SubscribeChainHeadEvent(worker.chainHeadCh)</span><br><span class="line">	worker.chainSideSub = eth.BlockChain().SubscribeChainSideEvent(worker.chainSideCh)</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//处理各种不同事件</span></span><br><span class="line">	<span class="keyword">go</span> worker.update()</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="comment">// </span></span><br><span class="line">	<span class="keyword">go</span> worker.wait()</span><br><span class="line">	worker.commitNewWork()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> worker</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此处几个遗留问题:</p>
+<ul>
+<li>ChainHeadEvent/ChainSideEvent/TxPreEvent 分别是什么事件？</li>
+<li>commitNewWork()分析</li>
+<li>commitTransactions()分析</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(self *worker)</span> <span class="title">update</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> self.txSub.Unsubscribe()</span><br><span class="line">	<span class="keyword">defer</span> self.chainHeadSub.Unsubscribe()</span><br><span class="line">	<span class="keyword">defer</span> self.chainSideSub.Unsubscribe()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="comment">// 处理不同的事件</span></span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="comment">// 处理 ChainHeadEvent，直接提交网络</span></span><br><span class="line">		<span class="keyword">case</span> &lt;-self.chainHeadCh:</span><br><span class="line">			self.commitNewWork()</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 处理 ChainSideEvent，存储可能的叔伯区块</span></span><br><span class="line">		<span class="keyword">case</span> ev := &lt;-self.chainSideCh:</span><br><span class="line">			self.uncleMu.Lock()</span><br><span class="line">			self.possibleUncles[ev.Block.Hash()] = ev.Block</span><br><span class="line">			self.uncleMu.Unlock()</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 处理 TxPreEvent</span></span><br><span class="line">		<span class="keyword">case</span> ev := &lt;-self.txCh:</span><br><span class="line">			<span class="comment">// 如果没有挖矿，将交易放到暂停状态</span></span><br><span class="line">			<span class="keyword">if</span> atomic.LoadInt32(&amp;self.mining) == <span class="number">0</span> &#123;</span><br><span class="line">				self.currentMu.Lock()</span><br><span class="line">				acc, _ := types.Sender(self.current.signer, ev.Tx)</span><br><span class="line">				txs := <span class="keyword">map</span>[common.Address]types.Transactions&#123;acc: &#123;ev.Tx&#125;&#125;</span><br><span class="line">				txset := types.NewTransactionsByPriceAndNonce(self.current.signer, txs)</span><br><span class="line"></span><br><span class="line">				self.current.commitTransactions(self.mux, txset, self.chain, self.coinbase)</span><br><span class="line">				self.currentMu.Unlock()</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// 如果正在挖矿并且现在处于空闲状态，则提交网络</span></span><br><span class="line">				<span class="keyword">if</span> self.config.Clique != <span class="literal">nil</span> &amp;&amp; self.config.Clique.Period == <span class="number">0</span> &#123;</span><br><span class="line">					self.commitNewWork()</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 系统暂停</span></span><br><span class="line">		<span class="keyword">case</span> &lt;-self.txSub.Err():</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		<span class="keyword">case</span> &lt;-self.chainHeadSub.Err():</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		<span class="keyword">case</span> &lt;-self.chainSideSub.Err():</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="挖矿"><a href="#挖矿" class="headerlink" title="挖矿"></a>挖矿</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(self *CpuAgent)</span> <span class="title">mine</span><span class="params">(work *Work, stop &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> result, err := self.engine.Seal(self.chain, work.Block, stop); result != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Info(<span class="string">"Successfully sealed new block"</span>, <span class="string">"number"</span>, result.Number(), <span class="string">"hash"</span>, result.Hash())</span><br><span class="line">		self.returnCh &lt;- &amp;Result&#123;work, result&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Warn(<span class="string">"Block sealing failed"</span>, <span class="string">"err"</span>, err)</span><br><span class="line">		&#125;</span><br><span class="line">		self.returnCh &lt;- <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现共识引擎中的seal方法，尝试去找到一个Nonce满足区块难度需求</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ethash *Ethash)</span> <span class="title">Seal</span><span class="params">(chain consensus.ChainReader, block *types.Block, stop &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span> <span class="params">(*types.Block, error)</span></span> &#123;</span><br><span class="line">	<span class="comment">// If we're running a fake PoW, simply return a 0 nonce immediately</span></span><br><span class="line">	<span class="keyword">if</span> ethash.config.PowMode == ModeFake || ethash.config.PowMode == ModeFullFake &#123;</span><br><span class="line">		header := block.Header()</span><br><span class="line">		header.Nonce, header.MixDigest = types.BlockNonce&#123;&#125;, common.Hash&#123;&#125;</span><br><span class="line">		<span class="keyword">return</span> block.WithSeal(header), <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// If we're running a shared PoW, delegate sealing to it</span></span><br><span class="line">	<span class="keyword">if</span> ethash.shared != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> ethash.shared.Seal(chain, block, stop)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Create a runner and the multiple search threads it directs</span></span><br><span class="line">	abort := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	found := <span class="built_in">make</span>(<span class="keyword">chan</span> *types.Block)</span><br><span class="line"></span><br><span class="line">	ethash.lock.Lock()</span><br><span class="line">	threads := ethash.threads</span><br><span class="line">	<span class="keyword">if</span> ethash.rand == <span class="literal">nil</span> &#123;</span><br><span class="line">		seed, err := crand.Int(crand.Reader, big.NewInt(math.MaxInt64))</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			ethash.lock.Unlock()</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">		&#125;</span><br><span class="line">		ethash.rand = rand.New(rand.NewSource(seed.Int64()))</span><br><span class="line">	&#125;</span><br><span class="line">	ethash.lock.Unlock()</span><br><span class="line">	<span class="keyword">if</span> threads == <span class="number">0</span> &#123;</span><br><span class="line">		threads = runtime.NumCPU()</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> threads &lt; <span class="number">0</span> &#123;</span><br><span class="line">		threads = <span class="number">0</span> <span class="comment">// Allows disabling local mining without extra logic around local/remote</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> pend sync.WaitGroup</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; threads; i++ &#123;</span><br><span class="line">		pend.Add(<span class="number">1</span>)</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(id <span class="keyword">int</span>, nonce <span class="keyword">uint64</span>)</span></span> &#123;</span><br><span class="line">			<span class="keyword">defer</span> pend.Done()</span><br><span class="line">			ethash.mine(block, id, nonce, abort, found)</span><br><span class="line">		&#125;(i, <span class="keyword">uint64</span>(ethash.rand.Int63()))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Wait until sealing is terminated or a nonce is found</span></span><br><span class="line">	<span class="keyword">var</span> result *types.Block</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> &lt;-stop:</span><br><span class="line">		<span class="comment">// Outside abort, stop all miner threads</span></span><br><span class="line">		<span class="built_in">close</span>(abort)</span><br><span class="line">	<span class="keyword">case</span> result = &lt;-found:</span><br><span class="line">		<span class="comment">// One of the threads found a block, abort all others</span></span><br><span class="line">		<span class="built_in">close</span>(abort)</span><br><span class="line">	<span class="keyword">case</span> &lt;-ethash.update:</span><br><span class="line">		<span class="comment">// Thread count was changed on user request, restart</span></span><br><span class="line">		<span class="built_in">close</span>(abort)</span><br><span class="line">		pend.Wait()</span><br><span class="line">		<span class="keyword">return</span> ethash.Seal(chain, block, stop)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Wait for all miners to terminate and return the block</span></span><br><span class="line">	pend.Wait()</span><br><span class="line">	<span class="keyword">return</span> result, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实际的POW挖矿算法，根据总之去寻找一个正确的nonce结果</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ethash *Ethash)</span> <span class="title">mine</span><span class="params">(block *types.Block, id <span class="keyword">int</span>, seed <span class="keyword">uint64</span>, abort <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, found <span class="keyword">chan</span> *types.Block)</span></span> &#123;</span><br><span class="line">	<span class="comment">// Extract some data from the header</span></span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		header  = block.Header()</span><br><span class="line">		hash    = header.HashNoNonce().Bytes()</span><br><span class="line">		target  = <span class="built_in">new</span>(big.Int).Div(maxUint256, header.Difficulty)</span><br><span class="line">		number  = header.Number.Uint64()</span><br><span class="line">		dataset = ethash.dataset(number)</span><br><span class="line">	)</span><br><span class="line">	<span class="comment">// Start generating random nonces until we abort or find a good one</span></span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		attempts = <span class="keyword">int64</span>(<span class="number">0</span>)</span><br><span class="line">		nonce    = seed</span><br><span class="line">	)</span><br><span class="line">	logger := log.New(<span class="string">"miner"</span>, id)</span><br><span class="line">	logger.Trace(<span class="string">"Started ethash search for new nonces"</span>, <span class="string">"seed"</span>, seed)</span><br><span class="line">search:</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-abort:</span><br><span class="line">			<span class="comment">// Mining terminated, update stats and abort</span></span><br><span class="line">			logger.Trace(<span class="string">"Ethash nonce search aborted"</span>, <span class="string">"attempts"</span>, nonce-seed)</span><br><span class="line">			ethash.hashrate.Mark(attempts)</span><br><span class="line">			<span class="keyword">break</span> search</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="comment">// We don't have to update hash rate on every nonce, so update after after 2^X nonces</span></span><br><span class="line">			attempts++</span><br><span class="line">			<span class="keyword">if</span> (attempts % (<span class="number">1</span> &lt;&lt; <span class="number">15</span>)) == <span class="number">0</span> &#123;</span><br><span class="line">				ethash.hashrate.Mark(attempts)</span><br><span class="line">				attempts = <span class="number">0</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// Compute the PoW value of this nonce</span></span><br><span class="line">			digest, result := hashimotoFull(dataset.dataset, hash, nonce)</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">new</span>(big.Int).SetBytes(result).Cmp(target) &lt;= <span class="number">0</span> &#123;</span><br><span class="line">				<span class="comment">// Correct nonce found, create a new header with it</span></span><br><span class="line">				header = types.CopyHeader(header)</span><br><span class="line">				header.Nonce = types.EncodeNonce(nonce)</span><br><span class="line">				header.MixDigest = common.BytesToHash(digest)</span><br><span class="line"></span><br><span class="line">				<span class="comment">// Seal and return a block (if still needed)</span></span><br><span class="line">				<span class="keyword">select</span> &#123;</span><br><span class="line">				<span class="keyword">case</span> found &lt;- block.WithSeal(header):</span><br><span class="line">					logger.Trace(<span class="string">"Ethash nonce found and reported"</span>, <span class="string">"attempts"</span>, nonce-seed, <span class="string">"nonce"</span>, nonce)</span><br><span class="line">				<span class="keyword">case</span> &lt;-abort:</span><br><span class="line">					logger.Trace(<span class="string">"Ethash nonce found but discarded"</span>, <span class="string">"attempts"</span>, nonce-seed, <span class="string">"nonce"</span>, nonce)</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">break</span> search</span><br><span class="line">			&#125;</span><br><span class="line">			nonce++</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Datasets are unmapped in a finalizer. Ensure that the dataset stays live</span></span><br><span class="line">	<span class="comment">// during sealing so it's not unmapped while being read.</span></span><br><span class="line">	runtime.KeepAlive(dataset)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="提交网络"><a href="#提交网络" class="headerlink" title="提交网络"></a>提交网络</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// 此处主要处理self.recv提交出的块</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(self *worker)</span> <span class="title">wait</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		mustCommitNewWork := <span class="literal">true</span></span><br><span class="line">		<span class="keyword">for</span> result := <span class="keyword">range</span> self.recv &#123;</span><br><span class="line">			atomic.AddInt32(&amp;self.atWork, <span class="number">-1</span>)</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> result == <span class="literal">nil</span> &#123;</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125;</span><br><span class="line">			block := result.Block</span><br><span class="line">			work := result.Work</span><br><span class="line"></span><br><span class="line">			<span class="comment">// Update the block hash in all logs since it is now available and not when the</span></span><br><span class="line">			<span class="comment">// receipt/log of individual transactions were created.</span></span><br><span class="line">			<span class="comment">// 更新区块哈希</span></span><br><span class="line">			<span class="keyword">for</span> _, r := <span class="keyword">range</span> work.receipts &#123;</span><br><span class="line">				<span class="keyword">for</span> _, l := <span class="keyword">range</span> r.Logs &#123;</span><br><span class="line">					l.BlockHash = block.Hash()</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">for</span> _, log := <span class="keyword">range</span> work.state.Logs() &#123;</span><br><span class="line">				log.BlockHash = block.Hash()</span><br><span class="line">			&#125;</span><br><span class="line">			</span><br><span class="line">			<span class="comment">//区块写入数据库</span></span><br><span class="line">			stat, err := self.chain.WriteBlockWithState(block, work.receipts, work.state)</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				log.Error(<span class="string">"Failed writing block to chain"</span>, <span class="string">"err"</span>, err)</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 如果已经是正式区块</span></span><br><span class="line">			<span class="keyword">if</span> stat == core.CanonStatTy &#123;</span><br><span class="line">				<span class="comment">// 不需要提交网络</span></span><br><span class="line">				mustCommitNewWork = <span class="literal">false</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 广播区块并且通知链插入事件</span></span><br><span class="line">			self.mux.Post(core.NewMinedBlockEvent&#123;Block: block&#125;)</span><br><span class="line">			<span class="keyword">var</span> (</span><br><span class="line">				events []<span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">				logs   = work.state.Logs()</span><br><span class="line">			)</span><br><span class="line">			events = <span class="built_in">append</span>(events, core.ChainEvent&#123;Block: block, Hash: block.Hash(), Logs: logs&#125;)</span><br><span class="line">			<span class="keyword">if</span> stat == core.CanonStatTy &#123;</span><br><span class="line">				events = <span class="built_in">append</span>(events, core.ChainHeadEvent&#123;Block: block&#125;)</span><br><span class="line">			&#125;</span><br><span class="line">			self.chain.PostChainEvents(events, logs)</span><br><span class="line"></span><br><span class="line">			<span class="comment">// 插入区块到等待集中等待最终确认</span></span><br><span class="line">			self.unconfirmed.Insert(block.NumberU64(), block.Hash())</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> mustCommitNewWork &#123;</span><br><span class="line">			    <span class="comment">// 提交新的工作</span></span><br><span class="line">				self.commitNewWork()</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//提交新的工作</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(self *worker)</span> <span class="title">commitNewWork</span><span class="params">()</span></span> &#123;</span><br><span class="line">	self.mu.Lock()</span><br><span class="line">	<span class="keyword">defer</span> self.mu.Unlock()</span><br><span class="line">	self.uncleMu.Lock()</span><br><span class="line">	<span class="keyword">defer</span> self.uncleMu.Unlock()</span><br><span class="line">	self.currentMu.Lock()</span><br><span class="line">	<span class="keyword">defer</span> self.currentMu.Unlock()</span><br><span class="line"></span><br><span class="line">	tstart := time.Now()</span><br><span class="line">	parent := self.chain.CurrentBlock()</span><br><span class="line"></span><br><span class="line">	tstamp := tstart.Unix()</span><br><span class="line">	<span class="keyword">if</span> parent.Time().Cmp(<span class="built_in">new</span>(big.Int).SetInt64(tstamp)) &gt;= <span class="number">0</span> &#123;</span><br><span class="line">		tstamp = parent.Time().Int64() + <span class="number">1</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果挖矿时间戳太超前，则进行等待</span></span><br><span class="line">	<span class="keyword">if</span> now := time.Now().Unix(); tstamp &gt; now+<span class="number">1</span> &#123;</span><br><span class="line">		wait := time.Duration(tstamp-now) * time.Second</span><br><span class="line">		log.Info(<span class="string">"Mining too far in the future"</span>, <span class="string">"wait"</span>, common.PrettyDuration(wait))</span><br><span class="line">		time.Sleep(wait)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	num := parent.Number()</span><br><span class="line">	header := &amp;types.Header&#123;</span><br><span class="line">		ParentHash: parent.Hash(),</span><br><span class="line">		Number:     num.Add(num, common.Big1),</span><br><span class="line">		GasLimit:   core.CalcGasLimit(parent),</span><br><span class="line">		Extra:      self.extra,</span><br><span class="line">		Time:       big.NewInt(tstamp),</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果在挖矿，则设置头文件的奖励为自己的，防止伪造奖励</span></span><br><span class="line">	<span class="keyword">if</span> atomic.LoadInt32(&amp;self.mining) == <span class="number">1</span> &#123;</span><br><span class="line">		header.Coinbase = self.coinbase</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> err := self.engine.Prepare(self.chain, header); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Error(<span class="string">"Failed to prepare header for mining"</span>, <span class="string">"err"</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 对DAO硬分叉事件的处理</span></span><br><span class="line">	<span class="keyword">if</span> daoBlock := self.config.DAOForkBlock; daoBlock != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="comment">// Check whether the block is among the fork extra-override range</span></span><br><span class="line">		limit := <span class="built_in">new</span>(big.Int).Add(daoBlock, params.DAOForkExtraRange)</span><br><span class="line">		<span class="keyword">if</span> header.Number.Cmp(daoBlock) &gt;= <span class="number">0</span> &amp;&amp; header.Number.Cmp(limit) &lt; <span class="number">0</span> &#123;</span><br><span class="line">			<span class="comment">// Depending whether we support or oppose the fork, override differently</span></span><br><span class="line">			<span class="keyword">if</span> self.config.DAOForkSupport &#123;</span><br><span class="line">				header.Extra = common.CopyBytes(params.DAOForkBlockExtra)</span><br><span class="line">			&#125; <span class="keyword">else</span> <span class="keyword">if</span> bytes.Equal(header.Extra, params.DAOForkBlockExtra) &#123;</span><br><span class="line">				header.Extra = []<span class="keyword">byte</span>&#123;&#125; <span class="comment">// If miner opposes, don't let it use the reserved extra-data</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 防止从旧状态开始挖矿</span></span><br><span class="line">	err := self.makeCurrent(parent, header)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Error(<span class="string">"Failed to create mining context"</span>, <span class="string">"err"</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 创建当前的工作任务并且检查所有需要的交易</span></span><br><span class="line">	work := self.current</span><br><span class="line">	<span class="keyword">if</span> self.config.DAOForkSupport &amp;&amp; self.config.DAOForkBlock != <span class="literal">nil</span> &amp;&amp; self.config.DAOForkBlock.Cmp(header.Number) == <span class="number">0</span> &#123;</span><br><span class="line">		misc.ApplyDAOHardFork(work.state)</span><br><span class="line">	&#125;</span><br><span class="line">	pending, err := self.eth.TxPool().Pending()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Error(<span class="string">"Failed to fetch pending transactions"</span>, <span class="string">"err"</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	txs := types.NewTransactionsByPriceAndNonce(self.current.signer, pending)</span><br><span class="line">	work.commitTransactions(self.mux, txs, self.chain, self.coinbase)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 计算新块的叔伯区块</span></span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		uncles    []*types.Header</span><br><span class="line">		badUncles []common.Hash</span><br><span class="line">	)</span><br><span class="line">	<span class="keyword">for</span> hash, uncle := <span class="keyword">range</span> self.possibleUncles &#123;</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(uncles) == <span class="number">2</span> &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err := self.commitUncle(work, uncle.Header()); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Trace(<span class="string">"Bad uncle found and will be removed"</span>, <span class="string">"hash"</span>, hash)</span><br><span class="line">			log.Trace(fmt.Sprint(uncle))</span><br><span class="line"></span><br><span class="line">			badUncles = <span class="built_in">append</span>(badUncles, hash)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			log.Debug(<span class="string">"Committing new uncle to block"</span>, <span class="string">"hash"</span>, hash)</span><br><span class="line">			uncles = <span class="built_in">append</span>(uncles, uncle.Header())</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> _, hash := <span class="keyword">range</span> badUncles &#123;</span><br><span class="line">		<span class="built_in">delete</span>(self.possibleUncles, hash)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 通过共识引擎产生新块</span></span><br><span class="line">	<span class="keyword">if</span> work.Block, err = self.engine.Finalize(self.chain, header, work.state, work.txs, uncles, work.receipts); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Error(<span class="string">"Failed to finalize block for sealing"</span>, <span class="string">"err"</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 表明提交新块成功</span></span><br><span class="line">	<span class="keyword">if</span> atomic.LoadInt32(&amp;self.mining) == <span class="number">1</span> &#123;</span><br><span class="line">		log.Info(<span class="string">"Commit new mining work"</span>, <span class="string">"number"</span>, work.Block.Number(), <span class="string">"txs"</span>, work.tcount, <span class="string">"uncles"</span>, <span class="built_in">len</span>(uncles), <span class="string">"elapsed"</span>, common.PrettyDuration(time.Since(tstart)))</span><br><span class="line">		self.unconfirmed.Shift(work.Block.NumberU64() - <span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 将当前任务传输到挖矿代理中</span></span><br><span class="line">	self.push(work)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/区块链/" rel="tag"># 区块链</a>
+          
+            <a href="/tags/以太坊/" rel="tag"># 以太坊</a>
+          
+            <a href="/tags/交易/" rel="tag"># 交易</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/26/POS初探/" rel="next" title="POS初探">
+                <i class="fa fa-chevron-left"></i> POS初探
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/05/kad网络学习/" rel="prev" title="kad网络学习">
+                kad网络学习 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#用户转账"><span class="nav-number">1.</span> <span class="nav-text">用户转账</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#命令"><span class="nav-number">1.1.</span> <span class="nav-text">命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#流程"><span class="nav-number">1.2.</span> <span class="nav-text">流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码分析"><span class="nav-number">1.3.</span> <span class="nav-text">代码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#交易发送"><span class="nav-number">1.3.1.</span> <span class="nav-text">交易发送</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#交易集合打包"><span class="nav-number">1.3.2.</span> <span class="nav-text">交易集合打包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#挖矿"><span class="nav-number">1.3.3.</span> <span class="nav-text">挖矿</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#提交网络"><span class="nav-number">1.3.4.</span> <span class="nav-text">提交网络</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
