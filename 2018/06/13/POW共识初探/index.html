@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="区块链,以太坊,共识," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="此处，我们对以太坊的POW共识的实现进行一些简单的梳理，大概了解下POW究竟是如何运作的。 区块结构首先了解下以太坊的区块结构 12345678910111213141516// /core/type/block.go// 区块结构type Block struct &amp;#123;	header       *Header       //区块头	uncles       []*Header">
+<meta name="keywords" content="区块链,以太坊,共识">
+<meta property="og:type" content="article">
+<meta property="og:title" content="POW共识初探">
+<meta property="og:url" content="https://remark31.github.io/2018/06/13/POW共识初探/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="此处，我们对以太坊的POW共识的实现进行一些简单的梳理，大概了解下POW究竟是如何运作的。 区块结构首先了解下以太坊的区块结构 12345678910111213141516// /core/type/block.go// 区块结构type Block struct &amp;#123;	header       *Header       //区块头	uncles       []*Header">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-12-13T07:32:59.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="POW共识初探">
+<meta name="twitter:description" content="此处，我们对以太坊的POW共识的实现进行一些简单的梳理，大概了解下POW究竟是如何运作的。 区块结构首先了解下以太坊的区块结构 12345678910111213141516// /core/type/block.go// 区块结构type Block struct &amp;#123;	header       *Header       //区块头	uncles       []*Header">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/06/13/POW共识初探/"/>
+
+
+
+
+
+  <title>POW共识初探 | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/06/13/POW共识初探/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">POW共识初探</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-06-13T11:35:54+08:00">
+                2018-06-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>此处，我们对以太坊的POW共识的实现进行一些简单的梳理，大概了解下POW究竟是如何运作的。</p>
+<h1 id="区块结构"><a href="#区块结构" class="headerlink" title="区块结构"></a>区块结构</h1><p>首先了解下以太坊的区块结构</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// /core/type/block.go</span></span><br><span class="line"><span class="comment">// 区块结构</span></span><br><span class="line"><span class="keyword">type</span> Block <span class="keyword">struct</span> &#123;</span><br><span class="line">	header       *Header       <span class="comment">//区块头</span></span><br><span class="line">	uncles       []*Header     <span class="comment">//叔伯区块头</span></span><br><span class="line">	transactions Transactions  <span class="comment">//交易列表</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// caches</span></span><br><span class="line">	hash atomic.Value</span><br><span class="line">	size atomic.Value</span><br><span class="line"></span><br><span class="line">	td *big.Int <span class="comment">// 整体复杂度，在该链中包含该区块的所有区块的复杂度的和</span></span><br><span class="line"></span><br><span class="line">	ReceivedAt   time.Time</span><br><span class="line">	ReceivedFrom <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>再看表头结构</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Header <span class="keyword">struct</span> &#123;</span><br><span class="line">	ParentHash  common.Hash    <span class="string">`json:"parentHash"       gencodec:"required"`</span>  <span class="comment">// 父区块hash</span></span><br><span class="line">	UncleHash   common.Hash    <span class="string">`json:"sha3Uncles"       gencodec:"required"`</span></span><br><span class="line">	<span class="comment">// 叔伯区块hash</span></span><br><span class="line">	Coinbase    common.Address <span class="string">`json:"miner"            gencodec:"required"`</span></span><br><span class="line">	<span class="comment">// 矿工地址</span></span><br><span class="line">	Root        common.Hash    <span class="string">`json:"stateRoot"        gencodec:"required"`</span>  <span class="comment">// state Trie根节点rlp hash</span></span><br><span class="line">	TxHash      common.Hash    <span class="string">`json:"transactionsRoot" gencodec:"required"`</span>  <span class="comment">// tx Trie根节点rlp hash</span></span><br><span class="line">	ReceiptHash common.Hash    <span class="string">`json:"receiptsRoot"     gencodec:"required"`</span>   <span class="comment">// receipt Trie根节点rlp hash</span></span><br><span class="line">	Bloom       Bloom          <span class="string">`json:"logsBloom"        gencodec:"required"`</span></span><br><span class="line">	Difficulty  *big.Int       <span class="string">`json:"difficulty"       gencodec:"required"`</span>  <span class="comment">// 难度值</span></span><br><span class="line">	Number      *big.Int       <span class="string">`json:"number"           gencodec:"required"`</span>  <span class="comment">// 区块编号</span></span><br><span class="line">	GasLimit    <span class="keyword">uint64</span>         <span class="string">`json:"gasLimit"         gencodec:"required"`</span>   <span class="comment">// 区块内所有Gas消耗的上限</span></span><br><span class="line">	GasUsed     <span class="keyword">uint64</span>         <span class="string">`json:"gasUsed"          gencodec:"required"`</span>   <span class="comment">// 区块内所有交易消耗的gas</span></span><br><span class="line">	Time        *big.Int       <span class="string">`json:"timestamp"        gencodec:"required"`</span></span><br><span class="line">	Extra       []<span class="keyword">byte</span>         <span class="string">`json:"extraData"        gencodec:"required"`</span></span><br><span class="line">	MixDigest   common.Hash    <span class="string">`json:"mixHash"          gencodec:"required"`</span></span><br><span class="line">	Nonce       BlockNonce     <span class="string">`json:"nonce"            gencodec:"required"`</span></span><br><span class="line">	<span class="comment">// POW的Nonce</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在表头结构中，与POW算法相关的是区块hash，Nonce以及Difficulty</p>
+<h1 id="POW-算法"><a href="#POW-算法" class="headerlink" title="POW 算法"></a>POW 算法</h1><p>POW简单的描述可以表示为如下公式<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RAND(hash, Nonce) &lt;= M / Difficulty</span><br></pre></td></tr></table></figure></p>
+<p>M是一个极大的整数，在hash和M确定的情况下，增大Difficulty会使满足条件的Nonce更少，暴力算出的概率会降低，反之亦然</p>
+<p>整体的POW算法就是在得到了需要打包的交易之后开始计算Nonce，在算出来后开始打包生成区块，接下来看在以太坊中的具体实现</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ethash *Ethash)</span> <span class="title">mine</span><span class="params">(block *types.Block, id <span class="keyword">int</span>, seed <span class="keyword">uint64</span>, abort <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, found <span class="keyword">chan</span> *types.Block)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 从block.header中获取部分数据，初始化</span></span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		header  = block.Header()</span><br><span class="line">		hash    = header.HashNoNonce().Bytes()</span><br><span class="line">		target  = <span class="built_in">new</span>(big.Int).Div(maxUint256, header.Difficulty)</span><br><span class="line">		number  = header.Number.Uint64()</span><br><span class="line">		dataset = ethash.dataset(number)</span><br><span class="line">	)</span><br><span class="line">	<span class="comment">// 开始生成随机数nounce，直到生成后退出</span></span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		attempts = <span class="keyword">int64</span>(<span class="number">0</span>)</span><br><span class="line">		nonce    = seed</span><br><span class="line">	)</span><br><span class="line">	logger := log.New(<span class="string">"miner"</span>, id)</span><br><span class="line">	logger.Trace(<span class="string">"Started ethash search for new nonces"</span>, <span class="string">"seed"</span>, seed)</span><br><span class="line">search:</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-abort:</span><br><span class="line">			<span class="comment">// 挖矿停止，更新状态并且退出</span></span><br><span class="line">			logger.Trace(<span class="string">"Ethash nonce search aborted"</span>, <span class="string">"attempts"</span>, nonce-seed)</span><br><span class="line">			ethash.hashrate.Mark(attempts)</span><br><span class="line">			<span class="keyword">break</span> search</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="comment">// </span></span><br><span class="line">			attempts++</span><br><span class="line">			<span class="keyword">if</span> (attempts % (<span class="number">1</span> &lt;&lt; <span class="number">15</span>)) == <span class="number">0</span> &#123;</span><br><span class="line">				ethash.hashrate.Mark(attempts)</span><br><span class="line">				attempts = <span class="number">0</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 计算POW的nounce值</span></span><br><span class="line">			digest, result := hashimotoFull(dataset.dataset, hash, nonce)</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">new</span>(big.Int).SetBytes(result).Cmp(target) &lt;= <span class="number">0</span> &#123;</span><br><span class="line">				<span class="comment">// 发现了正确的nounce，使用它创建新的block header</span></span><br><span class="line">				header = types.CopyHeader(header)</span><br><span class="line">				header.Nonce = types.EncodeNonce(nonce)</span><br><span class="line">				header.MixDigest = common.BytesToHash(digest)</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 返回区块，并且退出</span></span><br><span class="line">				<span class="keyword">select</span> &#123;</span><br><span class="line">				<span class="keyword">case</span> found &lt;- block.WithSeal(header):</span><br><span class="line">					logger.Trace(<span class="string">"Ethash nonce found and reported"</span>, <span class="string">"attempts"</span>, nonce-seed, <span class="string">"nonce"</span>, nonce)</span><br><span class="line">				<span class="keyword">case</span> &lt;-abort:</span><br><span class="line">					logger.Trace(<span class="string">"Ethash nonce found but discarded"</span>, <span class="string">"attempts"</span>, nonce-seed, <span class="string">"nonce"</span>, nonce)</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">break</span> search</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 如果没有找到则增加nonce的值</span></span><br><span class="line">			nonce++</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 保持dataset数据不被回收</span></span><br><span class="line">	runtime.KeepAlive(dataset)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到整个挖矿方法，在首先获取了Block的header数据之后开始了组装，然后开始根据随机的种子<code>ethash.rand.Int63()</code>开始遍历的计算<code>hashimotoFull</code>的结果是否满足<code>new(big.Int).SetBytes(result).Cmp(target) &lt;= 0</code>，如果满足，则说明找到了正确的nonce，就可以开始打包区块。</p>
+<p>接下来我们来看下如何的计算<code>hashimotoFull</code>的</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">hashimoto</span><span class="params">(hash []<span class="keyword">byte</span>, nonce <span class="keyword">uint64</span>, size <span class="keyword">uint64</span>, lookup <span class="keyword">func</span>(index <span class="keyword">uint32</span>)</span> []<span class="title">uint32</span>) <span class="params">([]<span class="keyword">byte</span>, []<span class="keyword">byte</span>)</span></span> &#123;</span><br><span class="line">	<span class="comment">// Calculate the number of theoretical rows (we use one buffer nonetheless)</span></span><br><span class="line">	rows := <span class="keyword">uint32</span>(size / mixBytes)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Combine header+nonce into a 64 byte seed</span></span><br><span class="line">	seed := <span class="built_in">make</span>([]<span class="keyword">byte</span>, <span class="number">40</span>)</span><br><span class="line">	<span class="built_in">copy</span>(seed, hash)</span><br><span class="line">	binary.LittleEndian.PutUint64(seed[<span class="number">32</span>:], nonce)</span><br><span class="line"></span><br><span class="line">	seed = crypto.Keccak512(seed)</span><br><span class="line">	seedHead := binary.LittleEndian.Uint32(seed)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Start the mix with replicated seed</span></span><br><span class="line">	mix := <span class="built_in">make</span>([]<span class="keyword">uint32</span>, mixBytes/<span class="number">4</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(mix); i++ &#123;</span><br><span class="line">		mix[i] = binary.LittleEndian.Uint32(seed[i%<span class="number">16</span>*<span class="number">4</span>:])</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Mix in random dataset nodes</span></span><br><span class="line">	temp := <span class="built_in">make</span>([]<span class="keyword">uint32</span>, <span class="built_in">len</span>(mix))</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; loopAccesses; i++ &#123;</span><br><span class="line">		parent := fnv(<span class="keyword">uint32</span>(i)^seedHead, mix[i%<span class="built_in">len</span>(mix)]) % rows</span><br><span class="line">		<span class="keyword">for</span> j := <span class="keyword">uint32</span>(<span class="number">0</span>); j &lt; mixBytes/hashBytes; j++ &#123;</span><br><span class="line">			<span class="built_in">copy</span>(temp[j*hashWords:], lookup(<span class="number">2</span>*parent+j))</span><br><span class="line">		&#125;</span><br><span class="line">		fnvHash(mix, temp)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Compress mix</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(mix); i += <span class="number">4</span> &#123;</span><br><span class="line">		mix[i/<span class="number">4</span>] = fnv(fnv(fnv(mix[i], mix[i+<span class="number">1</span>]), mix[i+<span class="number">2</span>]), mix[i+<span class="number">3</span>])</span><br><span class="line">	&#125;</span><br><span class="line">	mix = mix[:<span class="built_in">len</span>(mix)/<span class="number">4</span>]</span><br><span class="line"></span><br><span class="line">	digest := <span class="built_in">make</span>([]<span class="keyword">byte</span>, common.HashLength)</span><br><span class="line">	<span class="keyword">for</span> i, val := <span class="keyword">range</span> mix &#123;</span><br><span class="line">		binary.LittleEndian.PutUint32(digest[i*<span class="number">4</span>:], val)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> digest, crypto.Keccak256(<span class="built_in">append</span>(seed, digest...))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这一部分代码就很头疼了。没有太多的逻辑，完全是符合公式的计算。</p>
+<p>最后，还有一个关键点就是如何计算Difficulty</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  /consensus/ethash/consensus.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CalcDifficulty</span><span class="params">(config *params.ChainConfig, time <span class="keyword">uint64</span>, parent *types.Header)</span> *<span class="title">big</span>.<span class="title">Int</span></span> &#123;</span><br><span class="line">	next := <span class="built_in">new</span>(big.Int).Add(parent.Number, big1)</span><br><span class="line">	<span class="keyword">switch</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> config.IsByzantium(next):</span><br><span class="line">		<span class="keyword">return</span> calcDifficultyByzantium(time, parent)</span><br><span class="line">	<span class="keyword">case</span> config.IsHomestead(next):</span><br><span class="line">		<span class="keyword">return</span> calcDifficultyHomestead(time, parent)</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		<span class="keyword">return</span> calcDifficultyFrontier(time, parent)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里根据不同的配置计算不同情况下的难度值，这里简单的以拜占庭为例</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// 此处在计算时主要考虑的是其父区块的复杂度以及父区块的生成时间，和自己的生成时间</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">calcDifficultyByzantium</span><span class="params">(time <span class="keyword">uint64</span>, parent *types.Header)</span> *<span class="title">big</span>.<span class="title">Int</span></span> &#123;</span><br><span class="line">	<span class="comment">// https://github.com/ethereum/EIPs/issues/100.</span></span><br><span class="line">	<span class="comment">// algorithm:</span></span><br><span class="line">	<span class="comment">// diff = (parent_diff +</span></span><br><span class="line">	<span class="comment">//         (parent_diff / 2048 * max((2 if len(parent.uncles) else 1) - ((timestamp - parent.timestamp) // 9), -99))</span></span><br><span class="line">	<span class="comment">//        ) + 2^(periodCount - 2)</span></span><br><span class="line"></span><br><span class="line">	bigTime := <span class="built_in">new</span>(big.Int).SetUint64(time)</span><br><span class="line">	bigParentTime := <span class="built_in">new</span>(big.Int).Set(parent.Time)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// holds intermediate values to make the algo easier to read &amp; audit</span></span><br><span class="line">	x := <span class="built_in">new</span>(big.Int)</span><br><span class="line">	y := <span class="built_in">new</span>(big.Int)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (2 if len(parent_uncles) else 1) - (block_timestamp - parent_timestamp) // 9</span></span><br><span class="line">	x.Sub(bigTime, bigParentTime)</span><br><span class="line">	x.Div(x, big9)</span><br><span class="line">	<span class="keyword">if</span> parent.UncleHash == types.EmptyUncleHash &#123;</span><br><span class="line">		x.Sub(big1, x)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		x.Sub(big2, x)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// max((2 if len(parent_uncles) else 1) - (block_timestamp - parent_timestamp) // 9, -99)</span></span><br><span class="line">	<span class="keyword">if</span> x.Cmp(bigMinus99) &lt; <span class="number">0</span> &#123;</span><br><span class="line">		x.Set(bigMinus99)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// parent_diff + (parent_diff / 2048 * max((2 if len(parent.uncles) else 1) - ((timestamp - parent.timestamp) // 9), -99))</span></span><br><span class="line">	y.Div(parent.Difficulty, params.DifficultyBoundDivisor)</span><br><span class="line">	x.Mul(y, x)</span><br><span class="line">	x.Add(parent.Difficulty, x)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// minimum difficulty can ever be (before exponential factor)</span></span><br><span class="line">	<span class="keyword">if</span> x.Cmp(params.MinimumDifficulty) &lt; <span class="number">0</span> &#123;</span><br><span class="line">		x.Set(params.MinimumDifficulty)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// calculate a fake block number for the ice-age delay:</span></span><br><span class="line">	<span class="comment">//   https://github.com/ethereum/EIPs/pull/669</span></span><br><span class="line">	<span class="comment">//   fake_block_number = min(0, block.number - 3_000_000</span></span><br><span class="line">	fakeBlockNumber := <span class="built_in">new</span>(big.Int)</span><br><span class="line">	<span class="keyword">if</span> parent.Number.Cmp(big2999999) &gt;= <span class="number">0</span> &#123;</span><br><span class="line">		fakeBlockNumber = fakeBlockNumber.Sub(parent.Number, big2999999) <span class="comment">// Note, parent is 1 less than the actual block number</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// for the exponential factor</span></span><br><span class="line">	periodCount := fakeBlockNumber</span><br><span class="line">	periodCount.Div(periodCount, expDiffPeriod)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// the exponential factor, commonly referred to as "the bomb"</span></span><br><span class="line">	<span class="comment">// diff = diff + 2^(periodCount - 2)</span></span><br><span class="line">	<span class="keyword">if</span> periodCount.Cmp(big1) &gt; <span class="number">0</span> &#123;</span><br><span class="line">		y.Sub(periodCount, big2)</span><br><span class="line">		y.Exp(big2, y, <span class="literal">nil</span>)</span><br><span class="line">		x.Add(x, y)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> x</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>至此，POW共识的实现简单的梳理完成。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/区块链/" rel="tag"># 区块链</a>
+          
+            <a href="/tags/以太坊/" rel="tag"># 以太坊</a>
+          
+            <a href="/tags/共识/" rel="tag"># 共识</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/11/以太坊之区块交易的广播/" rel="next" title="以太坊之区块交易的广播">
+                <i class="fa fa-chevron-left"></i> 以太坊之区块交易的广播
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/14/golang中的context/" rel="prev" title="golang中的context">
+                golang中的context <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#区块结构"><span class="nav-number">1.</span> <span class="nav-text">区块结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#POW-算法"><span class="nav-number">2.</span> <span class="nav-text">POW 算法</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="p2p," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="基础数据结构123456789101112131415161718192021222324type IpfsDHT struct &amp;#123;	host      host.Host        // 提供了基础的网络服务接口	self      peer.ID          // 自己的peer	peerstore pstore.Peerstore // 线程安全的方法去存储peer以及相">
+<meta name="keywords" content="p2p">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自己的p2p网络实现(一)">
+<meta property="og:url" content="https://remark31.github.io/2018/06/28/自己的p2p网络实现-一/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="基础数据结构123456789101112131415161718192021222324type IpfsDHT struct &amp;#123;	host      host.Host        // 提供了基础的网络服务接口	self      peer.ID          // 自己的peer	peerstore pstore.Peerstore // 线程安全的方法去存储peer以及相">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/host1.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/host2.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/host3.png">
+<meta property="og:updated_time" content="2018-12-13T07:32:59.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="自己的p2p网络实现(一)">
+<meta name="twitter:description" content="基础数据结构123456789101112131415161718192021222324type IpfsDHT struct &amp;#123;	host      host.Host        // 提供了基础的网络服务接口	self      peer.ID          // 自己的peer	peerstore pstore.Peerstore // 线程安全的方法去存储peer以及相">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/host1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/06/28/自己的p2p网络实现-一/"/>
+
+
+
+
+
+  <title>自己的p2p网络实现(一) | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/06/28/自己的p2p网络实现-一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">自己的p2p网络实现(一)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-06-28T11:54:00+08:00">
+                2018-06-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="基础数据结构"><a href="#基础数据结构" class="headerlink" title="基础数据结构"></a>基础数据结构</h1><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> IpfsDHT <span class="keyword">struct</span> &#123;</span><br><span class="line">	host      host.Host        <span class="comment">// 提供了基础的网络服务接口</span></span><br><span class="line">	self      peer.ID          <span class="comment">// 自己的peer</span></span><br><span class="line">	peerstore pstore.Peerstore <span class="comment">// 线程安全的方法去存储peer以及相关信息</span></span><br><span class="line"></span><br><span class="line">	datastore ds.Datastore <span class="comment">// 本地数据</span></span><br><span class="line"></span><br><span class="line">	routingTable *kb.RoutingTable <span class="comment">// 不同距离的节点的路由表集合</span></span><br><span class="line">	providers    *providers.ProviderManager</span><br><span class="line"></span><br><span class="line">	birth time.Time <span class="comment">// peer启动时间</span></span><br><span class="line"></span><br><span class="line">	Validator record.Validator</span><br><span class="line"></span><br><span class="line">	ctx  context.Context</span><br><span class="line">	proc goprocess.Process</span><br><span class="line"></span><br><span class="line">	strmap <span class="keyword">map</span>[peer.ID]*messageSender</span><br><span class="line">	smlk   sync.Mutex</span><br><span class="line"></span><br><span class="line">	plk sync.Mutex</span><br><span class="line"></span><br><span class="line">	protocols []protocol.ID <span class="comment">// DHT协议</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里简单的回顾一下host.Host与pstore.Peerstore提供的方法</p>
+<p>这是host提供的方法，主要还是网络连接，协议处理相关的内容</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">type</span> Host <span class="keyword">interface</span> &#123;</span><br><span class="line">	<span class="comment">// 返回了连接上这个Host的本地peer的ID</span></span><br><span class="line">	ID() peer.ID</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 返回了与peer相关的一些信息，例如地址以及公私钥</span></span><br><span class="line">	Peerstore() pstore.Peerstore</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 返回这个host目前监听的地址</span></span><br><span class="line">	Addrs() []ma.Multiaddr</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 这个Host目前的网络接口</span></span><br><span class="line">	Network() inet.Network</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 到协议处理的多路流</span></span><br><span class="line">	Mux() *msmux.MultistreamMuxer</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 保证了目前有一条连接，从当前host到目标peer，如果当前连接失效，会继续连接或者返回错误</span></span><br><span class="line">	Connect(ctx context.Context, pi pstore.PeerInfo) error</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 在host的mux上设置一个协议处理器(线程安全)</span></span><br><span class="line">	SetStreamHandler(pid protocol.ID, handler inet.StreamHandler)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 在Host上设置一个合适的协议处理器通过一个协议选择的方法</span></span><br><span class="line">	SetStreamHandlerMatch(protocol.ID, <span class="function"><span class="keyword">func</span><span class="params">(<span class="keyword">string</span>)</span> <span class="title">bool</span>, <span class="title">inet</span>.<span class="title">StreamHandler</span>)</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">	// 移除一个协议流处理</span></span><br><span class="line"><span class="function">	<span class="title">RemoveStreamHandler</span><span class="params">(pid protocol.ID)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">	// 使用一个指定协议与指定<span class="title">peer</span>相连</span></span><br><span class="line"><span class="function">	<span class="title">NewStream</span><span class="params">(ctx context.Context, p peer.ID, pids ...protocol.ID)</span> <span class="params">(inet.Stream, error)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">	// 关闭网络服务</span></span><br><span class="line"><span class="function">	<span class="title">Close</span><span class="params">()</span> <span class="title">error</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">	// 返回这个<span class="title">Host</span>的连接管理器</span></span><br><span class="line"><span class="function">	<span class="title">ConnManager</span><span class="params">()</span> <span class="title">ifconnmgr</span>.<span class="title">ConnManager</span></span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>peerstore提供的方法就简单很多，主要还是返回一些Peer相关的基础信息</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Peerstore <span class="keyword">interface</span> &#123;</span><br><span class="line">	<span class="comment">// 地址管理器</span></span><br><span class="line">	AddrBook</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 管理peer的公钥/私钥</span></span><br><span class="line">	KeyBook</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 追踪peer的性能数据</span></span><br><span class="line">	Metrics</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 返回存储到目前peerstore中的peerID</span></span><br><span class="line">	Peers() []peer.ID</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 返回当前peerID对应的peerInfo结构体</span></span><br><span class="line">	PeerInfo(peer.ID) PeerInfo</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 提供了一个简单的存储其他的与Peer相关的键值对的地方</span></span><br><span class="line">	Get(id peer.ID, key <span class="keyword">string</span>) (<span class="keyword">interface</span>&#123;&#125;, error)</span><br><span class="line">	Put(id peer.ID, key <span class="keyword">string</span>, val <span class="keyword">interface</span>&#123;&#125;) error</span><br><span class="line"></span><br><span class="line">	GetProtocols(peer.ID) ([]<span class="keyword">string</span>, error)</span><br><span class="line">	AddProtocols(peer.ID, ...<span class="keyword">string</span>) error</span><br><span class="line">	SetProtocols(peer.ID, ...<span class="keyword">string</span>) error</span><br><span class="line">	SupportsProtocols(peer.ID, ...<span class="keyword">string</span>) ([]<span class="keyword">string</span>, error)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="基本方法"><a href="#基本方法" class="headerlink" title="基本方法"></a>基本方法</h1><p>接下来我们从KAD网络的基础消息类型入手分析</p>
+<h2 id="PING"><a href="#PING" class="headerlink" title="PING"></a>PING</h2><p>此处暂时没有发现libp2p中的实现</p>
+<h2 id="STORE"><a href="#STORE" class="headerlink" title="STORE"></a>STORE</h2><p>ipfs中的store不是简单的在一个节点中进行store操作，它会找到最临近的k个节点，然后执行这个操作</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(dht *IpfsDHT)</span> <span class="title">PutValue</span><span class="params">(ctx context.Context, key <span class="keyword">string</span>, value []<span class="keyword">byte</span>, opts ...ropts.Option)</span> <span class="params">(err error)</span></span> &#123;</span><br><span class="line">	eip := log.EventBegin(ctx, <span class="string">"PutValue"</span>)</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		eip.Append(loggableKey(key))</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			eip.SetError(err)</span><br><span class="line">		&#125;</span><br><span class="line">		eip.Done()</span><br><span class="line">	&#125;()</span><br><span class="line">	log.Debugf(<span class="string">"PutValue %s"</span>, key)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 构建key-value的结构体</span></span><br><span class="line">	rec := record.MakePutRecord(key, value)</span><br><span class="line">	rec.TimeReceived = proto.String(u.FormatRFC3339(time.Now()))</span><br><span class="line">	err = dht.putLocal(key, rec)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 返回网络中当前距离指定key最近的k个节点</span></span><br><span class="line">	pchan, err := dht.GetClosestPeers(ctx, key)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 将这最近的k个节点分别设置上键值对</span></span><br><span class="line">	wg := sync.WaitGroup&#123;&#125;</span><br><span class="line">	<span class="keyword">for</span> p := <span class="keyword">range</span> pchan &#123;</span><br><span class="line">		wg.Add(<span class="number">1</span>)</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(p peer.ID)</span></span> &#123;</span><br><span class="line">			ctx, cancel := context.WithCancel(ctx)</span><br><span class="line">			<span class="keyword">defer</span> cancel()</span><br><span class="line">			<span class="keyword">defer</span> wg.Done()</span><br><span class="line">			notif.PublishQueryEvent(ctx, &amp;notif.QueryEvent&#123;</span><br><span class="line">				Type: notif.Value,</span><br><span class="line">				ID:   p,</span><br><span class="line">			&#125;)</span><br><span class="line"></span><br><span class="line">			err := dht.putValueToPeer(ctx, p, key, rec)</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				log.Debugf(<span class="string">"failed putting value to peer: %s"</span>, err)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;(p)</span><br><span class="line">	&#125;</span><br><span class="line">	wg.Wait()</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里可以看到libp2p在执行操作的时候会去调用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">notif.PublishQueryEvent(ctx, &amp;notif.QueryEvent&#123;</span><br><span class="line">	Type: notif.Value,</span><br><span class="line">	ID:   p,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>目前暂时还没看出来这个QueryEvent的作用和目的。这个是接下来需要关注的问题和点了。</p>
+<h2 id="FIND-NODE"><a href="#FIND-NODE" class="headerlink" title="FIND_NODE"></a>FIND_NODE</h2><p>此处的目标是在当前p2p网络中找到指定id的peer</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(dht *IpfsDHT)</span> <span class="title">FindPeer</span><span class="params">(ctx context.Context, id peer.ID)</span> <span class="params">(_ pstore.PeerInfo, err error)</span></span> &#123;</span><br><span class="line">	eip := log.EventBegin(ctx, <span class="string">"FindPeer"</span>, id)</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			eip.SetError(err)</span><br><span class="line">		&#125;</span><br><span class="line">		eip.Done()</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 检查下是否已经连接上了</span></span><br><span class="line">	<span class="keyword">if</span> pi := dht.FindLocal(id); pi.ID != <span class="string">""</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> pi, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 返回当前桶中</span></span><br><span class="line">	peers := dht.routingTable.NearestPeers(kb.ConvertPeerID(id), AlphaValue)</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(peers) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> pstore.PeerInfo&#123;&#125;, kb.ErrLookupFailure</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 运气好，桶中内容直接发现了</span></span><br><span class="line">	<span class="keyword">for</span> _, p := <span class="keyword">range</span> peers &#123;</span><br><span class="line">		<span class="keyword">if</span> p == id &#123;</span><br><span class="line">			log.Debug(<span class="string">"found target peer in list of closest peers..."</span>)</span><br><span class="line">			<span class="keyword">return</span> dht.peerstore.PeerInfo(p), <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 开始查询</span></span><br><span class="line">	parent := ctx</span><br><span class="line">	query := dht.newQuery(<span class="keyword">string</span>(id), <span class="function"><span class="keyword">func</span><span class="params">(ctx context.Context, p peer.ID)</span> <span class="params">(*dhtQueryResult, error)</span></span> &#123;</span><br><span class="line">		notif.PublishQueryEvent(parent, &amp;notif.QueryEvent&#123;</span><br><span class="line">			Type: notif.SendingQuery,</span><br><span class="line">			ID:   p,</span><br><span class="line">		&#125;)</span><br><span class="line"></span><br><span class="line">		pmes, err := dht.findPeerSingle(ctx, p, id)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		closer := pmes.GetCloserPeers()</span><br><span class="line">		clpeerInfos := pb.PBPeersToPeerInfos(closer)</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 如果发现了Peer，设置结果success为true</span></span><br><span class="line">		<span class="keyword">for</span> _, npi := <span class="keyword">range</span> clpeerInfos &#123;</span><br><span class="line">			<span class="keyword">if</span> npi.ID == id &#123;</span><br><span class="line">				<span class="keyword">return</span> &amp;dhtQueryResult&#123;</span><br><span class="line">					peer:    npi,</span><br><span class="line">					success: <span class="literal">true</span>,</span><br><span class="line">				&#125;, <span class="literal">nil</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		notif.PublishQueryEvent(parent, &amp;notif.QueryEvent&#123;</span><br><span class="line">			Type:      notif.PeerResponse,</span><br><span class="line">			ID:        p,</span><br><span class="line">			Responses: clpeerInfos,</span><br><span class="line">		&#125;)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> &amp;dhtQueryResult&#123;closerPeers: clpeerInfos&#125;, <span class="literal">nil</span></span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 循环的调用该方法，直到找不到peer或者找到最后的值</span></span><br><span class="line">	result, err := query.Run(ctx, peers)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> pstore.PeerInfo&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	log.Debugf(<span class="string">"FindPeer %v %v"</span>, id, result.success)</span><br><span class="line">	<span class="keyword">if</span> result.peer.ID == <span class="string">""</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> pstore.PeerInfo&#123;&#125;, routing.ErrNotFound</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> *result.peer, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的query.Run的迭代查找的实现非常有意思，最终的效果是能在迭代的peer桶中找到所需要的peer列表</p>
+<h2 id="FIND-VALUE"><a href="#FIND-VALUE" class="headerlink" title="FIND_VALUE"></a>FIND_VALUE</h2><p>此处的目标是在p2p网络中找到指定的value</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(dht *IpfsDHT)</span> <span class="title">GetValue</span><span class="params">(ctx context.Context, key <span class="keyword">string</span>, opts ...ropts.Option)</span> <span class="params">(_ []<span class="keyword">byte</span>, err error)</span></span> &#123;</span><br><span class="line">	eip := log.EventBegin(ctx, <span class="string">"GetValue"</span>)</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		eip.Append(loggableKey(key))</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			eip.SetError(err)</span><br><span class="line">		&#125;</span><br><span class="line">		eip.Done()</span><br><span class="line">	&#125;()</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 设置超时时间</span></span><br><span class="line">	ctx, cancel := context.WithTimeout(ctx, time.Minute)</span><br><span class="line">	<span class="keyword">defer</span> cancel()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> cfg ropts.Options</span><br><span class="line">	<span class="keyword">if</span> err := cfg.Apply(opts...); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	responsesNeeded := <span class="number">0</span></span><br><span class="line">	<span class="keyword">if</span> !cfg.Offline &#123;</span><br><span class="line">		responsesNeeded = getQuorum(&amp;cfg)</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 迭代的获取Values的值</span></span><br><span class="line">	vals, err := dht.GetValues(ctx, key, responsesNeeded)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	recs := <span class="built_in">make</span>([][]<span class="keyword">byte</span>, <span class="number">0</span>, <span class="built_in">len</span>(vals))</span><br><span class="line">	<span class="keyword">for</span> _, v := <span class="keyword">range</span> vals &#123;</span><br><span class="line">		<span class="keyword">if</span> v.Val != <span class="literal">nil</span> &#123;</span><br><span class="line">			recs = <span class="built_in">append</span>(recs, v.Val)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(recs) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, routing.ErrNotFound</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	i, err := dht.Validator.Select(key, recs)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	best := recs[i]</span><br><span class="line">	log.Debugf(<span class="string">"GetValue %v %v"</span>, key, best)</span><br><span class="line">	<span class="keyword">if</span> best == <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Errorf(<span class="string">"GetValue yielded correct record with nil value."</span>)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, routing.ErrNotFound</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fixupRec := record.MakePutRecord(key, best)</span><br><span class="line">	<span class="keyword">for</span> _, v := <span class="keyword">range</span> vals &#123;</span><br><span class="line">		<span class="comment">// 如果有人发来的值不是正确的值，就会更新</span></span><br><span class="line">		<span class="keyword">if</span> !bytes.Equal(v.Val, best) &#123;</span><br><span class="line">			<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(v RecvdVal)</span></span> &#123;</span><br><span class="line">				<span class="keyword">if</span> v.From == dht.self &#123;</span><br><span class="line">					err := dht.putLocal(key, fixupRec)</span><br><span class="line">					<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">						log.Error(<span class="string">"Error correcting local dht entry:"</span>, err)</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">return</span></span><br><span class="line">				&#125;</span><br><span class="line">				ctx, cancel := context.WithTimeout(dht.Context(), time.Second*<span class="number">30</span>)</span><br><span class="line">				<span class="keyword">defer</span> cancel()</span><br><span class="line">				err := dht.putValueToPeer(ctx, v.From, key, fixupRec)</span><br><span class="line">				<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">					log.Error(<span class="string">"Error correcting DHT entry: "</span>, err)</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> best, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里<code>VALUE</code>的更新只会对于以前存储了这个<code>VALUE</code>的节点。这个是挺有趣的故事，按照论文的说法会将其它临近的节点缓存上，这里有些存疑。</p>
+<blockquote>
+<p>大部分的操作都是基于上述的查询过程实现的。为了存储一个&lt;key, value&gt;对，一个参与者定位出k个最接近key的节点，然后向它们发送STORERPC请求。另外，每个节点在需要保活的时候，都会重新发布&lt;key, value&gt;对，这个会在之后说。这种做法会保证&lt;key, value&gt;对有很大可能持久化。对于现在的Kademlia应用（比如文件共享），我们还会要求&lt;key, value&gt;对的原始发布者每隔24小时再重新发布一次。因为，为了限制系统中不可用的索引信息不至于太多，一个&lt;key, value&gt;对，在发布24小时后，默认就会被设为过期。对于其它的应用，比如数字证书或用于值映射的加密哈希，更长的过期时间也许会更合适。<br>要找到一个&lt;key, value&gt;对，一个节点先开始找到最接近这个key的k个节点。但是，值查找用的是FIND_VALUE而不是FIND_NODERPC。并且，只要有一个节点返回了value，查找过程就立即停止。为了缓存，一旦一个查找成功，请求节点将会在它发现的，那些最接近key的，但又没有存储这个&lt;key, value&gt;对的节点上存储这个键值对。</p>
+</blockquote>
+<p>这里在关注完成kad网络的基本操作后，其他的操作暂时先不再赘述，我们开始考虑如何在使用kad-dht包来实现一个p2p发现网络。</p>
+<h1 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h1><p>整体来说我们先考虑验证，再考虑实际的实现</p>
+<h2 id="demo模型"><a href="#demo模型" class="headerlink" title="demo模型"></a>demo模型</h2><p>整体要实现的demo的场景很简单，就是一个3个节点的发现网络</p>
+<h2 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h2><p>这里要解决的是如何kad网络中才能正常</p>
+<p>这里我们需要参考以太坊的devp2p的使用方法来实现一个基础的kad发现网络</p>
+<ol>
+<li>启动3个KAD节点</li>
+<li>通过KAD节点来进行发现和通信</li>
+</ol>
+<p>下面是我们最终实现的代码</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"context"</span></span><br><span class="line">	<span class="comment">// "crypto/rand"</span></span><br><span class="line">	<span class="string">"flag"</span></span><br><span class="line"></span><br><span class="line">	libp2p <span class="string">"github.com/libp2p/go-libp2p"</span></span><br><span class="line">	crypto <span class="string">"github.com/libp2p/go-libp2p-crypto"</span></span><br><span class="line">	p2phost <span class="string">"github.com/libp2p/go-libp2p-host"</span></span><br><span class="line">	dht <span class="string">"github.com/libp2p/go-libp2p-kad-dht"</span></span><br><span class="line">	dhtopts <span class="string">"github.com/libp2p/go-libp2p-kad-dht/opts"</span></span><br><span class="line">	net <span class="string">"github.com/libp2p/go-libp2p-net"</span></span><br><span class="line">	peer <span class="string">"github.com/libp2p/go-libp2p-peer"</span></span><br><span class="line">	peerstore <span class="string">"github.com/libp2p/go-libp2p-peerstore"</span></span><br><span class="line">	ma <span class="string">"github.com/multiformats/go-multiaddr"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"encoding/json"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"os"</span></span><br><span class="line">	<span class="string">"strconv"</span></span><br><span class="line">	<span class="comment">// "runtime/debug"</span></span><br><span class="line">	<span class="string">"bufio"</span></span><br><span class="line">	<span class="string">"strings"</span></span><br><span class="line">	<span class="comment">// "io"</span></span><br><span class="line">	<span class="comment">// "io/ioutil"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> logg *log.Logger</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> PID = <span class="string">"/p2p/1.0.0"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> BootnodeCon = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	logg = log.New(os.Stdout, <span class="string">""</span>, log.Ltime)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Msg <span class="keyword">struct</span> &#123;</span><br><span class="line">	Code    <span class="keyword">uint64</span></span><br><span class="line">	Size    <span class="keyword">uint32</span></span><br><span class="line">	Payload []<span class="keyword">byte</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// HostWrapper 主要用于streamHandler()方法可以操纵host对象</span></span><br><span class="line"><span class="keyword">type</span> HostWrapper <span class="keyword">struct</span> &#123;</span><br><span class="line">	Host p2phost.Host</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> blankValidator <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(blankValidator)</span> <span class="title">Validate</span><span class="params">(_ <span class="keyword">string</span>, _ []<span class="keyword">byte</span>)</span> <span class="title">error</span></span>        &#123; <span class="keyword">return</span> <span class="literal">nil</span> &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(blankValidator)</span> <span class="title">Select</span><span class="params">(_ <span class="keyword">string</span>, _ [][]<span class="keyword">byte</span>)</span> <span class="params">(<span class="keyword">int</span>, error)</span></span> &#123; <span class="keyword">return</span> <span class="number">0</span>, <span class="literal">nil</span> &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">constructDHT</span><span class="params">(ctx context.Context, listenstring <span class="keyword">string</span>, key <span class="keyword">string</span>)</span> <span class="params">(*dht.IpfsDHT, p2phost.Host, error)</span></span> &#123;</span><br><span class="line">	host, err := constructPeerHost(ctx, listenstring, key)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		logg.Printf(<span class="string">"constructPeerHost: %s"</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	vdht, err := dht.New(</span><br><span class="line">		ctx, host,</span><br><span class="line">		dhtopts.NamespacedValidator(<span class="string">"v"</span>, blankValidator&#123;&#125;),</span><br><span class="line">	)</span><br><span class="line"></span><br><span class="line">	hostAddr, _ := ma.NewMultiaddr(fmt.Sprintf(<span class="string">"/ipfs/%s"</span>, host.ID().Pretty()))</span><br><span class="line"></span><br><span class="line">	addr := host.Addrs()[<span class="number">0</span>]</span><br><span class="line">	fullAddr := addr.Encapsulate(hostAddr)</span><br><span class="line">	logg.Printf(<span class="string">"addr: %s"</span>, fullAddr)</span><br><span class="line">	<span class="keyword">return</span> vdht, host, err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">constructPeerHost</span><span class="params">(ctx context.Context, listenstring <span class="keyword">string</span>, key <span class="keyword">string</span>)</span> <span class="params">(p2phost.Host, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> options []libp2p.Option</span><br><span class="line">	<span class="keyword">if</span> key != <span class="string">""</span> &#123;</span><br><span class="line">		a := strings.NewReader(key)</span><br><span class="line">		pkey, _, err := crypto.GenerateEd25519Key(a)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			logg.Printf(<span class="string">"%s"</span>, err)</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		options = <span class="built_in">append</span>(options, libp2p.ListenAddrStrings(listenstring), libp2p.Identity(pkey))</span><br><span class="line"></span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		options = <span class="built_in">append</span>(options, libp2p.ListenAddrStrings(listenstring))</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> libp2p.New(ctx, options...)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makePort</span><span class="params">(port <span class="keyword">int</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">"/ip4/0.0.0.0/tcp/"</span> + strconv.Itoa(port)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getAddr</span><span class="params">(target <span class="keyword">string</span>)</span> <span class="params">(ma.Multiaddr, peer.ID, error)</span></span> &#123;</span><br><span class="line">	ipfsaddr, err := ma.NewMultiaddr(target)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		logg.Printf(<span class="string">"getAddr NewMultiaddr Err: %s"</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="string">""</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	pid, err := ipfsaddr.ValueForProtocol(ma.P_IPFS)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		logg.Printf(<span class="string">"getAddr ValueForProtocol Err: %s"</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="string">""</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	peerid, err := peer.IDB58Decode(pid)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		logg.Printf(<span class="string">"getAddr IDB58Decode Err: %s"</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="string">""</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Decapsulate the /ipfs/&lt;peerID&gt; part from the target</span></span><br><span class="line">	<span class="comment">// /ip4/&lt;a.b.c.d&gt;/ipfs/&lt;peer&gt; becomes /ip4/&lt;a.b.c.d&gt;</span></span><br><span class="line">	targetPeerAddr, _ := ma.NewMultiaddr(</span><br><span class="line">		fmt.Sprintf(<span class="string">"/ipfs/%s"</span>, peer.IDB58Encode(peerid)))</span><br><span class="line">	targetAddr := ipfsaddr.Decapsulate(targetPeerAddr)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> targetAddr, peerid, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">DecodePackage</span><span class="params">(data []<span class="keyword">byte</span>)</span> <span class="params">(*Msg, error)</span></span> &#123;</span><br><span class="line">	msg := &amp;Msg&#123;&#125;</span><br><span class="line">	err := json.Unmarshal(data, msg)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		logg.Printf(<span class="string">"DecodePackage Error: %s"</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> msg, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WritePackage</span><span class="params">(rw *bufio.ReadWriter, code <span class="keyword">uint64</span>, data []<span class="keyword">byte</span>)</span> <span class="params">([]<span class="keyword">byte</span>, error)</span></span> &#123;</span><br><span class="line">	msg := &amp;Msg&#123;Code: code, Payload: data, Size: <span class="keyword">uint32</span>(<span class="built_in">len</span>(data))&#125;</span><br><span class="line">	<span class="comment">// logg.Printf("Msg: %v", msg)</span></span><br><span class="line">	<span class="keyword">return</span> json.Marshal(msg)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// func NewDHT(ctx context.Context, h host.Host, dstore ds.Batching) *IpfsDHT</span></span><br><span class="line">	ctx, cancel := context.WithCancel(context.Background())</span><br><span class="line">	<span class="keyword">defer</span> cancel()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/9000")</span></span><br><span class="line">	key := flag.String(<span class="string">"k"</span>, <span class="string">""</span>, <span class="string">"private key"</span>)</span><br><span class="line">	target := flag.String(<span class="string">"b"</span>, <span class="string">""</span>, <span class="string">"target peer to dial"</span>)</span><br><span class="line">	findnode := flag.String(<span class="string">"f"</span>, <span class="string">""</span>, <span class="string">"target peer to find"</span>)</span><br><span class="line">	listenport := flag.Int(<span class="string">"p"</span>, <span class="number">9000</span>, <span class="string">"port to listen"</span>)</span><br><span class="line">	flag.Parse()</span><br><span class="line"></span><br><span class="line">	vdht, host, err := constructDHT(ctx, makePort(*listenport), *key)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		logg.Printf(<span class="string">"constructDHT a: %s"</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// logg.Printf("dhta : %v", dhta)</span></span><br><span class="line">	logg.Printf(<span class="string">"自己的peerID = %v\n"</span>, host.ID())</span><br><span class="line"></span><br><span class="line">	h := &amp;HostWrapper&#123;</span><br><span class="line">		Host: host,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> *target == <span class="string">""</span> &#123;</span><br><span class="line">		logg.Printf(<span class="string">"Listen for connect"</span>)</span><br><span class="line">		logg.Printf(<span class="string">"PID: %s Addr: %s"</span>, host.ID(), host.Addrs())</span><br><span class="line"></span><br><span class="line">		content := host.Peerstore().Peers()</span><br><span class="line">		<span class="keyword">for</span> i := <span class="keyword">range</span> content &#123;</span><br><span class="line">			logg.Printf(<span class="string">"---&gt; 当前PeerInfo[%d] = %v\n"</span>, i, host.Peerstore().PeerInfo(content[i]))</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		host.SetStreamHandler(PID, h.handleStream)</span><br><span class="line">		<span class="comment">//go listenPeerStoreChange(host)</span></span><br><span class="line"></span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">		host.SetStreamHandler(PID, h.handleStream)</span><br><span class="line">		targetAddr, peerid, err := getAddr(*target)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			logg.Printf(<span class="string">"target Error: %s"</span>, err)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		logg.Printf(<span class="string">"muaddr : %s"</span>, targetAddr)</span><br><span class="line"></span><br><span class="line">		host.Peerstore().AddAddrs(peerid, []ma.Multiaddr&#123;targetAddr&#125;, peerstore.PermanentAddrTTL)</span><br><span class="line">		vdht.Update(ctx, peerid)</span><br><span class="line"></span><br><span class="line">		content := host.Peerstore().Peers()</span><br><span class="line">		<span class="keyword">for</span> i := <span class="keyword">range</span> content &#123;</span><br><span class="line">			logg.Printf(<span class="string">"---&gt; 当前PeerInfo[%d] = %v\n"</span>, i, host.Peerstore().PeerInfo(content[i]))</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		s, err := host.NewStream(ctx, peerid, PID)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			logg.Printf(<span class="string">"NewStream Error: %s"</span>, err)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 封包，并且发送</span></span><br><span class="line">		msg, err := WritePackage(rw, <span class="number">1</span>, []<span class="keyword">byte</span>(<span class="string">"yoyoyo\n"</span>))</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			logg.Printf(<span class="string">"WritePackage Err: %s"</span>, err)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		logg.Printf(<span class="string">"msg : %v"</span>, msg)</span><br><span class="line">		_, err = rw.Write(msg)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			logg.Printf(<span class="string">"Write Err: %s"</span>, err)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		rw.WriteByte(<span class="string">'\n'</span>)</span><br><span class="line">		rw.Flush()</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> *findnode != <span class="string">""</span> &#123;</span><br><span class="line">		_, peerid, err := getAddr(*findnode)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			logg.Printf(<span class="string">"getAddr error: %v\n"</span>, err)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		logg.Printf(<span class="string">"find node: id =%v\n"</span>, peerid)</span><br><span class="line">		targetPeerInfo, err := vdht.FindPeer(ctx, peerid)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			logg.Printf(<span class="string">"findPeer error: %v\n"</span>, err)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		logg.Printf(<span class="string">"find peerid = %v SUCCESS with info = %v\n"</span>, peerid, targetPeerInfo)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="keyword">select</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *HostWrapper)</span> <span class="title">handleStream</span><span class="params">(s net.Stream)</span></span> &#123;</span><br><span class="line">	logg.Printf(<span class="string">"new stream"</span>)</span><br><span class="line">	<span class="comment">// 对接收到的包进行处理</span></span><br><span class="line">	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))</span><br><span class="line"></span><br><span class="line">	data, err := rw.ReadBytes(<span class="string">'\n'</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		logg.Printf(<span class="string">"handleStream ReadString Err: %s"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	logg.Printf(<span class="string">"data: %s"</span>, data)</span><br><span class="line">	msg, err := DecodePackage(data)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		logg.Printf(<span class="string">"handleStream DecodePackage Error: %s"</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">switch</span> msg.Code &#123;</span><br><span class="line">	<span class="keyword">case</span> BootnodeCon:</span><br><span class="line">		conn := s.Conn()</span><br><span class="line">		rma := conn.RemoteMultiaddr()</span><br><span class="line">		rpid := conn.RemotePeer()</span><br><span class="line">		h.Host.Peerstore().AddAddrs(rpid, []ma.Multiaddr&#123;rma&#125;, peerstore.PermanentAddrTTL)</span><br><span class="line">		logg.Printf(<span class="string">"got handshake signal: %v"</span>, <span class="keyword">string</span>(msg.Payload))</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		logg.Printf(<span class="string">"nothing to get"</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如上的demo实际上实现的就是节点的发现与通信的功能</p>
+<p>整体实验进行如下：</p>
+<ol>
+<li>首先启动节点1</li>
+<li>接下来启动节点2，设置节点2的bootnode节点为节点1</li>
+<li>最后启动节点3，设置节点3的bootnode节点为节点1，并且在节点3上尝试findnode节点2</li>
+</ol>
+<p>最终效果图如下</p>
+<ul>
+<li>节点1输出<br> <img src="/imgs/host1.png" alt="节点1输出"></li>
+<li>节点2输出<br> <img src="/imgs/host2.png" alt="节点2输出"></li>
+<li>节点3输出<br> <img src="/imgs/host3.png" alt="节点3输出"></li>
+</ul>
+<p>可以看到，节点3通过k桶中的节点1的地址最终成功的发现到了节点2</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>整个libp2p的kad网络的使用是非常有趣的，kad包其实本质上只去维护了k桶的关系以及实现了kad网络的基本操作，真正网络层的消息处理与地址维护还是在host层中，在我们的demo中虽然实现了一个小的p2p网络，可以节点之间相互发现，但是这个还不能算是一个真正的p2p网络，因为这个发现还是手动的，缺少一个任务调度层去自发的调度各种类型的任务。再之后的文章中我们会去讨论如何来调度这些任务。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/p2p/" rel="tag"># p2p</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/14/golang中的context/" rel="next" title="golang中的context">
+                <i class="fa fa-chevron-left"></i> golang中的context
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/28/公钥，私钥，签名与证书/" rel="prev" title="公钥，私钥，签名与证书">
+                公钥，私钥，签名与证书 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#基础数据结构"><span class="nav-number">1.</span> <span class="nav-text">基础数据结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#基本方法"><span class="nav-number">2.</span> <span class="nav-text">基本方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#PING"><span class="nav-number">2.1.</span> <span class="nav-text">PING</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#STORE"><span class="nav-number">2.2.</span> <span class="nav-text">STORE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FIND-NODE"><span class="nav-number">2.3.</span> <span class="nav-text">FIND_NODE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FIND-VALUE"><span class="nav-number">2.4.</span> <span class="nav-text">FIND_VALUE</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现思路"><span class="nav-number">3.</span> <span class="nav-text">实现思路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#demo模型"><span class="nav-number">3.1.</span> <span class="nav-text">demo模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#验证"><span class="nav-number">3.2.</span> <span class="nav-text">验证</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

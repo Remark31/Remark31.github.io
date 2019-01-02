@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="区块链,以太坊,p2p网络," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="问题描述在区块链的p2p网络中，当自己产生或者收到一个新区块的消息时，在自己校验了区块之后应该会广播出去，这里就会思考一个问题，如果每收到一个块都广播给周围的所有人，会不会形成一次广播的风暴？因此我们开始来观察在以太坊中是如何处理广播区块这个问题的。 以太坊的区块广播首先，我们确定有哪些情况会导致区块广播，进行怎么样的广播，这里我们可以从protocalManger入手，因为在以太坊的devp2p">
+<meta name="keywords" content="区块链,以太坊,p2p网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="以太坊之区块交易的广播">
+<meta property="og:url" content="https://remark31.github.io/2018/06/11/以太坊之区块交易的广播/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="问题描述在区块链的p2p网络中，当自己产生或者收到一个新区块的消息时，在自己校验了区块之后应该会广播出去，这里就会思考一个问题，如果每收到一个块都广播给周围的所有人，会不会形成一次广播的风暴？因此我们开始来观察在以太坊中是如何处理广播区块这个问题的。 以太坊的区块广播首先，我们确定有哪些情况会导致区块广播，进行怎么样的广播，这里我们可以从protocalManger入手，因为在以太坊的devp2p">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-12-13T07:32:59.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="以太坊之区块交易的广播">
+<meta name="twitter:description" content="问题描述在区块链的p2p网络中，当自己产生或者收到一个新区块的消息时，在自己校验了区块之后应该会广播出去，这里就会思考一个问题，如果每收到一个块都广播给周围的所有人，会不会形成一次广播的风暴？因此我们开始来观察在以太坊中是如何处理广播区块这个问题的。 以太坊的区块广播首先，我们确定有哪些情况会导致区块广播，进行怎么样的广播，这里我们可以从protocalManger入手，因为在以太坊的devp2p">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/06/11/以太坊之区块交易的广播/"/>
+
+
+
+
+
+  <title>以太坊之区块交易的广播 | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/06/11/以太坊之区块交易的广播/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">以太坊之区块交易的广播</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-06-11T20:31:53+08:00">
+                2018-06-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>在区块链的p2p网络中，当自己产生或者收到一个新区块的消息时，在自己校验了区块之后应该会广播出去，这里就会思考一个问题，如果每收到一个块都广播给周围的所有人，会不会形成一次广播的风暴？因此我们开始来观察在以太坊中是如何处理广播区块这个问题的。</p>
+<h1 id="以太坊的区块广播"><a href="#以太坊的区块广播" class="headerlink" title="以太坊的区块广播"></a>以太坊的区块广播</h1><p>首先，我们确定有哪些情况会导致区块广播，进行怎么样的广播，这里我们可以从protocalManger入手，因为在以太坊的devp2p通信中，所有的信息都是通过protocal传输的，从protocalManger的start方法中可以看到</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pm *ProtocolManager)</span> <span class="title">Start</span><span class="params">(maxPeers <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	pm.maxPeers = maxPeers</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 广播交易</span></span><br><span class="line">	pm.txCh = <span class="built_in">make</span>(<span class="keyword">chan</span> core.TxPreEvent, txChanSize)</span><br><span class="line">	pm.txSub = pm.txpool.SubscribeTxPreEvent(pm.txCh)</span><br><span class="line">	<span class="keyword">go</span> pm.txBroadcastLoop()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 广播挖出的区块</span></span><br><span class="line">	pm.minedBlockSub = pm.eventMux.Subscribe(core.NewMinedBlockEvent&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> pm.minedBroadcastLoop()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 同步处理</span></span><br><span class="line">	<span class="keyword">go</span> pm.syncer()</span><br><span class="line">	<span class="keyword">go</span> pm.txsyncLoop()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="广播交易"><a href="#广播交易" class="headerlink" title="广播交易"></a>广播交易</h2><p>广播交易这个做法很干脆，订阅了TxPreEvent之后，就开始等待事件的到来，一旦收到交易，就开始进行如下的广播</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 找到周围没有这条交易的peer，对这条交易进行广播</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pm *ProtocolManager)</span> <span class="title">BroadcastTx</span><span class="params">(hash common.Hash, tx *types.Transaction)</span></span> &#123;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 找到周围的没有这条hash的peer</span></span><br><span class="line">	peers := pm.peers.PeersWithoutTx(hash)</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//向这些peer发送这条交易，并且在自己的peer集中增加这条交易的记录</span></span><br><span class="line">	<span class="keyword">for</span> _, peer := <span class="keyword">range</span> peers &#123;</span><br><span class="line">		peer.SendTransactions(types.Transactions&#123;tx&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">	log.Trace(<span class="string">"Broadcast transaction"</span>, <span class="string">"hash"</span>, hash, <span class="string">"recipients"</span>, <span class="built_in">len</span>(peers))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里就留下了一个有趣的问题，如何知道周围节点有哪些交易的</p>
+<p>对这个p.knownTxs的add操作一共有两处地方，一处是在</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *peer)</span> <span class="title">SendTransactions</span><span class="params">(txs types.Transactions)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> _, tx := <span class="keyword">range</span> txs &#123;</span><br><span class="line">		p.knownTxs.Add(tx.Hash())</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> p2p.Send(p.rw, TxMsg, txs)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，这里是在发送交易前就主动在自己的peerSet中对需要被发送交易的peer进行了记录有哪些交易已经被发送了</p>
+<p>另外一处是在处理协议消息处<br><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// /eth/handler.go:657</span></span><br><span class="line">    <span class="keyword">case</span> msg.Code == TxMsg:</span><br><span class="line">		<span class="comment">// 交易消息到达时，确保目前是处于一个可以处理交易的状态</span></span><br><span class="line">		<span class="keyword">if</span> atomic.LoadUint32(&amp;pm.acceptTxs) == <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">//处理交易，并且将其发送到交易池中</span></span><br><span class="line">		<span class="keyword">var</span> txs []*types.Transaction</span><br><span class="line">		<span class="keyword">if</span> err := msg.Decode(&amp;txs); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> errResp(ErrDecode, <span class="string">"msg %v: %v"</span>, msg, err)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">for</span> i, tx := <span class="keyword">range</span> txs &#123;</span><br><span class="line">			<span class="keyword">if</span> tx == <span class="literal">nil</span> &#123;</span><br><span class="line">				<span class="keyword">return</span> errResp(ErrDecode, <span class="string">"transaction %d is nil"</span>, i)</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 标记该节点的交易有效</span></span><br><span class="line">			p.MarkTransaction(tx.Hash())</span><br><span class="line">		&#125;</span><br><span class="line">		pm.txpool.AddRemotes(txs)</span><br></pre></td></tr></table></figure></p>
+<p>这里是在协议收到了消息后的处理，可以看到，对于A，B对tx1交易的广播，A在向B广播时，A自己先会标记B已经有了tx1，B在收到A广播时，会标记A有了tx1，这样就不会重复广播了。</p>
+<h2 id="区块产生广播"><a href="#区块产生广播" class="headerlink" title="区块产生广播"></a>区块产生广播</h2><p>与交易广播类似，区块产生广播也是订阅了挖矿事件，之后开始对挖矿事件进行监听，然后就进入了如下代码</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//向周围广播区块</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pm *ProtocolManager)</span> <span class="title">BroadcastBlock</span><span class="params">(block *types.Block, propagate <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 找到周围节点中没有该区块hash的节点</span></span><br><span class="line">	hash := block.Hash()</span><br><span class="line">	peers := pm.peers.PeersWithoutBlock(hash)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 根据标志位进行处理</span></span><br><span class="line">	<span class="keyword">if</span> propagate &#123;</span><br><span class="line">		<span class="comment">// 计算区块的TD</span></span><br><span class="line">		<span class="keyword">var</span> td *big.Int</span><br><span class="line">		<span class="keyword">if</span> parent := pm.blockchain.GetBlock(block.ParentHash(), block.NumberU64()<span class="number">-1</span>); parent != <span class="literal">nil</span> &#123;</span><br><span class="line">			td = <span class="built_in">new</span>(big.Int).Add(block.Difficulty(), pm.blockchain.GetTd(block.ParentHash(), block.NumberU64()<span class="number">-1</span>))</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			log.Error(<span class="string">"Propagating dangling block"</span>, <span class="string">"number"</span>, block.Number(), <span class="string">"hash"</span>, hash)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 发送区块到peer的子集中</span></span><br><span class="line">		transfer := peers[:<span class="keyword">int</span>(math.Sqrt(<span class="keyword">float64</span>(<span class="built_in">len</span>(peers))))]</span><br><span class="line">		<span class="keyword">for</span> _, peer := <span class="keyword">range</span> transfer &#123;</span><br><span class="line">			peer.SendNewBlock(block, td)</span><br><span class="line">		&#125;</span><br><span class="line">		log.Trace(<span class="string">"Propagated block"</span>, <span class="string">"hash"</span>, hash, <span class="string">"recipients"</span>, <span class="built_in">len</span>(transfer), <span class="string">"duration"</span>, common.PrettyDuration(time.Since(block.ReceivedAt)))</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果块确实已经在自己的链中了，广播Hash</span></span><br><span class="line">	<span class="keyword">if</span> pm.blockchain.HasBlock(hash, block.NumberU64()) &#123;</span><br><span class="line">		<span class="keyword">for</span> _, peer := <span class="keyword">range</span> peers &#123;</span><br><span class="line">			peer.SendNewBlockHashes([]common.Hash&#123;hash&#125;, []<span class="keyword">uint64</span>&#123;block.NumberU64()&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">		log.Trace(<span class="string">"Announced block"</span>, <span class="string">"hash"</span>, hash, <span class="string">"recipients"</span>, <span class="built_in">len</span>(peers), <span class="string">"duration"</span>, common.PrettyDuration(time.Since(block.ReceivedAt)))</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到区块广播和交易的广播很类似，只是区别在于多了一个标志位，当propagate标志位为false时，这个广播只向周围区块广播区块的hash，同样的会在knownBlocks中加上标记，这里和交易广播完全一样。<br>当propagate标志位为true时，会广播整个区块，不过广播方式会有所区别：<br>首先需要计算这个区块的TD</p>
+<blockquote>
+<p>TD：total difficulty，所有父区块的复杂度的和，这个不会存在区块中，但是会存在数据库中的一个字段</p>
+</blockquote>
+<p>计算之后广播给当前区块集的子集，子集的算法是总peer数量的开方(<strong>暂时不知道为什么用这种方法</strong>)</p>
+<h2 id="同步区块处理"><a href="#同步区块处理" class="headerlink" title="同步区块处理"></a>同步区块处理</h2><p>同步区块协程会周期性的从网络同步hash以及区块数据</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pm *ProtocolManager)</span> <span class="title">syncer</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 启动同步进程，对各种同步数据进行处理</span></span><br><span class="line">	pm.fetcher.Start()</span><br><span class="line">	<span class="keyword">defer</span> pm.fetcher.Stop()</span><br><span class="line">	<span class="keyword">defer</span> pm.downloader.Terminate()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 启动定时器强行同步</span></span><br><span class="line">	forceSync := time.NewTicker(forceSyncCycle)</span><br><span class="line">	<span class="keyword">defer</span> forceSync.Stop()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-pm.newPeerCh:</span><br><span class="line">			</span><br><span class="line">			<span class="keyword">if</span> pm.peers.Len() &lt; minDesiredPeerCount &#123;</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">go</span> pm.synchronise(pm.peers.BestPeer())</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-forceSync.C:</span><br><span class="line">			<span class="comment">// 强制从最佳节点上同步数据</span></span><br><span class="line">			<span class="keyword">go</span> pm.synchronise(pm.peers.BestPeer())</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-pm.noMorePeers:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们还是从发送方进行分析，首先需要选择一个peer进行主动同步，也即是BestPeer，简单来说，就是当前时刻td最大的peer</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取最大td的peer</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ps *peerSet)</span> <span class="title">BestPeer</span><span class="params">()</span> *<span class="title">peer</span></span> &#123;</span><br><span class="line">	ps.lock.RLock()</span><br><span class="line">	<span class="keyword">defer</span> ps.lock.RUnlock()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		bestPeer *peer</span><br><span class="line">		bestTd   *big.Int</span><br><span class="line">	)</span><br><span class="line">	<span class="keyword">for</span> _, p := <span class="keyword">range</span> ps.peers &#123;</span><br><span class="line">		<span class="keyword">if</span> _, td := p.Head(); bestPeer == <span class="literal">nil</span> || td.Cmp(bestTd) &gt; <span class="number">0</span> &#123;</span><br><span class="line">			bestPeer, bestTd = p, td</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> bestPeer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来，已经找到了最佳的peer，我们就开始关注同步区块的过程</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pm *ProtocolManager)</span> <span class="title">synchronise</span><span class="params">(peer *peer)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> peer == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 对自己目前的Td进行计算，确保远程peer的td是大于本地td的，如果大才开始进行同步操作</span></span><br><span class="line">	currentBlock := pm.blockchain.CurrentBlock()</span><br><span class="line">	td := pm.blockchain.GetTd(currentBlock.Hash(), currentBlock.NumberU64())</span><br><span class="line"></span><br><span class="line">	pHead, pTd := peer.Head()</span><br><span class="line">	<span class="keyword">if</span> pTd.Cmp(td) &lt;= <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 下载模式选择</span></span><br><span class="line">	mode := downloader.FullSync</span><br><span class="line">	<span class="keyword">if</span> atomic.LoadUint32(&amp;pm.fastSync) == <span class="number">1</span> &#123;</span><br><span class="line">		<span class="comment">// 如果显式要求是fastSync模式，则设置为fastSync模式</span></span><br><span class="line">		mode = downloader.FastSync</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> currentBlock.NumberU64() == <span class="number">0</span> &amp;&amp; pm.blockchain.CurrentFastBlock().NumberU64() &gt; <span class="number">0</span> &#123;</span><br><span class="line">		atomic.StoreUint32(&amp;pm.fastSync, <span class="number">1</span>)</span><br><span class="line">		mode = downloader.FastSync</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> mode == downloader.FastSync &#123;</span><br><span class="line">		<span class="comment">// 同样确保快速同步模式下的td也是更高的</span></span><br><span class="line">		<span class="keyword">if</span> pm.blockchain.GetTdByHash(pm.blockchain.CurrentFastBlock().Hash()).Cmp(pTd) &gt;= <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 运行同步方法</span></span><br><span class="line">	<span class="keyword">if</span> err := pm.downloader.Synchronise(peer.id, pHead, pTd, mode); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> atomic.LoadUint32(&amp;pm.fastSync) == <span class="number">1</span> &#123;</span><br><span class="line">		log.Info(<span class="string">"Fast sync complete, auto disabling"</span>)</span><br><span class="line">		atomic.StoreUint32(&amp;pm.fastSync, <span class="number">0</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	atomic.StoreUint32(&amp;pm.acceptTxs, <span class="number">1</span>) </span><br><span class="line">	<span class="keyword">if</span> head := pm.blockchain.CurrentBlock(); head.NumberU64() &gt; <span class="number">0</span> &#123;</span><br><span class="line">	    <span class="comment">// 对当前同步到的区块进行广播</span></span><br><span class="line">		<span class="keyword">go</span> pm.BroadcastBlock(head, <span class="literal">false</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，主动从远程peer同步区块的核心还是在于td的比较，一切都要远程peer的td比自己大，然后才开始进行区块同步，具体同步的方法是<code>downloader.Synchronise</code>方法，接下来我们细细分析一下这个方法(等待细化)</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(d *Downloader)</span> <span class="title">syncWithPeer</span><span class="params">(p *peerConnection, hash common.Hash, td *big.Int)</span> <span class="params">(err error)</span></span> &#123;</span><br><span class="line">	d.mux.Post(StartEvent&#123;&#125;)</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="comment">// reset on error</span></span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			d.mux.Post(FailedEvent&#123;err&#125;)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			d.mux.Post(DoneEvent&#123;&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">if</span> p.version &lt; <span class="number">62</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> errTooOld</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	log.Debug(<span class="string">"Synchronising with the network"</span>, <span class="string">"peer"</span>, p.id, <span class="string">"eth"</span>, p.version, <span class="string">"head"</span>, hash, <span class="string">"td"</span>, td, <span class="string">"mode"</span>, d.mode)</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">(start time.Time)</span></span> &#123;</span><br><span class="line">		log.Debug(<span class="string">"Synchronisation terminated"</span>, <span class="string">"elapsed"</span>, time.Since(start))</span><br><span class="line">	&#125;(time.Now())</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Look up the sync boundaries: the common ancestor and the target block</span></span><br><span class="line">	latest, err := d.fetchHeight(p)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	height := latest.Number.Uint64()</span><br><span class="line"></span><br><span class="line">	origin, err := d.findAncestor(p, height)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	d.syncStatsLock.Lock()</span><br><span class="line">	<span class="keyword">if</span> d.syncStatsChainHeight &lt;= origin || d.syncStatsChainOrigin &gt; origin &#123;</span><br><span class="line">		d.syncStatsChainOrigin = origin</span><br><span class="line">	&#125;</span><br><span class="line">	d.syncStatsChainHeight = height</span><br><span class="line">	d.syncStatsLock.Unlock()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Ensure our origin point is below any fast sync pivot point</span></span><br><span class="line">	pivot := <span class="keyword">uint64</span>(<span class="number">0</span>)</span><br><span class="line">	<span class="keyword">if</span> d.mode == FastSync &#123;</span><br><span class="line">		<span class="keyword">if</span> height &lt;= <span class="keyword">uint64</span>(fsMinFullBlocks) &#123;</span><br><span class="line">			origin = <span class="number">0</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			pivot = height - <span class="keyword">uint64</span>(fsMinFullBlocks)</span><br><span class="line">			<span class="keyword">if</span> pivot &lt;= origin &#123;</span><br><span class="line">				origin = pivot - <span class="number">1</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	d.committed = <span class="number">1</span></span><br><span class="line">	<span class="keyword">if</span> d.mode == FastSync &amp;&amp; pivot != <span class="number">0</span> &#123;</span><br><span class="line">		d.committed = <span class="number">0</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Initiate the sync using a concurrent header and content retrieval algorithm</span></span><br><span class="line">	d.queue.Prepare(origin+<span class="number">1</span>, d.mode)</span><br><span class="line">	<span class="keyword">if</span> d.syncInitHook != <span class="literal">nil</span> &#123;</span><br><span class="line">		d.syncInitHook(origin, height)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fetchers := []<span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">error</span></span>&#123;</span><br><span class="line">		<span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">error</span></span> &#123; <span class="keyword">return</span> d.fetchHeaders(p, origin+<span class="number">1</span>, pivot) &#125;, <span class="comment">// Headers are always retrieved</span></span><br><span class="line">		<span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">error</span></span> &#123; <span class="keyword">return</span> d.fetchBodies(origin + <span class="number">1</span>) &#125;,          <span class="comment">// Bodies are retrieved during normal and fast sync</span></span><br><span class="line">		<span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">error</span></span> &#123; <span class="keyword">return</span> d.fetchReceipts(origin + <span class="number">1</span>) &#125;,        <span class="comment">// Receipts are retrieved during fast sync</span></span><br><span class="line">		<span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">error</span></span> &#123; <span class="keyword">return</span> d.processHeaders(origin+<span class="number">1</span>, pivot, td) &#125;,</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> d.mode == FastSync &#123;</span><br><span class="line">		fetchers = <span class="built_in">append</span>(fetchers, <span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">error</span></span> &#123; <span class="keyword">return</span> d.processFastSyncContent(latest) &#125;)</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> d.mode == FullSync &#123;</span><br><span class="line">		fetchers = <span class="built_in">append</span>(fetchers, d.processFullSyncContent)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> d.spawnSync(fetchers)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="同步交易处理"><a href="#同步交易处理" class="headerlink" title="同步交易处理"></a>同步交易处理</h2><p>当有节点到来，我们会将现有的等待打包的交易发送给一个新节点，为了利用带宽，我们会打包交易并且一次性发送给一个peer</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// /eth/sync.go:65</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(pm *ProtocolManager)</span> <span class="title">txsyncLoop</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		pending = <span class="built_in">make</span>(<span class="keyword">map</span>[discover.NodeID]*txsync)</span><br><span class="line">		sending = <span class="literal">false</span>               <span class="comment">// whether a send is active</span></span><br><span class="line">		pack    = <span class="built_in">new</span>(txsync)         <span class="comment">// the pack that is being sent</span></span><br><span class="line">		done    = <span class="built_in">make</span>(<span class="keyword">chan</span> error, <span class="number">1</span>) <span class="comment">// result of the send</span></span><br><span class="line">	)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 发送一个包到远程节点，并且从pending中移除已经发送的交易</span></span><br><span class="line">	send := <span class="function"><span class="keyword">func</span><span class="params">(s *txsync)</span></span> &#123;</span><br><span class="line">		<span class="comment">// Fill pack with transactions up to the target size.</span></span><br><span class="line">		size := common.StorageSize(<span class="number">0</span>)</span><br><span class="line">		pack.p = s.p</span><br><span class="line">		pack.txs = pack.txs[:<span class="number">0</span>]</span><br><span class="line">		<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(s.txs) &amp;&amp; size &lt; txsyncPackSize; i++ &#123;</span><br><span class="line">			pack.txs = <span class="built_in">append</span>(pack.txs, s.txs[i])</span><br><span class="line">			size += s.txs[i].Size()</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		s.txs = s.txs[:<span class="built_in">copy</span>(s.txs, s.txs[<span class="built_in">len</span>(pack.txs):])]</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(s.txs) == <span class="number">0</span> &#123;</span><br><span class="line">			<span class="built_in">delete</span>(pending, s.p.ID())</span><br><span class="line">		&#125;</span><br><span class="line">		s.p.Log().Trace(<span class="string">"Sending batch of transactions"</span>, <span class="string">"count"</span>, <span class="built_in">len</span>(pack.txs), <span class="string">"bytes"</span>, size)</span><br><span class="line">		sending = <span class="literal">true</span></span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; done &lt;- pack.p.SendTransactions(pack.txs) &#125;()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 随机选择下一个等待同步的peer去发送</span></span><br><span class="line">	pick := <span class="function"><span class="keyword">func</span><span class="params">()</span> *<span class="title">txsync</span></span> &#123;</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(pending) == <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">		n := rand.Intn(<span class="built_in">len</span>(pending)) + <span class="number">1</span></span><br><span class="line">		<span class="keyword">for</span> _, s := <span class="keyword">range</span> pending &#123;</span><br><span class="line">			<span class="keyword">if</span> n--; n == <span class="number">0</span> &#123;</span><br><span class="line">				<span class="keyword">return</span> s</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> s := &lt;-pm.txsyncCh:</span><br><span class="line">			pending[s.p.ID()] = s</span><br><span class="line">			<span class="keyword">if</span> !sending &#123;</span><br><span class="line">				send(s)</span><br><span class="line">			&#125;</span><br><span class="line">		<span class="keyword">case</span> err := &lt;-done:</span><br><span class="line">			sending = <span class="literal">false</span></span><br><span class="line">		</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				pack.p.Log().Debug(<span class="string">"Transaction send failed"</span>, <span class="string">"err"</span>, err)</span><br><span class="line">				<span class="built_in">delete</span>(pending, pack.p.ID())</span><br><span class="line">			&#125;</span><br><span class="line">			开始调度下一个peer发送情况</span><br><span class="line">			<span class="keyword">if</span> s := pick(); s != <span class="literal">nil</span> &#123;</span><br><span class="line">				send(s)</span><br><span class="line">			&#125;</span><br><span class="line">		<span class="keyword">case</span> &lt;-pm.quitSync:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/区块链/" rel="tag"># 区块链</a>
+          
+            <a href="/tags/以太坊/" rel="tag"># 以太坊</a>
+          
+            <a href="/tags/p2p网络/" rel="tag"># p2p网络</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/07/libp2p节点id的生成/" rel="next" title="libp2p节点id的生成">
+                <i class="fa fa-chevron-left"></i> libp2p节点id的生成
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/13/POW共识初探/" rel="prev" title="POW共识初探">
+                POW共识初探 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题描述"><span class="nav-number">1.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#以太坊的区块广播"><span class="nav-number">2.</span> <span class="nav-text">以太坊的区块广播</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#广播交易"><span class="nav-number">2.1.</span> <span class="nav-text">广播交易</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#区块产生广播"><span class="nav-number">2.2.</span> <span class="nav-text">区块产生广播</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步区块处理"><span class="nav-number">2.3.</span> <span class="nav-text">同步区块处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步交易处理"><span class="nav-number">2.4.</span> <span class="nav-text">同步交易处理</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

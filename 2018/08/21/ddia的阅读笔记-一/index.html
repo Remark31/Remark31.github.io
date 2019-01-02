@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="基础,概念,杂谈," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="写在前面的话原书来源https://legacy.gitbook.com/book/vonng/ddia-cn/details 偶然从旁人推荐中得知了这本书，正好最近也算是陷入了一定的瓶颈，于是看看这本书来窥视一下大神的境界 这篇阅读笔记主要内容是ddia的数据系统的一到四节的内容，从这四节看下来的体验就是ddia这本书目前所讲的内容更像是九阴真经一样的内功心法大全，提供了各种场景和心法的思路，用">
+<meta name="keywords" content="基础,概念,杂谈">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ddia的阅读笔记(一)">
+<meta property="og:url" content="https://remark31.github.io/2018/08/21/ddia的阅读笔记-一/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="写在前面的话原书来源https://legacy.gitbook.com/book/vonng/ddia-cn/details 偶然从旁人推荐中得知了这本书，正好最近也算是陷入了一定的瓶颈，于是看看这本书来窥视一下大神的境界 这篇阅读笔记主要内容是ddia的数据系统的一到四节的内容，从这四节看下来的体验就是ddia这本书目前所讲的内容更像是九阴真经一样的内功心法大全，提供了各种场景和心法的思路，用">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_datasystem1.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_Btree.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_Btree_add.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_etl.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_datadb_bitmap.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_datadb_pview.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_stream_avro.png">
+<meta property="og:updated_time" content="2018-12-13T07:32:59.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ddia的阅读笔记(一)">
+<meta name="twitter:description" content="写在前面的话原书来源https://legacy.gitbook.com/book/vonng/ddia-cn/details 偶然从旁人推荐中得知了这本书，正好最近也算是陷入了一定的瓶颈，于是看看这本书来窥视一下大神的境界 这篇阅读笔记主要内容是ddia的数据系统的一到四节的内容，从这四节看下来的体验就是ddia这本书目前所讲的内容更像是九阴真经一样的内功心法大全，提供了各种场景和心法的思路，用">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/ddia_datasystem1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/08/21/ddia的阅读笔记-一/"/>
+
+
+
+
+
+  <title>ddia的阅读笔记(一) | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/08/21/ddia的阅读笔记-一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ddia的阅读笔记(一)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-21T18:44:23+08:00">
+                2018-08-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="写在前面的话"><a href="#写在前面的话" class="headerlink" title="写在前面的话"></a>写在前面的话</h1><p>原书来源<br><a href="https://legacy.gitbook.com/book/vonng/ddia-cn/details" target="_blank" rel="noopener">https://legacy.gitbook.com/book/vonng/ddia-cn/details</a></p>
+<p>偶然从旁人推荐中得知了这本书，正好最近也算是陷入了一定的瓶颈，于是看看这本书来窥视一下大神的境界</p>
+<p>这篇阅读笔记主要内容是ddia的数据系统的一到四节的内容，从这四节看下来的体验就是ddia这本书目前所讲的内容更像是九阴真经一样的内功心法大全，提供了各种场景和心法的思路，用于开拓眼界，这也是我目前所需要的，由于之前在游戏行业和区块链行业都做了一段时间，学到的都算是奇门心法，现在也需要一些普适性的心法。</p>
+<p>言归正传，先说总结</p>
+<p><strong>第一章</strong>提出了一些数据密集型应用的基本思考方式，可以理解成总纲</p>
+<p>核心在于提出了应用在非功能需求上的思考</p>
+<p><strong>第二章</strong>从数据模型出发，展示了各种不同的数据模型，可以理解成最基础的招数的心法</p>
+<p>核心在于如何选择一些抽象的数据模型，更直白的说法是，SQL、NOSQL OR GRAPH</p>
+<p><strong>第三章</strong>是在第二章基础上，详细的展示了如何对数据模型进行存储，可以理解成最基础招数的具体招数</p>
+<p>核心在于介绍了数据库从设计理念上的不同，OLTP以及OLAP，更细分层面是OLTP中的两种存储引擎，日记结构以及就地更新。</p>
+<p><strong>第四章</strong>主要研究了数据结构变为网络或者硬盘上字节的几种方法，另外就是这些方法对于演化性的影响，另外讨论了数据流的一些问题。</p>
+<p>核心在于介绍了三种不同的编码模式：语言内置，文本格式以及二进制格式。另外介绍了数据流的三种模式：数据库，REST和RPC，异步消息机制。</p>
+<h1 id="可靠性，可扩展性，可维护性"><a href="#可靠性，可扩展性，可维护性" class="headerlink" title="可靠性，可扩展性，可维护性"></a>可靠性，可扩展性，可维护性</h1><p>数据密集型任务的标准组件</p>
+<ul>
+<li>数据库</li>
+<li>缓存</li>
+<li>搜索索引</li>
+<li>流处理</li>
+<li>批处理</li>
+</ul>
+<p>一个常见的的数据系统架构</p>
+<p><img src="/imgs/ddia_datasystem1.png" alt="数据系统架构"></p>
+<p>上图可以看到应用程序的整体流程</p>
+<ol>
+<li>请求缓存</li>
+<li>如果缓存不命中请求db，搜索请求会用到全局索引</li>
+<li>请求数据后会去执行应用程序代码进行改变，更新索引，更新缓存</li>
+<li>应用程序的异步任务会到消息队列</li>
+<li>消费消息队列的消息后的应用程序会触发另一些行为，影响到外部世界</li>
+</ol>
+<p>接下来进入主旨，如何保证这个系统的<em>可靠性，可扩展性和可维护性</em></p>
+<h2 id="可靠性"><a href="#可靠性" class="headerlink" title="可靠性"></a>可靠性</h2><ul>
+<li>应用程序表现出用户所期望的功能</li>
+<li>允许用户犯错，允许用户以出乎意料的方式使用软件</li>
+<li>在于其的负载和数据量下，性能满足要求</li>
+<li>系统能房子未经授权的访问和滥用</li>
+</ul>
+<p>粗略的理解</p>
+<blockquote>
+<p>即使出现问题，也能继续正常工作</p>
+</blockquote>
+<h3 id="硬件故障"><a href="#硬件故障" class="headerlink" title="硬件故障"></a>硬件故障</h3><p>硬件冗余</p>
+<blockquote>
+<p>磁盘可以组建RAID，服务器可以有双路电源和热插拔CPU，数据中心可能有电池和柴油发电机作为后备电源，某个组件挂掉时冗余组件可以立刻接管</p>
+</blockquote>
+<h3 id="软件错误"><a href="#软件错误" class="headerlink" title="软件错误"></a>软件错误</h3><p>难以预估的系统性错误，这种错误跨节点相关 例如</p>
+<ul>
+<li>接受特定的错误输入导致所有实例崩溃：2012年6月30日的闰秒</li>
+<li>失控进程占用共享资源</li>
+<li>系统依赖的服务变慢，没有响应或者开始返回错误的响应</li>
+<li>级联故障，小组件的小故障触发另一个组件的故障，进而触发更多故障</li>
+</ul>
+<p>这种错误没有速效药，有一些小办法来解决</p>
+<ul>
+<li>考虑系统中的假设和交互</li>
+<li>彻底测试</li>
+<li>进程格力</li>
+<li>允许进程崩溃重启</li>
+<li>测量、监控并分析生产环境中的系统行为</li>
+</ul>
+<h3 id="人为错误"><a href="#人为错误" class="headerlink" title="人为错误"></a>人为错误</h3><ul>
+<li>以最小化犯错机会的方式设计系统</li>
+<li>将人们最容易犯错的地方与可能导致失效的地方解耦</li>
+<li>彻底测试，单元/集成/手动测试</li>
+<li>允许从人为错误中简单快速的恢复</li>
+<li>配置详细和明确的监控：比如性能指标和错误率</li>
+<li>良好的管理时间与重逢的培训</li>
+</ul>
+<blockquote>
+<p>可靠性非常的重要，但是某些情况下也可能会选择牺牲可靠性来降低开发成本</p>
+</blockquote>
+<h2 id="可扩展性"><a href="#可扩展性" class="headerlink" title="可扩展性"></a>可扩展性</h2><p>用来描述系统应对负载增长能力的术语，需要考虑的是</p>
+<ul>
+<li>如果系统以特定方式增长，有什么选项可以应对增长</li>
+<li>如何增加计算资源来处理额外的负载</li>
+</ul>
+<h3 id="描述负载"><a href="#描述负载" class="headerlink" title="描述负载"></a>描述负载</h3><p>使用负载参数的数字来描述，可能是</p>
+<ul>
+<li>每秒向Web服务器发出的请求</li>
+<li>数据库中的读写比率</li>
+<li>聊天室中同时活跃的用户数量</li>
+<li>缓存命中率或者其他等等</li>
+</ul>
+<h3 id="描述性能"><a href="#描述性能" class="headerlink" title="描述性能"></a>描述性能</h3><p>对于在线系统，最重要的是服务的响应时间，即客户端发送请求到接受响应之间的时间</p>
+<ul>
+<li><p>平均响应时间</p>
+<ul>
+<li>算数平均值</li>
+<li>不能告诉有多少用户实际上经历了这个延迟</li>
+</ul>
+</li>
+<li><p>百分位点</p>
+<ul>
+<li>将响应时间列表按最快到最慢排序，那么中位数就在正中间</li>
+<li>可以明确的反应出有多少用户比这个快，有多少用户比这个慢</li>
+<li>中位数简单被缩写为p50</li>
+</ul>
+</li>
+<li><p>尾部延迟</p>
+<ul>
+<li>响应时间的高百分位点非常重要，直接影响用户的服务体验 </li>
+<li>p99.9</li>
+<li>由于排队延迟的原因，测试客户端响应时间非常重要</li>
+</ul>
+</li>
+</ul>
+<h3 id="应对负载的方法"><a href="#应对负载的方法" class="headerlink" title="应对负载的方法"></a>应对负载的方法</h3><ul>
+<li><p>纵向扩展(垂直扩展)</p>
+<ul>
+<li>转向更强大的机器</li>
+</ul>
+</li>
+<li><p>横向扩展(水平扩展)</p>
+<ul>
+<li>将负载分布到多台小机器上</li>
+</ul>
+</li>
+<li><p>跨多台机器部署无状态服务非常简单，但是将带状态的数据系统从单节点变为分布式配置会引入许多额外复杂度</p>
+</li>
+<li><p>良好适配应用的可扩展架构是围绕假设建立的</p>
+</li>
+</ul>
+<h2 id="可维护性"><a href="#可维护性" class="headerlink" title="可维护性"></a>可维护性</h2><p>在设计之初就尽量考虑尽可能减少维护期间的痛苦，关注软件系统的三个设计原则</p>
+<ul>
+<li>可操作性<ul>
+<li>便于运维团队保持系统平稳运行 </li>
+</ul>
+</li>
+<li>简单性<ul>
+<li>从系统中消除尽可能多的复杂性，使新工程师也能轻松理解系统 </li>
+</ul>
+</li>
+<li>可演化性<ul>
+<li>使工程师在未来可以轻松的对系统进行更改 </li>
+</ul>
+</li>
+</ul>
+<h3 id="可操作性"><a href="#可操作性" class="headerlink" title="可操作性"></a>可操作性</h3><p>优良的运维可以弥补一定的软件缺陷，一个优良运维团队的职责如下：</p>
+<ul>
+<li>监控系统的运行状况</li>
+<li>跟踪问题的原因</li>
+<li>及时更新软件和平台</li>
+<li>了解系统间的相互作用</li>
+<li>预测未来的问题，并在问题出现之前加以解决</li>
+<li>简历部署、配置、管理方面的良好实践，编写相应工具</li>
+<li>执行复杂的维护任务</li>
+<li>配置变更时，维护系统的安全性</li>
+<li>定义工作流程，使运维的操作可预测</li>
+<li>铁打的营盘流水的兵，增加组织对系统的了解</li>
+</ul>
+<p>数据系统可以通过各种方式降低日常任务的困扰度</p>
+<ul>
+<li>通过良好的监控，提供对系统内部状态和运行时行为的可见性</li>
+<li>为自动化提供良好支持，将系统与标准化工具相继承</li>
+<li>避免依赖单台机器</li>
+<li>提供良好的文档和易于理解的操作模型</li>
+<li>提供良好的默认行为，但需要时也允许管理员只有覆盖默认值</li>
+<li>有条件时进行自我修复，但需要时也允许管理员手动控制系统状态</li>
+<li>行为可预测，最大限度减少意外</li>
+</ul>
+<h3 id="简单性"><a href="#简单性" class="headerlink" title="简单性"></a>简单性</h3><blockquote>
+<p>额外复杂度：由具体实现中涌现，而非问题本身固有的复杂度</p>
+</blockquote>
+<p>消除额外复杂度的最好工具就是<strong>抽象</strong></p>
+<h3 id="可演化性"><a href="#可演化性" class="headerlink" title="可演化性"></a>可演化性</h3><p>敏捷开发模式为适应变化提供了框架</p>
+<h1 id="数据模型与查询语言"><a href="#数据模型与查询语言" class="headerlink" title="数据模型与查询语言"></a>数据模型与查询语言</h1><blockquote>
+<p>基本思想：每一层都通过提供一个明确的数据模型来隐藏更低层次中的复杂性，这些抽象允许不同的人群有效的协作。</p>
+</blockquote>
+<h2 id="关系模型与文档模型"><a href="#关系模型与文档模型" class="headerlink" title="关系模型与文档模型"></a>关系模型与文档模型</h2><p>关系模型的著名代表就是SQL</p>
+<ul>
+<li>数据被组织成关系(表)</li>
+<li>其中每个关系是元组(行)的无序集合</li>
+</ul>
+<h3 id="NOSQL"><a href="#NOSQL" class="headerlink" title="NOSQL"></a>NOSQL</h3><p>驱动因素</p>
+<ul>
+<li>需要比关系型数据库更好的扩展性，包括非常大的数据集或者非常高的写入吞吐量</li>
+<li>免费和开源软件更受欢迎</li>
+<li>关系模型不能很好的支持一些特殊的查询操作</li>
+<li>受挫于关系模型的限制性，渴望一种更具多动态性与表现力的数据模型</li>
+</ul>
+<h3 id="对象关系不匹配"><a href="#对象关系不匹配" class="headerlink" title="对象关系不匹配"></a>对象关系不匹配</h3><p>面向对象模型与SQL数据模型需要一个笨拙的转换层，像ActiveRecord和Hibernate这样的对象关系映射(ORM)框架可以减少这个转换成说需要的样板代码的数量，但是他们不能完全隐藏这两个模型之间的差异。</p>
+<h3 id="多对一和多对多的关系"><a href="#多对一和多对多的关系" class="headerlink" title="多对一和多对多的关系"></a>多对一和多对多的关系</h3><p>简历中的区域和行业，有两种方式来存储</p>
+<ol>
+<li>存储为纯文本的字符串</li>
+<li>给出地理区域和行业的标准化列表，让用户从下拉中选择或者自动填充器中选择</li>
+</ol>
+<p>其中2的好处在于</p>
+<ul>
+<li>简介之间样式和拼写统一</li>
+<li>避免歧义</li>
+<li>易于更新</li>
+<li>本地化支持</li>
+<li>更好的搜索</li>
+</ul>
+<p>另外在于副本问题</p>
+<ul>
+<li>使用ID<ul>
+<li>对人类有意义的信息只存储在一处</li>
+<li>所有引用的地方使用ID</li>
+</ul>
+</li>
+<li>使用文本字符串<ul>
+<li>所有引用的地方复制对人类有意义的信息</li>
+</ul>
+</li>
+</ul>
+<p>使用ID的好处是ID对人类没有意义，因此不需要改变，是数据库规范化的关键思想</p>
+<p>可惜的是在文档模型中多对一的关系非常不合适。很多文档数据库并不支持链接</p>
+<p>所以可以考虑在将某些特别的东西设置为<strong>实体</strong>，例如简历中的<code>组织</code>和<code>学校</code>，这样就能方便的进行链接。</p>
+<p>文档模型的优势</p>
+<ul>
+<li>架构灵活性</li>
+<li>因局部性而有更好的性能</li>
+<li>更接近应用程序使用的数据结构</li>
+</ul>
+<p>关系模型的优势</p>
+<ul>
+<li>为链接提供更好的支持</li>
+<li>支持多对一及多对多的关系</li>
+</ul>
+<h3 id="写代码的选择"><a href="#写代码的选择" class="headerlink" title="写代码的选择"></a>写代码的选择</h3><ul>
+<li><p>文档模型</p>
+<ul>
+<li>应用程序的数据具有类似于文档的结构(一对多关系树)</li>
+<li>文档嵌套不能太深</li>
+<li>读时模式的文档结构</li>
+<li>文档数据局部性(数据库会加载整个文档，即使只访问其中一小部分)</li>
+</ul>
+</li>
+<li><p>关系模型</p>
+<ul>
+<li>多对多的关系的需求</li>
+<li>强类型检查</li>
+</ul>
+</li>
+</ul>
+<h3 id="数据查询语言"><a href="#数据查询语言" class="headerlink" title="数据查询语言"></a>数据查询语言</h3><ul>
+<li>命令式代码查询</li>
+<li>声明式查询</li>
+<li>web上的声明式查询</li>
+<li>MapReduce<ul>
+<li>处于申明式查询和命令式查询之间</li>
+<li>查询逻辑用代码片段来表示，代码片段会被框架重复性调用</li>
+<li>基于map和reduce函数</li>
+</ul>
+</li>
+</ul>
+<h4 id="一个MapReduce的例子"><a href="#一个MapReduce的例子" class="headerlink" title="一个MapReduce的例子"></a>一个MapReduce的例子</h4><p>海洋生物学家这个例子还没太看明白</p>
+<h2 id="图数据模型"><a href="#图数据模型" class="headerlink" title="图数据模型"></a>图数据模型</h2><ul>
+<li>顶点</li>
+<li>边</li>
+</ul>
+<p>例如</p>
+<ul>
+<li><p>社交图谱</p>
+<ul>
+<li>顶点是人</li>
+<li>边表示哪些人彼此认识</li>
+</ul>
+</li>
+<li><p>网络图谱</p>
+<ul>
+<li>顶点是网页</li>
+<li>边表示指向其它页面的HTML链接</li>
+</ul>
+</li>
+<li><p>公路或铁路网络</p>
+<ul>
+<li>顶点是交叉路口</li>
+<li>边表示他们之间的道路或者铁路线</li>
+</ul>
+</li>
+</ul>
+<h3 id="属性图"><a href="#属性图" class="headerlink" title="属性图"></a>属性图</h3><p>顶点</p>
+<ul>
+<li>唯一的标识符</li>
+<li>一组出边</li>
+<li>一组入边</li>
+<li>一组属性(键值对)</li>
+</ul>
+<p>边</p>
+<ul>
+<li>唯一标识符</li>
+<li>边的起点/尾部顶点</li>
+<li>边的终点/头部顶点</li>
+<li>描述两个顶点之间关系类型的标签</li>
+<li>一组属性(键值对)</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">// 使用SQL来表示属性图</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> vertices (</span><br><span class="line">  vertex_id  <span class="built_in">INTEGER</span> PRIMARY <span class="keyword">KEY</span>,</span><br><span class="line">  properties <span class="keyword">JSON</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> edges (</span><br><span class="line">  edge_id     <span class="built_in">INTEGER</span> PRIMARY <span class="keyword">KEY</span>,</span><br><span class="line">  tail_vertex <span class="built_in">INTEGER</span> <span class="keyword">REFERENCES</span> vertices (vertex_id),</span><br><span class="line">  head_vertex <span class="built_in">INTEGER</span> <span class="keyword">REFERENCES</span> vertices (vertex_id),</span><br><span class="line">  label       <span class="built_in">TEXT</span>,</span><br><span class="line">  properties  <span class="keyword">JSON</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> edges_tails <span class="keyword">ON</span> edges (tail_vertex);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> edges_heads <span class="keyword">ON</span> edges (head_vertex);</span><br></pre></td></tr></table></figure>
+<h4 id="Cypher-查询语言"><a href="#Cypher-查询语言" class="headerlink" title="Cypher 查询语言"></a>Cypher 查询语言</h4><p>属性图的声明式查询语言，为Neo4j图形数据库而发明</p>
+<h4 id="SQL中的图查询"><a href="#SQL中的图查询" class="headerlink" title="SQL中的图查询"></a>SQL中的图查询</h4><p>使用<code>递归公用表表达式</code>(<code>WITH RECURSIVE</code>语法)</p>
+<p>例如</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">WITH RECURSIVE</span><br><span class="line">-- in_usa 包含所有的美国境内的位置ID</span><br><span class="line">    in_usa(vertex_id) AS (</span><br><span class="line">    SELECT vertex_id FROM vertices WHERE properties -&gt;&gt; &apos;name&apos; = &apos;United States&apos;</span><br><span class="line">    UNION</span><br><span class="line">    SELECT edges.tail_vertex FROM edges</span><br><span class="line">      JOIN in_usa ON edges.head_vertex = in_usa.vertex_id</span><br><span class="line">      WHERE edges.label = &apos;within&apos;</span><br><span class="line">  ),</span><br><span class="line">-- in_europe 包含所有的欧洲境内的位置ID</span><br><span class="line">    in_europe(vertex_id) AS (</span><br><span class="line">    SELECT vertex_id FROM vertices WHERE properties -&gt;&gt; &apos;name&apos; = &apos;Europe&apos;</span><br><span class="line">    UNION</span><br><span class="line">    SELECT edges.tail_vertex FROM edges</span><br><span class="line">      JOIN in_europe ON edges.head_vertex = in_europe.vertex_id</span><br><span class="line">      WHERE edges.label = &apos;within&apos; ),</span><br><span class="line">-- born_in_usa 包含了所有类型为Person，且出生在美国的顶点</span><br><span class="line">    born_in_usa(vertex_id) AS (</span><br><span class="line">      SELECT edges.tail_vertex FROM edges</span><br><span class="line">        JOIN in_usa ON edges.head_vertex = in_usa.vertex_id</span><br><span class="line">        WHERE edges.label = &apos;born_in&apos; ),</span><br><span class="line">-- lives_in_europe 包含了所有类型为Person，且居住在欧洲的顶点。</span><br><span class="line">    lives_in_europe(vertex_id) AS (</span><br><span class="line">      SELECT edges.tail_vertex FROM edges</span><br><span class="line">        JOIN in_europe ON edges.head_vertex = in_europe.vertex_id</span><br><span class="line">        WHERE edges.label = &apos;lives_in&apos;)</span><br><span class="line">  SELECT vertices.properties -&gt;&gt; &apos;name&apos;</span><br><span class="line">  FROM vertices</span><br><span class="line">JOIN born_in_usa ON vertices.vertex_id = born_in_usa.vertex_id</span><br><span class="line">JOIN lives_in_europe ON vertices.vertex_id = lives_in_europe.vertex_id;</span><br></pre></td></tr></table></figure>
+<p>P.S.<br>mysql中要进行图查询是非常复杂的。</p>
+<h2 id="三元组存储和SPARQL"><a href="#三元组存储和SPARQL" class="headerlink" title="三元组存储和SPARQL"></a>三元组存储和SPARQL</h2><p>在三元存储中，所有的信息都是简单的三部分表示形式存储(主语、谓语、宾语)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">例如(吉姆，喜欢，香蕉)</span><br></pre></td></tr></table></figure>
+<p>三元组的主语是图中的一个顶点，而宾语是下面两者之一</p>
+<ul>
+<li>原始数据中类型的值，例如</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(lucy, age, 33)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>图中的另外的顶点，例如</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">（lucy, marriedTo, alain）</span><br></pre></td></tr></table></figure>
+<h3 id="语义网络"><a href="#语义网络" class="headerlink" title="语义网络"></a>语义网络</h3><h3 id="RDF数据模型"><a href="#RDF数据模型" class="headerlink" title="RDF数据模型"></a>RDF数据模型</h3><h3 id="SPARQL查询语言"><a href="#SPARQL查询语言" class="headerlink" title="SPARQL查询语言"></a>SPARQL查询语言</h3><h3 id="基础-Datalog"><a href="#基础-Datalog" class="headerlink" title="基础:Datalog"></a>基础:Datalog</h3><h1 id="存储与检索"><a href="#存储与检索" class="headerlink" title="存储与检索"></a>存储与检索</h1><h2 id="驱动数据库的数据结构"><a href="#驱动数据库的数据结构" class="headerlink" title="驱动数据库的数据结构"></a>驱动数据库的数据结构</h2><p>最简单的db可以用以下实现</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="function"><span class="title">db_set</span></span> () &#123;</span><br><span class="line">    <span class="built_in">echo</span> <span class="string">"<span class="variable">$1</span>,<span class="variable">$2</span>"</span> &gt;&gt; database</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="title">db_get</span></span> () &#123;</span><br><span class="line">    grep <span class="string">"^<span class="variable">$1</span>,"</span> database | sed -e <span class="string">"s/^<span class="variable">$1</span>,//"</span> | tail -n 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>实现了基础的键值存储功能。并且在set时使用了<strong>尾部追加</strong>写入的方式</p>
+<p>很多数据库在内部使用了<strong>日志(log)</strong>,这也是一个仅追加(append-only)的数据文件。</p>
+<blockquote>
+<p>日志：一个仅追加的记录序列。它可能压根就不是给人类看 的，使用二进制格式，并仅能由其他程序读取。</p>
+</blockquote>
+<p>为了高效的查找数据库中特定键的值，需要一个数据结构：<strong>索引(index)</strong></p>
+<p>索引的大致思路：保存一些额外的元数据作为路 标，帮助你找到想要的数据</p>
+<p>这是存储系统中一个重要的权衡:精心选择的索引加快了读查询的速度，但是每个索引都会 拖慢写入速度。</p>
+<h3 id="哈希索引"><a href="#哈希索引" class="headerlink" title="哈希索引"></a>哈希索引</h3><p>假设我们的数据存储只是一个追加写入的文件，就像前面的例子一样。那么最简单的索引策 略就是:保留一个内存中的哈希映射，其中每个键都映射到一个数据文件中的字节偏移量， 指明了可以找到对应值的位置</p>
+<p><strong>如何在追加索引中利用磁盘空间</strong></p>
+<p>将日志分为特定大小的段，当日志增长到特定尺寸时关闭当前段文件，并开始写入 一个新的段文件。然后，我们就可以对这些段进行压缩(compaction)，压缩意味着在日志中丢弃重复的键，只保留每个键的最近更新。在进行时，我们仍然可以继续使用旧的段文件来正常提供读写请求。合并过程完成后，我们将读取请求 转换为使用新的合并段而不是旧段 —— 然后可以简单地删除旧的段文件。</p>
+<p>接下来就是一些细节问题</p>
+<h4 id="文件格式"><a href="#文件格式" class="headerlink" title="文件格式"></a>文件格式</h4><p>二进制</p>
+<h4 id="删除记录"><a href="#删除记录" class="headerlink" title="删除记录"></a>删除记录</h4><p>使用逻辑删除，合并时再进行放弃</p>
+<h4 id="崩溃恢复"><a href="#崩溃恢复" class="headerlink" title="崩溃恢复"></a>崩溃恢复</h4><p>数据库重启时，内存散列映射将丢失，可以通过存储加速恢复磁盘上每个段的哈希映射的快照，可以更快地加载到内存中。</p>
+<h4 id="部分写入记录"><a href="#部分写入记录" class="headerlink" title="部分写入记录"></a>部分写入记录</h4><p>数据库可能随时崩溃，包括将记录附加到日志中途，所以需要包含校验和，允许监测和忽略日志的损坏部分。</p>
+<h4 id="并发控制"><a href="#并发控制" class="headerlink" title="并发控制"></a>并发控制</h4><p>常见的实现选择是只有一个写入器线程</p>
+<h4 id="局限性"><a href="#局限性" class="headerlink" title="局限性"></a>局限性</h4><ul>
+<li>散列表必须能放进内存：磁盘哈希映射需要大量随机访问I/O</li>
+<li>范围查询效率不高：必须在散列映射中单独查找每个键</li>
+</ul>
+<h3 id="SSTables和LSM树"><a href="#SSTables和LSM树" class="headerlink" title="SSTables和LSM树"></a>SSTables和LSM树</h3><p><strong>排序字符串表(Sorted String Table)</strong> 简称 <strong>SSTable</strong></p>
+<blockquote>
+<p>要求键值对的序列按键排序</p>
+</blockquote>
+<p>优势:</p>
+<ul>
+<li>合并段是简单而高效的，即使文件大于可用内存<ul>
+<li>归并排序有序文本</li>
+</ul>
+</li>
+<li>为了在文件中找到一个特定的键，你不再需要保存内存中所有键的索引<ul>
+<li>因为主键是有序的，因此可以通过临近位置偏移搜到想要的地方</li>
+</ul>
+</li>
+</ul>
+<h4 id="构建和维护SSTables"><a href="#构建和维护SSTables" class="headerlink" title="构建和维护SSTables"></a>构建和维护SSTables</h4><blockquote>
+<p>使用内存中的红黑树或AVL树，可以按任何顺序插入键并按排序顺序读取它们。</p>
+</blockquote>
+<ul>
+<li>写入时，添加到内存中的平衡树数据结构，内存树又是被称为<strong>内存表(memtable)</strong></li>
+<li>内存表大于某个阈值，将其作为SSTable文件写入磁盘。</li>
+<li>读取时，先尝试在内存表中寻找关键字，再到最近的磁盘段中寻找关键字</li>
+<li>有时会在后台运行合并和压缩过程以组合段文件并丢弃覆盖或删除的值</li>
+</ul>
+<p>缺陷：</p>
+<blockquote>
+<p>如果数据库崩溃，则最近的写入(在内存表中， 但尚未写入磁盘)将丢失</p>
+</blockquote>
+<p>解决方案：</p>
+<blockquote>
+<p>可以在磁盘上保存一个单独的日志，每个写入都会立即被附加到磁盘上，就像在前一节中一样。该日志不是按排序顺序，但这并不重要，因为它的唯一目的是在崩溃后恢复内存表。每当内存表写出到SSTable时，相应的日志都可以被丢弃。</p>
+</blockquote>
+<h4 id="用SSTables制作LSM树"><a href="#用SSTables制作LSM树" class="headerlink" title="用SSTables制作LSM树"></a>用SSTables制作LSM树</h4><blockquote>
+<p>此处的本质是LevelDB和RocksDB中使用的关键字存储引擎库</p>
+</blockquote>
+<p><strong>LSM树：日志结构合并树(Log-Structured Merge Tree)</strong></p>
+<h4 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h4><p>查找数据库中不存在的键：</p>
+<ul>
+<li>检查内存表</li>
+<li>从磁盘中读取，回到最老</li>
+<li>最后确定键不存在</li>
+</ul>
+<p>解决方案：</p>
+<ul>
+<li>使用Bloom过滤器</li>
+</ul>
+<blockquote>
+<p>布隆过滤器是用于近似集合内容的内存高效数据结构，它可以告诉您数据库中是否出现键，从而为不存在的键节省许多不必要的磁盘读取操作</p>
+</blockquote>
+<ul>
+<li>其它策略<ul>
+<li>大小分层压实</li>
+<li>平坦压缩：LevelDB和RocksDB</li>
+<li>大小分层：HBase</li>
+</ul>
+</li>
+</ul>
+<p>水平压实：关键范围被拆分成更小的SSTables，较旧的数据被移动到单独的“水平”，这使得压缩能够更加递增地进行，并且使用更少的磁盘空间。</p>
+<h4 id="LSM树的小结"><a href="#LSM树的小结" class="headerlink" title="LSM树的小结"></a>LSM树的小结</h4><p>基本思想：保存一系列在后台合并的SSTables，简单而有效。</p>
+<ul>
+<li>数据集大于可用内存仍然能正常工作</li>
+<li>高效地执行范围查询：数据按排序顺序存储</li>
+<li>支持非常高的写入吞吐量：磁盘写入是连续的</li>
+</ul>
+<h3 id="B树"><a href="#B树" class="headerlink" title="B树"></a>B树</h3><blockquote>
+<p>在几乎所有的关系数据库中，仍然是标准的索引实现，许多非关系数据库也使用它们</p>
+</blockquote>
+<p>设计理念</p>
+<ul>
+<li>保持按键排序的键值对</li>
+<li>将数据库分解成固定大小的块或者页面，并且一次只能读取或者写入一个页面。</li>
+<li>每个页面都可以使用地址来标识，允许一个页面引用另一个页面，从而构建出一个页面树</li>
+</ul>
+<p><img src="/imgs/ddia_Btree.png" alt="B树"></p>
+<blockquote>
+<p>一个页面会被指定为B树的根;在索引中查找一个键时，就从这里开始。该页面包含几个键和 对子页面的引用。每个子页面负责一段连续范围的键，引用之间的键，指明了引用子页面的键范围。</p>
+</blockquote>
+<p>在B树的一个页面中对子页面的引用的数量称为分支因子，例如上图中，分支因子是6。</p>
+<h4 id="B树的更新"><a href="#B树的更新" class="headerlink" title="B树的更新"></a>B树的更新</h4><p>搜索包含该键的叶页，更改该页中的值，并将该页写回到磁盘</p>
+<h4 id="B树的新增"><a href="#B树的新增" class="headerlink" title="B树的新增"></a>B树的新增</h4><p>找到其范围内包含新键的页面，并且添加到页面</p>
+<p>如果没有足够可用空间容纳新键盘，则将其分成两个半满页面，更新父页面以解释新分区，如图所示</p>
+<p><img src="/imgs/ddia_Btree_add.png" alt="B树添加"></p>
+<h4 id="增加B树的可靠性"><a href="#增加B树的可靠性" class="headerlink" title="增加B树的可靠性"></a>增加B树的可靠性</h4><p>不可靠的原因：</p>
+<blockquote>
+<p>B树的基本底层写操作是用新数据覆盖磁盘上的页面</p>
+</blockquote>
+<p>再加之 <strong>一些操作需要覆盖几个不同的页面</strong>，例如插入导致页面过度而拆分页面，因为如果数据库在仅有一些页面被写入后崩溃，那么最终将导致一个损坏的索引</p>
+<p>解决方案：</p>
+<p>预写式日志 (WAL, write-ahead-log) (也称为重做日志(redo log))。这是一个仅追加的文件，每个B树修改都可以应用到树本身的页面上。当数据库在崩溃后恢复时，这个日志被用来使B树 恢复到一致的状态</p>
+<h4 id="B树的优化"><a href="#B树的优化" class="headerlink" title="B树的优化"></a>B树的优化</h4><ul>
+<li>使用写时复制方案，二部是覆盖页面并维护WAL进行崩溃恢复。(LMDB)</li>
+<li>不存储整个键来节省页面空间，特别是在树内部的页面上，键只需要提供足够的信息来充当键范围之间的边界</li>
+<li>额外的指针已添加到树中</li>
+<li>B树的变体如分形树借用一些日志结构的思想来减少磁盘寻</li>
+</ul>
+<h3 id="B树与LSM树的比较"><a href="#B树与LSM树的比较" class="headerlink" title="B树与LSM树的比较"></a>B树与LSM树的比较</h3><p>通常，LSM树写入速度更快，B树的读取速度更快。</p>
+<h4 id="LSM树的优点"><a href="#LSM树的优点" class="headerlink" title="LSM树的优点"></a>LSM树的优点</h4><p>写放大(write amplification)</p>
+<blockquote>
+<p>在数据库的生命 周期中写入数据库导致对磁盘的多次写入</p>
+</blockquote>
+<ul>
+<li>LSM树比B树支持更高的写入吞吐量</li>
+<li>LSM树可以被压缩得更好，并且具有较低的存储开销(因为会定期重写SSTables去除碎片)</li>
+</ul>
+<h4 id="LSM树的缺点"><a href="#LSM树的缺点" class="headerlink" title="LSM树的缺点"></a>LSM树的缺点</h4><ul>
+<li>压缩过程有时会干扰正在进行的读写操作</li>
+<li>高写入吞吐量，数据库越大，压缩所需的磁盘带宽就越多</li>
+</ul>
+<h4 id="B树的优点"><a href="#B树的优点" class="headerlink" title="B树的优点"></a>B树的优点</h4><ul>
+<li>每个键只存在于索引中的一个位置，这样可以提供更强大的事物语义的操作。</li>
+</ul>
+<h2 id="其它索引结构"><a href="#其它索引结构" class="headerlink" title="其它索引结构"></a>其它索引结构</h2><p>例如关系数据库中使用<code>CREATE INDEX</code>命令在同一个表中创建多个二级索引。</p>
+<p>B树/日志结构索引都可以用作辅助索引。</p>
+<h3 id="值存储在索引中"><a href="#值存储在索引中" class="headerlink" title="值存储在索引中"></a>值存储在索引中</h3><p>索引的关键字是搜索的内容，可以是以下两种情况：</p>
+<ul>
+<li>是所讨论的实际行</li>
+<li>也可以是对存储在别处的行的引用</li>
+</ul>
+<p><strong>堆文件(heap file)</strong>: 行被存储的地方，并且存储的数据没有特定的顺序。</p>
+<p>优势</p>
+<ul>
+<li>避免了在存在多个二级索引时复制数据</li>
+<li>不更改键的情况下更新值时非常高效：只要新值不大于旧值，就可以覆盖</li>
+</ul>
+<p>劣势</p>
+<ul>
+<li>更改键时更新值可能会更新所有索引，或者在旧堆位置留下一个转发指针</li>
+<li>索引到堆文件的额外跳跃对读取来说性能损失很大。</li>
+</ul>
+<p>索引的分类</p>
+<ul>
+<li><strong>聚集索引(clustered index)</strong>:将索引行直接存储在索引中。  </li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">例如，在MySQL的InnoDB存储引擎中，表的主键 总是一个聚簇索引，二级索引用主键(而不是堆文件中的位置)【31】。在SQL Server中， 可以为每个表指定一个聚簇索引【32】。</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>非聚集索引(nonclustered index)</strong>:仅在索引中存储对数据的引用   </li>
+<li><strong>覆盖索引(covering index)/包含列的索引(index with included columns)</strong>:其存储表的一部分在索引内   </li>
+</ul>
+<h3 id="多列索引"><a href="#多列索引" class="headerlink" title="多列索引"></a>多列索引</h3><p><strong>连接索引(concatenated index)</strong>：它通过将一列的值追加到另一列后面，简单地将多个字段组合成一个键(索引定义中指定了字段的连接顺序)</p>
+<p><strong>多维索引(multi-dimensional index)</strong>：是一种查询多个列的更一般的方法，这对于地理空间数据尤为重要。</p>
+<h3 id="全文搜索和模糊索引"><a href="#全文搜索和模糊索引" class="headerlink" title="全文搜索和模糊索引"></a>全文搜索和模糊索引</h3><p><strong>Lucene</strong>:内存中的索引 是键中字符的有限状态自动机，类似于trie。这个自动机可以转换成Levenshtein自动机，它支持在给定的编辑距离内有效地搜索单词。</p>
+<h3 id="在内存中存储一切"><a href="#在内存中存储一切" class="headerlink" title="在内存中存储一切"></a>在内存中存储一切</h3><p>内存数据库</p>
+<ul>
+<li>仅用于缓存(如Memcached)，重启时允许数据丢失</li>
+<li>持久性存储：<ul>
+<li>通过特殊的硬件</li>
+<li>更改日志写入磁盘</li>
+<li>定时快照写入磁盘或者通过复制内存实现</li>
+</ul>
+</li>
+</ul>
+<p>一些有趣的例子</p>
+<ul>
+<li><strong>VoltDB、MemSQL、Oracle TimesTen</strong>：具有关系模型的内存数据库</li>
+<li><strong>RAM Cloud</strong>：开源的内存键值存储器，具有持久性(对存储器中的数据以及 磁盘上的数据使用日志结构化方法)</li>
+<li><strong>Redis和Couchbase</strong>：异步写入磁盘，提供了较弱的持久性</li>
+</ul>
+<p>内存数据库更快的原因在于<strong>省去了将内存数据结构编码为磁盘数据结构的开销</strong></p>
+<h2 id="事务处理和分析"><a href="#事务处理和分析" class="headerlink" title="事务处理和分析"></a>事务处理和分析</h2><table>
+<thead>
+<tr>
+<th>属性</th>
+<th>事务处理 OLTP</th>
+<th>分析系统 OLAP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主要读取模式</td>
+<td>查询少量记录，按键读取</td>
+<td>在大批量记录上聚合</td>
+</tr>
+<tr>
+<td>主要写入模式</td>
+<td>随机访问，写入要求低延时</td>
+<td>批量导入(ETL)，事件流</td>
+</tr>
+<tr>
+<td>主要用户</td>
+<td>终端用户，通过Web应用</td>
+<td>内部数据分析师，决策支持</td>
+</tr>
+<tr>
+<td>处理的数据</td>
+<td>数据的最新状态(当前时间点)</td>
+<td>随时间推移的历史事件</td>
+</tr>
+<tr>
+<td>数据集尺寸</td>
+<td>GB ~ TB</td>
+<td>TB ~ PB</td>
+</tr>
+</tbody>
+</table>
+<p>专门进行分析的数据库被称为<strong>数据仓库(data warehouse)</strong></p>
+<h3 id="数据仓库"><a href="#数据仓库" class="headerlink" title="数据仓库"></a>数据仓库</h3><p><img src="/imgs/ddia_etl.png" alt="数据仓库建立"></p>
+<h4 id="OLTP数据库与数据仓库之间的分歧"><a href="#OLTP数据库与数据仓库之间的分歧" class="headerlink" title="OLTP数据库与数据仓库之间的分歧"></a>OLTP数据库与数据仓库之间的分歧</h4><p>数据仓库通常是关系型的，然而由于针对不同的查询模式进行了优化，因此不是两种都支持。</p>
+<p>一些有趣的数据仓库的例子</p>
+<ul>
+<li><strong>Microsoft SQL Server、SAP HANA</strong>支持在同一产品中进行事务处理和数据仓库</li>
+<li><strong>Teradata、Vertica、SAP HANA、ParAccel</strong>：昂贵的付费仓库</li>
+<li><strong>Apache Hive、Spark SQL、Cloudera Impala、Facebook Presto、Apache Tajo、Apache Drill</strong>：开源的数据仓库竞争者</li>
+</ul>
+<h3 id="分析模式"><a href="#分析模式" class="headerlink" title="分析模式"></a>分析模式</h3><ul>
+<li>星型模式(维度建模)</li>
+</ul>
+<p>由一个中心组成，例如如下模式</p>
+<p>实际销售表</p>
+<table>
+<thead>
+<tr>
+<th>日期</th>
+<th>产品</th>
+<th>仓库表</th>
+<th>促销</th>
+<th>用户</th>
+<th>数量</th>
+<th>原始价格</th>
+<th>折扣价格</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>日期表key</td>
+<td>产品表key</td>
+<td>仓储表key</td>
+<td>促销表key</td>
+<td>用户表key</td>
+<td>数量</td>
+<td>价格</td>
+<td>价格</td>
+</tr>
+</tbody>
+</table>
+<p>可以看到中心表是由其他表的主键所构成的</p>
+<ul>
+<li>雪花模式</li>
+</ul>
+<p>星型表的一种变体，其中的尺寸再次被分解，例如产品表中继续被细分等等。</p>
+<h3 id="列存储"><a href="#列存储" class="headerlink" title="列存储"></a>列存储</h3><h4 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h4><p>事实表虽然超过100列，但是每次数据仓库的分析查询只会访问4、5个查询</p>
+<p>然而在大多数OLTP数据库中，存储都是面向行的方式进行布局的：表格的一行中的所有值都相邻存储。</p>
+<p>即是构建了常见列的索引，然而面向行的存储引擎仍然会将所有这些行从磁盘中加载到内存中，解析，过滤，需要很长时间。</p>
+<h4 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h4><p>不要将所有来自一行的值存储在一起，而是将来自每一列的所有值存储在一起</p>
+<p>简而言之就是讲每个列存储在一个单独的文件中，查询只需要读取和解析查询中使用的那些列。</p>
+<h3 id="列压缩"><a href="#列压缩" class="headerlink" title="列压缩"></a>列压缩</h3><p>位图编码</p>
+<p><img src="/imgs/ddia_datadb_bitmap.png" alt="位图编码"></p>
+<blockquote>
+<p>面向列的存储和列族</p>
+</blockquote>
+<blockquote>
+<p>Cassandra和HBase有一个列族的概念，他们从Bigtable继承【9】。然而，把它们称为 面向列是非常具有误导性的:在每个列族中，它们将一行中的所有列与行键一起存储， 并且不使用列压缩。因此，Bigtable模型仍然主要是面向行的。</p>
+</blockquote>
+<h3 id="内存带宽和向量处理"><a href="#内存带宽和向量处理" class="headerlink" title="内存带宽和向量处理"></a>内存带宽和向量处理</h3><p>矢量化处理</p>
+<h3 id="列存储中的排序顺序"><a href="#列存储中的排序顺序" class="headerlink" title="列存储中的排序顺序"></a>列存储中的排序顺序</h3><p>每次排序都会对所有列进行影响</p>
+<p>举例：</p>
+<p>如果查询通常以日期范围为目标，例如上个月，则可以将 date_key 作为第一个排序键。然后，查询优化器只能扫描上个月的行，这 比扫描所有行要快得多。</p>
+<p>第二列可以确定第一列中具有相同值的任何行的排序顺序。</p>
+<p>排序的另一个好处是可以压缩列(参见位图中的压缩相同值)</p>
+<h3 id="几个不同的排序顺序"><a href="#几个不同的排序顺序" class="headerlink" title="几个不同的排序顺序"></a>几个不同的排序顺序</h3><p>在<strong>Vertica</strong>中被采用：使用不同的方式存储相同的数据。在查询时可以使用最适合查询模式的版本</p>
+<h3 id="写入列存储"><a href="#写入列存储" class="headerlink" title="写入列存储"></a>写入列存储</h3><p>使用LSM树，所有的写操作先进入一个内存中的存储，在这里它们被添加到一个已排序的结构中，并准备写入磁盘。内存中的存储是面向行还是列的，这并不重要。当已经积累了足够的写入数据时，它们将与磁盘上的列文件合并，并批量写入新文件。这基本上是<strong>Vertica</strong>所做的。</p>
+<h3 id="聚合"><a href="#聚合" class="headerlink" title="聚合"></a>聚合</h3><p>缓存一些常见的聚合函数，例如SQL中的COUNT,SUM,AVG,MIN,MAX</p>
+<p>物化视图：</p>
+<blockquote>
+<p>在关系数据库中通常会被定义为一个虚拟视图，不同的是，物化视图是查询结果的实际副本，写入磁盘，而虚拟视图只是写入查询的捷径。从虚拟视图读取时，SQL引擎会将其展开到视图的底层查询中，然后处理展开的查询。</p>
+</blockquote>
+<p>虚拟视图</p>
+<blockquote>
+<p>一个类似于表的对象，其内容是一些查询的结果</p>
+</blockquote>
+<p><img src="/imgs/ddia_datadb_pview.png" alt="虚拟视图"></p>
+<p>这里只是用了两个维度的视图，更多维度需要自己去想象了。</p>
+<p>物化视图<br>优点：查询变得非常快<br>缺点：不具有查询原始数据的灵活性</p>
+<h1 id="编码与演化"><a href="#编码与演化" class="headerlink" title="编码与演化"></a>编码与演化</h1><p>代码变更的基本方案</p>
+<ul>
+<li>服务端：滚动升级(阶段发布)，将新版本部署到少数几个节点，检查新版本是否正常运行，然后逐渐部完所有的节点</li>
+<li>客户端：是否升级看用户的心情，用户可能长期都不会升级。</li>
+</ul>
+<p>新旧代码会可能同时共处，因此要保持双向兼容性</p>
+<ul>
+<li>向后兼容：新代码可以读旧数据</li>
+<li>向前兼容：旧代码可以读新数据</li>
+</ul>
+<p>向前兼容的核心在于旧版的程序需要忽略新版数据格式中新增的部分。</p>
+<h2 id="编码数据的格式"><a href="#编码数据的格式" class="headerlink" title="编码数据的格式"></a>编码数据的格式</h2><p>程序至少要使用两种形式的数据</p>
+<ul>
+<li>内存中的数据格式</li>
+<li>要写入文件或者通过网络发送，必须通过其编码为某种自包含的字节序列(例如JSON文档)</li>
+</ul>
+<ul>
+<li>编码：内存到字节序列的转换(序列化，编组)</li>
+<li>解码：反之(解析，反序列化，反编组)</li>
+</ul>
+<h3 id="语言特定格式"><a href="#语言特定格式" class="headerlink" title="语言特定格式"></a>语言特定格式</h3><p>编程语言的内建支持</p>
+<ul>
+<li>JAVA：<code>java.io.Serializable</code></li>
+<li>Ruby：<code>Marshal</code></li>
+<li>Python：<code>pickle</code></li>
+<li>其它的第三方库: <code>kryo for Java</code></li>
+</ul>
+<p>优势：</p>
+<ul>
+<li>方便</li>
+<li>很少的额外代码实现内存对象的保存与恢复</li>
+</ul>
+<p>劣势：</p>
+<ul>
+<li>编码与语言深度板顶，其它语言很难读取</li>
+<li>为了恢复相同对象的数据，解码过程需要实例化任意类的能力，可能会导致安全问题</li>
+<li>向前向后兼容可能会有问题</li>
+<li>效率很低(Java的内置序列化点名批评)</li>
+</ul>
+<h3 id="JSON-XML和二进制变体"><a href="#JSON-XML和二进制变体" class="headerlink" title="JSON,XML和二进制变体"></a>JSON,XML和二进制变体</h3><p>JSON,XML和CSV是文本格式，具有人类可读性，被广泛支持，可惜也有些内部问题</p>
+<ul>
+<li>数字编码多有歧义：XML和CSV不能区分数字和字符串，JSON能区分，但是不能区分整数和浮点数，而且不能指定精度</li>
+<li>处理大量数据时，问题会更加严重，Twitter上有一个大于$2^{53}$的数字的例子，它使用一个64位的数 字来标识每条推文。Twitter API返回的JSON包含了两种推特ID，一个JSON数字，另一个是十进制字符串，以此避免JavaScript程序无法正确解析数字的问题</li>
+<li>JSON和XML对Unicode字符串有很好的支持，但是不支持二进制数据，因此使用Base64编码来解决这个问题。</li>
+<li>CSV没有任何模式，需要应用程序定义每行和每列的含义。</li>
+</ul>
+<h3 id="二进制编码"><a href="#二进制编码" class="headerlink" title="二进制编码"></a>二进制编码</h3><p>为了节约空间，导致大量的二进制编码版本的JSON &amp; XML出现，例如 </p>
+<ul>
+<li>JSON:MessagePack，BSON，BJSON，UBJSON，BISON和Smile等</li>
+<li>XML:WBXML和Fast Infoset等</li>
+</ul>
+<h3 id="Thrift与Protocol-Buffer"><a href="#Thrift与Protocol-Buffer" class="headerlink" title="Thrift与Protocol Buffer"></a>Thrift与Protocol Buffer</h3><p>Thrift：Facebook开发，需要接口定义语言(IDL)来描述模式，如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct Person &#123;</span><br><span class="line">    1: required string       userName,</span><br><span class="line">    2: optional i64          favoriteNumber,</span><br><span class="line">    3: optional list&lt;string&gt; interests</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Protocol Buffers: Google开发，与Thrift类似</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">message Person &#123;</span><br><span class="line">    required string user_name       = 1;</span><br><span class="line">    optional int64  favorite_number = 2;</span><br><span class="line">    repeated string interests       = 3;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="字段标签的演变"><a href="#字段标签的演变" class="headerlink" title="字段标签的演变"></a>字段标签的演变</h2><p>以Thrift为例，字段由标签号码(1,2,3)标识，使用数据类型(i64,string)为注释。</p>
+<ul>
+<li>向前兼容性<ul>
+<li>旧代码不知道新的字段，可以简单的忽略，数据类型注释保证了忽略跳过的字节数  </li>
+</ul>
+</li>
+<li>向后兼容性<ul>
+<li>在模式部署后新添加的字段都必须是可选或者具有默认值的 </li>
+</ul>
+</li>
+</ul>
+<h2 id="数据类型的演变"><a href="#数据类型的演变" class="headerlink" title="数据类型的演变"></a>数据类型的演变</h2><p>允许，但是值会失去精度或者被扼杀</p>
+<h3 id="Avro"><a href="#Avro" class="headerlink" title="Avro"></a>Avro</h3><p>Apache Avro: Hadoop的子项目，一种Avro IDL用于人工编辑，一种基于JSON用于机器读取</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">record Person &#123;</span><br><span class="line">    string                userName;</span><br><span class="line">    union &#123; null, long &#125;  favoriteNumber = null;</span><br><span class="line">    array&lt;string&gt;         interests;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对应的等价JSON表示为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;type&quot;: &quot;record&quot;,</span><br><span class="line">    &quot;name&quot;: &quot;Person&quot;,</span><br><span class="line">    &quot;fields&quot;: [</span><br><span class="line">        &#123;&quot;name&quot;: &quot;userName&quot;, &quot;type&quot;: &quot;string&quot;&#125;,</span><br><span class="line">        &#123;&quot;name&quot;: &quot;favoriteNumber&quot;, &quot;type&quot;: [&quot;null&quot;, &quot;long&quot;], &quot;default&quot;: null&#125;, </span><br><span class="line">        &#123;&quot;name&quot;: &quot;interests&quot;, &quot;type&quot;: &#123;&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: &quot;string&quot;&#125;</span><br><span class="line">    ] </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Avro的作者模式和读者模式"><a href="#Avro的作者模式和读者模式" class="headerlink" title="Avro的作者模式和读者模式"></a>Avro的作者模式和读者模式</h4><ul>
+<li>作者模式：应用程序想要编码一些数据，可以使用它知道的任何版本的模式编码数据</li>
+<li>读者模式：应用程序想要解码一些数据，它会希望数据在某个模式中，这就是读者模式</li>
+</ul>
+<p>Avro的关键思想在于作者模式和读者模式不必相同，它们只需要兼容。</p>
+<p>例如：</p>
+<p><img src="/imgs/ddia_stream_avro.png" alt="Avro的作者模式与读者模式"></p>
+<p>如果读取数据的代码遇到：</p>
+<ul>
+<li>在作者模式中但不在读者模式中：则忽略</li>
+<li>在读者模式中但不在作者模式中：则使用读者模式中的默认填充值</li>
+</ul>
+<h4 id="Avro的模式演变规则"><a href="#Avro的模式演变规则" class="headerlink" title="Avro的模式演变规则"></a>Avro的模式演变规则</h4><p>只能添加或者删除具有默认值的字段</p>
+<p>对于更改类型的情况</p>
+<ul>
+<li>Avro可以转换类型，就恶意改变字段的数据类型</li>
+<li>更改字段名称是向后兼容的，但不能向前兼容</li>
+<li>向联合类型添加分支也是向后兼容的，不能向前兼容</li>
+</ul>
+<h4 id="动态生成的模式"><a href="#动态生成的模式" class="headerlink" title="动态生成的模式"></a>动态生成的模式</h4><p>架构不包含任何标签号码</p>
+<h2 id="数据流的类型"><a href="#数据流的类型" class="headerlink" title="数据流的类型"></a>数据流的类型</h2><h3 id="数据库中的数据流"><a href="#数据库中的数据流" class="headerlink" title="数据库中的数据流"></a>数据库中的数据流</h3><p>需要担心的是旧版本代码在更新数据库中的值时会导致领域不完整(未写回新的字段)</p>
+<h4 id="数据与代码时间的不匹配"><a href="#数据与代码时间的不匹配" class="headerlink" title="数据与代码时间的不匹配"></a>数据与代码时间的不匹配</h4><p>大部分关系数据库都允许简单的模式更改，例如添加一个默认值为空的列</p>
+<h4 id="归档存储"><a href="#归档存储" class="headerlink" title="归档存储"></a>归档存储</h4><ul>
+<li>快照</li>
+<li>备份</li>
+<li>数据仓库等</li>
+</ul>
+<h3 id="服务中的数据流"><a href="#服务中的数据流" class="headerlink" title="服务中的数据流"></a>服务中的数据流</h3><blockquote>
+<p>服务器公开的API被称为服务</p>
+</blockquote>
+<ul>
+<li><p>REST</p>
+</li>
+<li><p>RPC</p>
+</li>
+</ul>
+<h4 id="Web服务"><a href="#Web服务" class="headerlink" title="Web服务"></a>Web服务</h4><p>服务使用HTTP作为底层通信协议，可称WEB服务</p>
+<ul>
+<li>运行在用户设备上的客户端应用</li>
+<li>一种服务向同一组织拥有的另一项服务提出请求(中间件)</li>
+<li>一种服务通过互联网向不同组织所拥有的服务提出请求(在线服务提供的公共API)</li>
+</ul>
+<p>目前有两种web服务方法</p>
+<ul>
+<li>REST：强调简单的数据格式，使用URL来标识资源，并使用HTTP功能进行缓存控制，身份验证和内容类型协商</li>
+</ul>
+<blockquote>
+<p>根据REST原则设计的API称为RESTful</p>
+</blockquote>
+<ul>
+<li>SOAP：用于制作网络API请求的基于XML的协议</li>
+</ul>
+<h4 id="远程过程调用-RPC-的问题"><a href="#远程过程调用-RPC-的问题" class="headerlink" title="远程过程调用(RPC)的问题"></a>远程过程调用(RPC)的问题</h4><p>RPC本质在于向远程网络服务发出请求，但是根本上是具有缺陷的</p>
+<ul>
+<li>RPC请求是不可预知的，必须去预测，例如重试失败的请求</li>
+<li>RPC可能因为超时，返回没有任何结果</li>
+<li>RPC的重试可能会导致操作被执行多次，需要在协议中引入除重机制(幂等)</li>
+</ul>
+<blockquote>
+<p>幂等：某个函数或者某个接口使用相同参数调用一次或者无限次，其造成的后果是一样的</p>
+</blockquote>
+<ul>
+<li>RPC的延迟是很不稳定的，可能1秒返回结果，也可能需要更长的时间</li>
+<li>RPC的请求在发送较大的对象是可能会变成问题</li>
+<li>RPC的跨语言数据类型可能会有问题</li>
+</ul>
+<h4 id="RPC的方向"><a href="#RPC的方向" class="headerlink" title="RPC的方向"></a>RPC的方向</h4><ul>
+<li>Thrift，Avro带有RPC支持</li>
+<li>gRPC使用了Protocol Buffer的RPC实现</li>
+<li>Finagle使用Thrfit</li>
+<li>Rest.li使用JSON over HTTP</li>
+</ul>
+<p>REST是公共API的主要锋哥<br>RPC主要是同一组织之间拥有的服务请求</p>
+<h4 id="数据编码与RPC的演化"><a href="#数据编码与RPC的演化" class="headerlink" title="数据编码与RPC的演化"></a>数据编码与RPC的演化</h4><p>RPC方案的前后向兼容性属性从它使用的编码方式中继承</p>
+<ul>
+<li>RPC可能需要提供多个版本的服务API</li>
+<li>RESTful API，常用的方法是在URL或HTTP Accept头中使用版本号</li>
+<li>API密钥来表示特定客户端的服务</li>
+<li>将客户端请求的api版本存储在服务器上并允许通过单独的管理页面进行管理和更新</li>
+</ul>
+<h3 id="消息传递中的数据流"><a href="#消息传递中的数据流" class="headerlink" title="消息传递中的数据流"></a>消息传递中的数据流</h3><p>异步消息传递系统(消息代理)的优点</p>
+<ul>
+<li>收件人不可用或过载的情况下可以充当缓冲区，提高系统可靠性</li>
+<li>可以自动将消息重发到已经崩溃的进程，防止消息丢失</li>
+<li>避免发件人知道收件人的IP和端口</li>
+<li>允许将一条消息发给多个收件人</li>
+<li>将发件人与收件人逻辑分离</li>
+</ul>
+<p>消息传递通信是单向的：发送者不期望收到消息的回复，只是发送它，忘记它</p>
+<h4 id="消息掮客"><a href="#消息掮客" class="headerlink" title="消息掮客"></a>消息掮客</h4><p>一些开源的中间件消息队列，例如</p>
+<ul>
+<li>RabbitMQ，ActiveMQ，HornetQ，NATS和Apache Kafka等开源实现</li>
+<li>TIBCO，IBM WebSphere和webMethods等商业软件</li>
+</ul>
+<p>通常情况下：一个进程将消息发送到指定的队列或主题，代理确保将消息传递给一个或多个消费者或订阅者到那个队列或主题。在同一主题上可以有许多生产者和许多消费者。</p>
+<h4 id="分布式的Actor框架"><a href="#分布式的Actor框架" class="headerlink" title="分布式的Actor框架"></a>分布式的Actor框架</h4><p>Actor模型</p>
+<blockquote>
+<p>逻辑被封装在角色中，而不是直接处理线程(以及竞争条件，锁定和死锁的相关问题)。每个角色通常代表一个客户或实体，它可能有一些本地状态(不与其他任何角色共享)，它通过发送和接收异步消息与其他角色通信。消息传送不保证:在某些错误情况下，消息将丢失。由于每个角色一次只能处理一条消息，因此不需要担心线程，每个角色可以由框架独立调度。</p>
+</blockquote>
+<p>在分布式的框架中，可以用这个模型跨越多个节点扩展应用程序。</p>
+<p>流行的分布式actor框架处理消息</p>
+<ul>
+<li>Akka使用Java的内置序列化</li>
+<li>Orleans默认使用不支持滚动升级部署的自定义数据编码格式</li>
+<li>Erlang OTP对记录模式的更改是非常困难的</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/基础/" rel="tag"># 基础</a>
+          
+            <a href="/tags/概念/" rel="tag"># 概念</a>
+          
+            <a href="/tags/杂谈/" rel="tag"># 杂谈</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/08/以太坊节点id的生成/" rel="next" title="以太坊节点id的生成">
+                <i class="fa fa-chevron-left"></i> 以太坊节点id的生成
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/09/04/ddia阅读笔记-二/" rel="prev" title="ddia阅读笔记(二)">
+                ddia阅读笔记(二) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写在前面的话"><span class="nav-number">1.</span> <span class="nav-text">写在前面的话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#可靠性，可扩展性，可维护性"><span class="nav-number">2.</span> <span class="nav-text">可靠性，可扩展性，可维护性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#可靠性"><span class="nav-number">2.1.</span> <span class="nav-text">可靠性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#硬件故障"><span class="nav-number">2.1.1.</span> <span class="nav-text">硬件故障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#软件错误"><span class="nav-number">2.1.2.</span> <span class="nav-text">软件错误</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#人为错误"><span class="nav-number">2.1.3.</span> <span class="nav-text">人为错误</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可扩展性"><span class="nav-number">2.2.</span> <span class="nav-text">可扩展性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#描述负载"><span class="nav-number">2.2.1.</span> <span class="nav-text">描述负载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#描述性能"><span class="nav-number">2.2.2.</span> <span class="nav-text">描述性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应对负载的方法"><span class="nav-number">2.2.3.</span> <span class="nav-text">应对负载的方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可维护性"><span class="nav-number">2.3.</span> <span class="nav-text">可维护性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#可操作性"><span class="nav-number">2.3.1.</span> <span class="nav-text">可操作性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#简单性"><span class="nav-number">2.3.2.</span> <span class="nav-text">简单性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#可演化性"><span class="nav-number">2.3.3.</span> <span class="nav-text">可演化性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据模型与查询语言"><span class="nav-number">3.</span> <span class="nav-text">数据模型与查询语言</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#关系模型与文档模型"><span class="nav-number">3.1.</span> <span class="nav-text">关系模型与文档模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NOSQL"><span class="nav-number">3.1.1.</span> <span class="nav-text">NOSQL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对象关系不匹配"><span class="nav-number">3.1.2.</span> <span class="nav-text">对象关系不匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多对一和多对多的关系"><span class="nav-number">3.1.3.</span> <span class="nav-text">多对一和多对多的关系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#写代码的选择"><span class="nav-number">3.1.4.</span> <span class="nav-text">写代码的选择</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据查询语言"><span class="nav-number">3.1.5.</span> <span class="nav-text">数据查询语言</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#一个MapReduce的例子"><span class="nav-number">3.1.5.1.</span> <span class="nav-text">一个MapReduce的例子</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#图数据模型"><span class="nav-number">3.2.</span> <span class="nav-text">图数据模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#属性图"><span class="nav-number">3.2.1.</span> <span class="nav-text">属性图</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Cypher-查询语言"><span class="nav-number">3.2.1.1.</span> <span class="nav-text">Cypher 查询语言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SQL中的图查询"><span class="nav-number">3.2.1.2.</span> <span class="nav-text">SQL中的图查询</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三元组存储和SPARQL"><span class="nav-number">3.3.</span> <span class="nav-text">三元组存储和SPARQL</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#语义网络"><span class="nav-number">3.3.1.</span> <span class="nav-text">语义网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RDF数据模型"><span class="nav-number">3.3.2.</span> <span class="nav-text">RDF数据模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SPARQL查询语言"><span class="nav-number">3.3.3.</span> <span class="nav-text">SPARQL查询语言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基础-Datalog"><span class="nav-number">3.3.4.</span> <span class="nav-text">基础:Datalog</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#存储与检索"><span class="nav-number">4.</span> <span class="nav-text">存储与检索</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#驱动数据库的数据结构"><span class="nav-number">4.1.</span> <span class="nav-text">驱动数据库的数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#哈希索引"><span class="nav-number">4.1.1.</span> <span class="nav-text">哈希索引</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#文件格式"><span class="nav-number">4.1.1.1.</span> <span class="nav-text">文件格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#删除记录"><span class="nav-number">4.1.1.2.</span> <span class="nav-text">删除记录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#崩溃恢复"><span class="nav-number">4.1.1.3.</span> <span class="nav-text">崩溃恢复</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#部分写入记录"><span class="nav-number">4.1.1.4.</span> <span class="nav-text">部分写入记录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#并发控制"><span class="nav-number">4.1.1.5.</span> <span class="nav-text">并发控制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#局限性"><span class="nav-number">4.1.1.6.</span> <span class="nav-text">局限性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SSTables和LSM树"><span class="nav-number">4.1.2.</span> <span class="nav-text">SSTables和LSM树</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#构建和维护SSTables"><span class="nav-number">4.1.2.1.</span> <span class="nav-text">构建和维护SSTables</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#用SSTables制作LSM树"><span class="nav-number">4.1.2.2.</span> <span class="nav-text">用SSTables制作LSM树</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#性能优化"><span class="nav-number">4.1.2.3.</span> <span class="nav-text">性能优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#LSM树的小结"><span class="nav-number">4.1.2.4.</span> <span class="nav-text">LSM树的小结</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#B树"><span class="nav-number">4.1.3.</span> <span class="nav-text">B树</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#B树的更新"><span class="nav-number">4.1.3.1.</span> <span class="nav-text">B树的更新</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#B树的新增"><span class="nav-number">4.1.3.2.</span> <span class="nav-text">B树的新增</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#增加B树的可靠性"><span class="nav-number">4.1.3.3.</span> <span class="nav-text">增加B树的可靠性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#B树的优化"><span class="nav-number">4.1.3.4.</span> <span class="nav-text">B树的优化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#B树与LSM树的比较"><span class="nav-number">4.1.4.</span> <span class="nav-text">B树与LSM树的比较</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#LSM树的优点"><span class="nav-number">4.1.4.1.</span> <span class="nav-text">LSM树的优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#LSM树的缺点"><span class="nav-number">4.1.4.2.</span> <span class="nav-text">LSM树的缺点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#B树的优点"><span class="nav-number">4.1.4.3.</span> <span class="nav-text">B树的优点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其它索引结构"><span class="nav-number">4.2.</span> <span class="nav-text">其它索引结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#值存储在索引中"><span class="nav-number">4.2.1.</span> <span class="nav-text">值存储在索引中</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多列索引"><span class="nav-number">4.2.2.</span> <span class="nav-text">多列索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#全文搜索和模糊索引"><span class="nav-number">4.2.3.</span> <span class="nav-text">全文搜索和模糊索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在内存中存储一切"><span class="nav-number">4.2.4.</span> <span class="nav-text">在内存中存储一切</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#事务处理和分析"><span class="nav-number">4.3.</span> <span class="nav-text">事务处理和分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#数据仓库"><span class="nav-number">4.3.1.</span> <span class="nav-text">数据仓库</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#OLTP数据库与数据仓库之间的分歧"><span class="nav-number">4.3.1.1.</span> <span class="nav-text">OLTP数据库与数据仓库之间的分歧</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分析模式"><span class="nav-number">4.3.2.</span> <span class="nav-text">分析模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#列存储"><span class="nav-number">4.3.3.</span> <span class="nav-text">列存储</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#场景"><span class="nav-number">4.3.3.1.</span> <span class="nav-text">场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方法"><span class="nav-number">4.3.3.2.</span> <span class="nav-text">方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#列压缩"><span class="nav-number">4.3.4.</span> <span class="nav-text">列压缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存带宽和向量处理"><span class="nav-number">4.3.5.</span> <span class="nav-text">内存带宽和向量处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#列存储中的排序顺序"><span class="nav-number">4.3.6.</span> <span class="nav-text">列存储中的排序顺序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#几个不同的排序顺序"><span class="nav-number">4.3.7.</span> <span class="nav-text">几个不同的排序顺序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#写入列存储"><span class="nav-number">4.3.8.</span> <span class="nav-text">写入列存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#聚合"><span class="nav-number">4.3.9.</span> <span class="nav-text">聚合</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#编码与演化"><span class="nav-number">5.</span> <span class="nav-text">编码与演化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#编码数据的格式"><span class="nav-number">5.1.</span> <span class="nav-text">编码数据的格式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#语言特定格式"><span class="nav-number">5.1.1.</span> <span class="nav-text">语言特定格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JSON-XML和二进制变体"><span class="nav-number">5.1.2.</span> <span class="nav-text">JSON,XML和二进制变体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二进制编码"><span class="nav-number">5.1.3.</span> <span class="nav-text">二进制编码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Thrift与Protocol-Buffer"><span class="nav-number">5.1.4.</span> <span class="nav-text">Thrift与Protocol Buffer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字段标签的演变"><span class="nav-number">5.2.</span> <span class="nav-text">字段标签的演变</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据类型的演变"><span class="nav-number">5.3.</span> <span class="nav-text">数据类型的演变</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Avro"><span class="nav-number">5.3.1.</span> <span class="nav-text">Avro</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Avro的作者模式和读者模式"><span class="nav-number">5.3.1.1.</span> <span class="nav-text">Avro的作者模式和读者模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Avro的模式演变规则"><span class="nav-number">5.3.1.2.</span> <span class="nav-text">Avro的模式演变规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#动态生成的模式"><span class="nav-number">5.3.1.3.</span> <span class="nav-text">动态生成的模式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据流的类型"><span class="nav-number">5.4.</span> <span class="nav-text">数据流的类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#数据库中的数据流"><span class="nav-number">5.4.1.</span> <span class="nav-text">数据库中的数据流</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#数据与代码时间的不匹配"><span class="nav-number">5.4.1.1.</span> <span class="nav-text">数据与代码时间的不匹配</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#归档存储"><span class="nav-number">5.4.1.2.</span> <span class="nav-text">归档存储</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务中的数据流"><span class="nav-number">5.4.2.</span> <span class="nav-text">服务中的数据流</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Web服务"><span class="nav-number">5.4.2.1.</span> <span class="nav-text">Web服务</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#远程过程调用-RPC-的问题"><span class="nav-number">5.4.2.2.</span> <span class="nav-text">远程过程调用(RPC)的问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RPC的方向"><span class="nav-number">5.4.2.3.</span> <span class="nav-text">RPC的方向</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#数据编码与RPC的演化"><span class="nav-number">5.4.2.4.</span> <span class="nav-text">数据编码与RPC的演化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息传递中的数据流"><span class="nav-number">5.4.3.</span> <span class="nav-text">消息传递中的数据流</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#消息掮客"><span class="nav-number">5.4.3.1.</span> <span class="nav-text">消息掮客</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式的Actor框架"><span class="nav-number">5.4.3.2.</span> <span class="nav-text">分布式的Actor框架</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

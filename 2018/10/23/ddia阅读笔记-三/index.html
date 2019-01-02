@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="基础,概念,杂谈," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="写在前面的话本文的主要内容是ddia的第六章，分区 分区的主要目的是在数据量极大时，单节点处理不可取，因此需要将数据分散到多个节点进行并行的处理，这样就引出了分散数据的方法的问题，分别有按照键的范围分区以及按照键的散列分区。 分区之后的次级索引的需求，引出了基于文档的分区以及基于关键词的分区，前者是本地索引，后者是全局索引。 在分区之后对于节点动态增加和删除的情况下，引出了分区平衡的问题，给出了一">
+<meta name="keywords" content="基础,概念,杂谈">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ddia阅读笔记(三)">
+<meta property="og:url" content="https://remark31.github.io/2018/10/23/ddia阅读笔记-三/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="写在前面的话本文的主要内容是ddia的第六章，分区 分区的主要目的是在数据量极大时，单节点处理不可取，因此需要将数据分散到多个节点进行并行的处理，这样就引出了分散数据的方法的问题，分别有按照键的范围分区以及按照键的散列分区。 分区之后的次级索引的需求，引出了基于文档的分区以及基于关键词的分区，前者是本地索引，后者是全局索引。 在分区之后对于节点动态增加和删除的情况下，引出了分区平衡的问题，给出了一">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_partion_copy.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_partion_fileindex.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_partition_keyindex.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_partition_discovery.png">
+<meta property="og:updated_time" content="2018-12-13T07:32:59.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ddia阅读笔记(三)">
+<meta name="twitter:description" content="写在前面的话本文的主要内容是ddia的第六章，分区 分区的主要目的是在数据量极大时，单节点处理不可取，因此需要将数据分散到多个节点进行并行的处理，这样就引出了分散数据的方法的问题，分别有按照键的范围分区以及按照键的散列分区。 分区之后的次级索引的需求，引出了基于文档的分区以及基于关键词的分区，前者是本地索引，后者是全局索引。 在分区之后对于节点动态增加和删除的情况下，引出了分区平衡的问题，给出了一">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/ddia_partion_copy.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/10/23/ddia阅读笔记-三/"/>
+
+
+
+
+
+  <title>ddia阅读笔记(三) | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/10/23/ddia阅读笔记-三/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ddia阅读笔记(三)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-23T09:57:27+08:00">
+                2018-10-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="写在前面的话"><a href="#写在前面的话" class="headerlink" title="写在前面的话"></a>写在前面的话</h1><p>本文的主要内容是ddia的第六章，分区</p>
+<p>分区的主要目的是在数据量极大时，单节点处理不可取，因此需要将数据分散到多个节点进行并行的处理，这样就引出了分散数据的方法的问题，分别有按照<code>键的范围</code>分区以及按照<code>键的散列</code>分区。</p>
+<p>分区之后的次级索引的需求，引出了<code>基于文档</code>的分区以及<code>基于关键词</code>的分区，前者是本地索引，后者是全局索引。</p>
+<p>在分区之后对于节点动态增加和删除的情况下，引出了分区平衡的问题，给出了一定的解决方案。</p>
+<p>最后，对于请求路由，发现服务进行了介绍，提到了ZooKeeper，这个很有趣，在fabric kafka共识中，也是使用的zk来维护kafka的集群信息注册，不过当时并没有细细研究这个东西，之后有时间可以研究下fabric上的zk和kafka.</p>
+<p>整体来说分区还是和复制结合使用的一种策略，不过又是完全独立的，区块链中公链很少分区，强行要扯上去可能是侧链的概念与分区有一定关系吧，更多还是复制。</p>
+<h1 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h1><p>对于非常大的数据集或者非常高的吞吐量，仅仅复制是不够的，还需要对数据进行分区(partitions)，也称为分片(sharding)</p>
+<blockquote>
+<p>分区是一种有意将大型数据库分解成小型数据库的方式。它与网络分区(net splits)无关</p>
+</blockquote>
+<p>通常情况下，每条数据属于且仅属于一个分区，分区的主要目的是为了可扩展性。</p>
+<h2 id="分区与复制"><a href="#分区与复制" class="headerlink" title="分区与复制"></a>分区与复制</h2><p><img src="/imgs/ddia_partion_copy.png" alt="分区与复制"></p>
+<p>分区与复制通常可以结合使用，使得每个分区副本存储在多个节点上，大多数情况下，分区与复制的方案选择是独立的。</p>
+<h2 id="键值数据的分区"><a href="#键值数据的分区" class="headerlink" title="键值数据的分区"></a>键值数据的分区</h2><p>分区的核心是公平，尽量避免热点，最简单的方案就是<strong>将记录随机分配给节点</strong>，缺陷在于必须并行的查询所有节点。</p>
+<h3 id="根据键的范围分区"><a href="#根据键的范围分区" class="headerlink" title="根据键的范围分区"></a>根据键的范围分区</h3><p>例如字典、百科全书的卷，知道范围之间的边界，就可以轻松确定哪个分区包含某个值。</p>
+<p>分区边界会是一个问题，这里可以</p>
+<ul>
+<li>管理员手动选择</li>
+<li>数据库自动选择</li>
+</ul>
+<p>在每个分区中，可以按照一定的顺序保存键(如SSTable和LSM)</p>
+<ul>
+<li>好处：范围扫描简单</li>
+<li>坏处：特定的访问会导致热点</li>
+</ul>
+<p>例如：将测量数据存入数据库时，如果以时间戳为key，每天的数据写入都会产生一个热点，所有的数据都会写到当天存储所在的那个节点上，这里解决方案是需要使用除了时间戳以外的东西作为主键，例如传感器名称等。</p>
+<h3 id="根据键的散列分区"><a href="#根据键的散列分区" class="headerlink" title="根据键的散列分区"></a>根据键的散列分区</h3><p>使用标准散列函数可以将偏斜的数据均匀分布。</p>
+<blockquote>
+<p>一致性哈希<br>它使用随机选择的分区边界(partition boundaries)来避免中央控制或分布式一致性的需要,此处与复制一致性或ACID一致性无关。可以简单称之为散列分区(hash partitioning)</p>
+</blockquote>
+<p>散列的劣势在于失去了<strong>高效执行范围查询的能力</strong></p>
+<p>举例：</p>
+<ul>
+<li>在mongoDB中，如果使用了基于散列的分区模式，则任何范围查询都必须发送到所有分区</li>
+<li>Riak，Couchbase或Voldemort不支持主键上的范围查询</li>
+<li>Cassandra采用了折中策略，可以使用多个列的复合主键，只有第一列会作为散列的依据，其他列会被作为排序数据的连接索引，在第一列已经指定了固定值的情况下，可以对该键的其他列执行有效的范围查询</li>
+</ul>
+<h4 id="负载倾斜与消除热点"><a href="#负载倾斜与消除热点" class="headerlink" title="负载倾斜与消除热点"></a>负载倾斜与消除热点</h4><p>哈希分区可以减少热点，但是并不能避免，极端情况下所有读写操作都是针对同一个键的。</p>
+<p>简单的处理方法：<br>在主键的开始或者结尾增加一个随机数</p>
+<ul>
+<li>优势：这样可以将主键散列到不同的分区中</li>
+<li>劣势：所有的读取都要做额外的合并操作，并且需要记录哪些主键被附加了随机数，这里需要自己来权衡。</li>
+</ul>
+<h2 id="分片与次级索引"><a href="#分片与次级索引" class="headerlink" title="分片与次级索引"></a>分片与次级索引</h2><p>次级索引是关系型数据库的基础，并且在文档数据库中也很常见，然而面临的问题是次级索引不能整齐的映射到分区，有两种用次级索引对数据库进行分区的方法</p>
+<ul>
+<li>基于文档的分区</li>
+<li>基于关键词的分区</li>
+</ul>
+<h3 id="基于文档的分区"><a href="#基于文档的分区" class="headerlink" title="基于文档的分区"></a>基于文档的分区</h3><p>例如某一汽车网站，每个列表都有一个唯一的文档ID，当需要按照颜色过滤时，需要构建一个颜色相关的次级索引，如下图所示</p>
+<p><img src="/imgs/ddia_partion_fileindex.png" alt="基于文档的分区"></p>
+<p>在这种索引方法中，每个分区是完全独立的：</p>
+<ul>
+<li>分区维护自己的二级索引</li>
+<li>不关心存储在其他分区的数据</li>
+</ul>
+<p>因此也被称为<strong>本地索引</strong></p>
+<p>在查询时需要将请求发送到所有分区，并且合并所有返回的结果，因此也被成为分散/聚集。</p>
+<p>使用：</p>
+<ul>
+<li>MonDBDB,Riak,Cassandra等</li>
+</ul>
+<h3 id="根据关键词的分区"><a href="#根据关键词的分区" class="headerlink" title="根据关键词的分区"></a>根据关键词的分区</h3><p>构建一个全局索引，然后对索引也进行分区，如下图所示</p>
+<p><img src="/imgs/ddia_partition_keyindex.png" alt="基于关键词的分区"></p>
+<p>例如a到r的颜色在分区0中，s到z的在分区1中，等等</p>
+<p>这种分区方式被称为关键词分区</p>
+<p><strong>优势</strong></p>
+<ul>
+<li>读取更有效率，不需要分散/聚集所有分区</li>
+</ul>
+<p><strong>劣势</strong></p>
+<ul>
+<li>写速度较慢且复杂，写入单个文档可能会影响索引的多个分区</li>
+</ul>
+<p>理想情况下索引总是最新的，然而实践中对全局二级索引的更新通常是异步的。</p>
+<h2 id="分区再平衡"><a href="#分区再平衡" class="headerlink" title="分区再平衡"></a>分区再平衡</h2><p>随着时间推移，数据库会产生变化，例如需要更多的CPU来处理吞吐量，更多的磁盘存储数据集等，这些需要数据/请求从一个节点移动到另一个节点。这种将负载从集群中的一个节点向另一个节点移动的过程称为<strong>再平衡</strong></p>
+<p>再平衡的最低要求</p>
+<ul>
+<li>再平衡后，负载应该在集群中的节点之间公平的共享</li>
+<li>再平衡发生时，数据库应该继续接受读取和写入</li>
+<li>节点之间只移动必须的数据，以便快速再平衡，并减少网络和磁盘I/O的负载</li>
+</ul>
+<h3 id="平衡策略"><a href="#平衡策略" class="headerlink" title="平衡策略"></a>平衡策略</h3><h4 id="hash-mod-N：极不推荐"><a href="#hash-mod-N：极不推荐" class="headerlink" title="hash mod N：极不推荐"></a>hash mod N：极不推荐</h4><p>方法：hash(key) mode 10，就可以简单的将键分给了10个节点</p>
+<p>劣势：如果N(节点数量)发生了变化，就会导致大量的数据发生了移动，这使重新平衡过于昂贵了。</p>
+<h4 id="固定数量的分区"><a href="#固定数量的分区" class="headerlink" title="固定数量的分区"></a>固定数量的分区</h4><p>简单解决方案：创建比节点更多的分区，并为每个节点分配多个分区</p>
+<p>例如：</p>
+<ul>
+<li>运行在10个节点上的集群开始被拆为1000个分区，大约会有100个分区分配给每个节点</li>
+<li>当节点被添加集群后，从之前的节点中窃取分区，知道分区再次公平分配</li>
+<li>只有分区在节点间移动，分区的数量和键不会被改变</li>
+</ul>
+<p>缺陷：</p>
+<p>分区数量固定 ，但是数量量变动很大，难以达到最佳性能。</p>
+<h4 id="动态分区"><a href="#动态分区" class="headerlink" title="动态分区"></a>动态分区</h4><p>分区增长到超过配置的大小时，会被分成两个分区，每个分区约占一半的数据。相反，如果大量数据被删除分区缩小到某个阈值以下，就可以和相邻分区合并。</p>
+<p>注意点：</p>
+<p>当空数据库从一个分区开始，所有写入就会汇集到一个节点，因此允许在一个空数据库上预先配置一组初始分区(预分割，HBase和MongoDB）</p>
+<p><strong>不仅使用于范围分区，也适用于散列分区</strong></p>
+<h4 id="按节点比例分区"><a href="#按节点比例分区" class="headerlink" title="按节点比例分区"></a>按节点比例分区</h4><p>每个节点具有固定数量的分区。</p>
+<ul>
+<li>每个分区大小与数据集大小成比例增长，而节点数量保持不变</li>
+<li>当增加节点数时，分区将再次变小</li>
+<li>新节点加入会随机选择固定数量的现有分区进行拆分，占有一半并且将另一半留在原地</li>
+</ul>
+<p><strong>要求使用基于散列的分区</strong></p>
+<h4 id="运维：手动还是自动平衡"><a href="#运维：手动还是自动平衡" class="headerlink" title="运维：手动还是自动平衡"></a>运维：手动还是自动平衡</h4><ul>
+<li>全自动平衡：系统自动决定何时将分区从一个节点移到另一个节点，无需人工干预<ul>
+<li>优势：方便，正常维护少</li>
+<li>劣势：不可预测，可能危险。</li>
+</ul>
+</li>
+<li>完全手动：分区指派给节点由管理员明确配置，仅在管理员明确重新配置时才会更改。</li>
+</ul>
+<p>例如：<br>假设一个节点过载，并且对请求的响应暂时很慢。其他节点得出结论:过载的节点已经死亡，并自动重新平衡集群，使负载离开它。这会对已经超负荷的节点，其他节点和网络造成额外的负载，从而使情况变得更糟，并可能导致级联失败。</p>
+<h2 id="请求路由"><a href="#请求路由" class="headerlink" title="请求路由"></a>请求路由</h2><p>可以概括为服务发现，如下图所示:</p>
+<p><img src="/imgs/ddia_partition_discovery.png" alt="服务发现"></p>
+<ul>
+<li>允许联系任何节点，如节点拥有分区，则直接处理该请求，否则将请求转发，接收回复并传递给客户端</li>
+<li>将请求发送到路由层，决定应该请求的节点，并相应的转发</li>
+<li>要求客户端知道分区与节点的配置，客户端直接连接，不需要中介。</li>
+</ul>
+<p>问题：路由决策的组件是如何了解分区-节点之间的分配关系变化的？</p>
+<p>许多都依赖于一个独立的协调服务，如ZooKeeper来跟踪集群元数据。</p>
+<ul>
+<li>每个节点都在ZooKeeper中注册自己</li>
+<li>ZooKeeper维护分区到节点的可靠映射</li>
+<li>参与者可以在ZooKeeper中订阅此信息，当分区发生改变，就会ZK就会通知路由更新。</li>
+</ul>
+<h2 id="执行并查询"><a href="#执行并查询" class="headerlink" title="执行并查询"></a>执行并查询</h2><p>大规模并行处理(MPP, Massively parallel processing)</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/基础/" rel="tag"># 基础</a>
+          
+            <a href="/tags/概念/" rel="tag"># 概念</a>
+          
+            <a href="/tags/杂谈/" rel="tag"># 杂谈</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/04/ddia阅读笔记-二/" rel="next" title="ddia阅读笔记(二)">
+                <i class="fa fa-chevron-left"></i> ddia阅读笔记(二)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/10/26/ddia阅读笔记-四/" rel="prev" title="ddia阅读笔记(四)">
+                ddia阅读笔记(四) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写在前面的话"><span class="nav-number">1.</span> <span class="nav-text">写在前面的话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分区"><span class="nav-number">2.</span> <span class="nav-text">分区</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#分区与复制"><span class="nav-number">2.1.</span> <span class="nav-text">分区与复制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#键值数据的分区"><span class="nav-number">2.2.</span> <span class="nav-text">键值数据的分区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#根据键的范围分区"><span class="nav-number">2.2.1.</span> <span class="nav-text">根据键的范围分区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#根据键的散列分区"><span class="nav-number">2.2.2.</span> <span class="nav-text">根据键的散列分区</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#负载倾斜与消除热点"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">负载倾斜与消除热点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分片与次级索引"><span class="nav-number">2.3.</span> <span class="nav-text">分片与次级索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于文档的分区"><span class="nav-number">2.3.1.</span> <span class="nav-text">基于文档的分区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#根据关键词的分区"><span class="nav-number">2.3.2.</span> <span class="nav-text">根据关键词的分区</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分区再平衡"><span class="nav-number">2.4.</span> <span class="nav-text">分区再平衡</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#平衡策略"><span class="nav-number">2.4.1.</span> <span class="nav-text">平衡策略</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#hash-mod-N：极不推荐"><span class="nav-number">2.4.1.1.</span> <span class="nav-text">hash mod N：极不推荐</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#固定数量的分区"><span class="nav-number">2.4.1.2.</span> <span class="nav-text">固定数量的分区</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#动态分区"><span class="nav-number">2.4.1.3.</span> <span class="nav-text">动态分区</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#按节点比例分区"><span class="nav-number">2.4.1.4.</span> <span class="nav-text">按节点比例分区</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#运维：手动还是自动平衡"><span class="nav-number">2.4.1.5.</span> <span class="nav-text">运维：手动还是自动平衡</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#请求路由"><span class="nav-number">2.5.</span> <span class="nav-text">请求路由</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#执行并查询"><span class="nav-number">2.6.</span> <span class="nav-text">执行并查询</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

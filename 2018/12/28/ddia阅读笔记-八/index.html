@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="写在前面的话本章是ddia的第十一章，流处理。 流处理与之前批处理最大的区别在于流是无穷无尽的，以事件为最小原子，随着时间推移逐渐可用。 本章第一部分讲的消息队列，将消费者和生产者的稳定性问题转移到了自己身上，比如fabirc中的老熟人kafka 接下来提到了流与数据库的关联，流很像是数据库中的日志结构存储引擎，阐述了两者之间的关联 再后提到了状态与流处理，讨论了流处理中的不同窗口方式以及连接类型">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ddia阅读笔记(八)">
+<meta property="og:url" content="https://remark31.github.io/2018/12/28/ddia阅读笔记-八/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="写在前面的话本章是ddia的第十一章，流处理。 流处理与之前批处理最大的区别在于流是无穷无尽的，以事件为最小原子，随着时间推移逐渐可用。 本章第一部分讲的消息队列，将消费者和生产者的稳定性问题转移到了自己身上，比如fabirc中的老熟人kafka 接下来提到了流与数据库的关联，流很像是数据库中的日志结构存储引擎，阐述了两者之间的关联 再后提到了状态与流处理，讨论了流处理中的不同窗口方式以及连接类型">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_streambalance.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_streamorder.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_logsteam.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_streamdoublewrite.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_streamcdc.png">
+<meta property="og:updated_time" content="2019-01-02T12:37:07.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ddia阅读笔记(八)">
+<meta name="twitter:description" content="写在前面的话本章是ddia的第十一章，流处理。 流处理与之前批处理最大的区别在于流是无穷无尽的，以事件为最小原子，随着时间推移逐渐可用。 本章第一部分讲的消息队列，将消费者和生产者的稳定性问题转移到了自己身上，比如fabirc中的老熟人kafka 接下来提到了流与数据库的关联，流很像是数据库中的日志结构存储引擎，阐述了两者之间的关联 再后提到了状态与流处理，讨论了流处理中的不同窗口方式以及连接类型">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/ddia_streambalance.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/12/28/ddia阅读笔记-八/"/>
+
+
+
+
+
+  <title>ddia阅读笔记(八) | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/12/28/ddia阅读笔记-八/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ddia阅读笔记(八)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-28T16:52:15+08:00">
+                2018-12-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="写在前面的话"><a href="#写在前面的话" class="headerlink" title="写在前面的话"></a>写在前面的话</h1><p>本章是ddia的第十一章，流处理。</p>
+<p>流处理与之前批处理最大的区别在于流是无穷无尽的，以事件为最小原子，随着时间推移逐渐可用。</p>
+<p>本章第一部分讲的消息队列，将消费者和生产者的稳定性问题转移到了自己身上，比如fabirc中的老熟人kafka</p>
+<p>接下来提到了流与数据库的关联，流很像是数据库中的日志结构存储引擎，阐述了两者之间的关联</p>
+<p>再后提到了状态与流处理，讨论了流处理中的不同窗口方式以及连接类型，以及应用</p>
+<p>最后对流处理的容错进行了讨论，与批处理不同的需要更加细粒度的容错机制。</p>
+<h1 id="流处理"><a href="#流处理" class="headerlink" title="流处理"></a>流处理</h1><ul>
+<li>批处理：输入是有界的，批处理知道它合适完成输入的读取</li>
+<li>流处理：抛开固定的时间切片，事件发生就立即处理</li>
+</ul>
+<blockquote>
+<p>“流”是指随着时间的推移逐渐可用的数据</p>
+</blockquote>
+<h2 id="传递事件流"><a href="#传递事件流" class="headerlink" title="传递事件流"></a>传递事件流</h2><p>流处理的上下文中，记录通常被叫做事件</p>
+<blockquote>
+<p>事件：一个小的，自包含的，不可变的对象，包含某个时间点发生的某件事情的细节</p>
+</blockquote>
+<p>事件由生产者(<code>producer</code>)生成一次，然后可能由多个消费者(<code>consumer</code>)进行处理，在流媒体系统中，相关的事件通常被聚合为一个主题(<code>topic</code>)或流(<code>stream</code>)</p>
+<h3 id="消息系统"><a href="#消息系统" class="headerlink" title="消息系统"></a>消息系统</h3><p>向消费者通知新事件的常用方式是使用消息传递系统(<code>messaging system</code>)</p>
+<p>通用问题：</p>
+<ol>
+<li>如果生产者发送消息的速度比消费者能够处理的速度快会发生什么?</li>
+</ol>
+<ul>
+<li>系统丢掉消息</li>
+<li>将消息放入缓冲队列</li>
+<li>使用背压(流量控制，阻塞生产者，以避免发送更多的消息)</li>
+</ul>
+<p>P.S. 如消息缓存在队列中，当队列装不进内存时系统会发生何种情况？</p>
+<ul>
+<li>崩溃？</li>
+<li>写入磁盘？</li>
+<li>磁盘访问会如何影响消息传递系统的性能？</li>
+</ul>
+<ol start="2">
+<li>如果节点崩溃或暂时脱机，会发生什么情况?</li>
+</ol>
+<ul>
+<li>持久性可能需要写入磁盘和/或复制的某种组合</li>
+<li>如果你能接受有时消息会丢失，则可能在同一硬件上获得更高的吞吐量和更低的延 迟。</li>
+</ul>
+<h4 id="直接从生产者传递给消费者"><a href="#直接从生产者传递给消费者" class="headerlink" title="直接从生产者传递给消费者"></a>直接从生产者传递给消费者</h4><ul>
+<li>UDP组播广泛应用于金融行业 (应用层协议恢复丢失的数据包)</li>
+<li>无代理的消息库，通过TCP或IP多播实现发布/订阅消息<ul>
+<li>ZeroMQ</li>
+<li>nanomsg</li>
+</ul>
+</li>
+<li>使用不可靠的UDP消息传递来收集网络中所有机器的指标对其进行监控<ul>
+<li>StasD</li>
+<li>Brubeck</li>
+</ul>
+</li>
+<li>如消费者在网络上公开服务，生产者可以直接发送HTTP或RPC请求将消息推送给使用者<ul>
+<li>webhooks</li>
+</ul>
+</li>
+</ul>
+<p>这些系统：</p>
+<ul>
+<li>通常要求应用代码意识到消息丢失的可能性</li>
+<li>需要假设生产者和消费者始终在线</li>
+</ul>
+<h3 id="消息代理"><a href="#消息代理" class="headerlink" title="消息代理"></a>消息代理</h3><p>消息代理(<code>message broker</code>)，也称为消息队列(<code>message queue</code>)，消息代理实质上是一种针对处理消息流而优化的数据库。作为服务器运行，生产者和消费者作为客户端连接到服务器，生产者将消息写入代理，消费者通过从代理那里读取来接受消息。</p>
+<p>通过代理，可以将持久性问题转移到代理的身上。</p>
+<h4 id="消息代理与数据库对比"><a href="#消息代理与数据库对比" class="headerlink" title="消息代理与数据库对比"></a>消息代理与数据库对比</h4><ul>
+<li>数据库通常保留数据直至显式删除，而大多数消息代理在消息传递成功后会自动删除数据</li>
+<li>代理通常认为自己的队列很短，如果需要缓冲很多消息，就可能导致整体吞吐量恶化</li>
+<li>数据库通常支持二级索引和各种搜索数据的方式，消息代理通常支持按照某种模式匹配主题，订阅子集，机制并不一样</li>
+<li>查询数据库时，结果通常基于某个时间点的数据快照。消息代理不支持任意查询，但是当数据发生变化时(即新消息可用时)，它们会通知客户端</li>
+</ul>
+<h4 id="多个消费者"><a href="#多个消费者" class="headerlink" title="多个消费者"></a>多个消费者</h4><p>多个消费者从同一主题中读取消息时，有两种主要的消息传递模式</p>
+<ul>
+<li>负载均衡(load balance)</li>
+</ul>
+<p>每条消息都被传递给消费者之一,处理该主题下消息的工作能被多个消费者共享。适用于处理消息的代价高昂，希望能并行处理消息</p>
+<ul>
+<li>扇出(fan-out)</li>
+</ul>
+<p>每条消息都传递给所有的消费者，允许几个独立的消费者收听相同的消息广播而不互相影响。</p>
+<p><img src="/imgs/ddia_streambalance.png" alt="消息传递模式"></p>
+<p>两种模式可以组合使用：两个独立的消费者组可以每组各订阅一个主题，每一组组都共同收到所有消息，但在每一组内部，每条消息仅由单个节点处理</p>
+<h4 id="确认与重新交付"><a href="#确认与重新交付" class="headerlink" title="确认与重新交付"></a>确认与重新交付</h4><p>为了确保消息不会丢失，消息代理使用确认：客户端必须显式告知代理消息处理完毕的时间，以便代理能将消息从队列中移除</p>
+<p>如果与客户端的连接关闭，或者代理超出一段时间未收到确认，代理则认为消息没有被处理，因此它将消息再递送给另一个消费者</p>
+<p>负载均衡与重新交付结合时，可能会导致消息顺序变动，如下图所示</p>
+<p><img src="/imgs/ddia_streamorder.png" alt="流中的消息顺序变动"></p>
+<p>消费者2在消费m3时崩溃，此时消费者1正在处理m4，在处理完成后再处理重发的m3，因此导致顺序变动</p>
+<p>为避免此问题：</p>
+<ul>
+<li>可以让每个消费者使用单独的队列</li>
+<li>让消息是完全独立的</li>
+</ul>
+<h3 id="分区日志"><a href="#分区日志" class="headerlink" title="分区日志"></a>分区日志</h3><p>消息队列是建立在短暂消息传递的思维方式上。</p>
+<p>如果你将新的消费者添加到消息系统，通常只能接收到消费者注册之后开始发送的消息，先前的任何消息都不能收到，而对于文件和数据库，可以随时添加新的客户端，并且能读取任意久远的数据。</p>
+<p>这里就产生了一个想法：基于日志的消息代理(<code>log-based message brokers</code>)，既有数据库的持久存储方式，又有消息传递的低延迟通知</p>
+<h4 id="使用日志进行消息存储"><a href="#使用日志进行消息存储" class="headerlink" title="使用日志进行消息存储"></a>使用日志进行消息存储</h4><p>生产者通过将消息追加到日志末尾来发送消息，而消费者通过依次读取日志来接收消息。如果消费者读到日志末尾，则会等待新消息追加的通知。 Unix工具tail -f 能监视文件被追加写入的数据，基本上就是这样工作的。</p>
+<p>为了扩展性别，可以分区，不同分区可以托管到不同的机器上。</p>
+<p>每个分区内队列为每个消息非配一个单调递增的序列号或偏移量(offset)</p>
+<p><img src="/imgs/ddia_logsteam.png" alt="日志流"></p>
+<p>这种消息存储的实例有：</p>
+<ul>
+<li>Apache Kafka</li>
+<li>Amazon Kinesis Streams</li>
+<li>DistributedLog</li>
+</ul>
+<h4 id="日志与传统消息相比"><a href="#日志与传统消息相比" class="headerlink" title="日志与传统消息相比"></a>日志与传统消息相比</h4><p>基于日志的方法天然支持扇出式消息传递，读取消息不会将其从日志中删除。</p>
+<p>为了在一组消费者之间实现负载平衡，代理可以将整个分区分配给消费者组中的节点，而不是将单条消息分配给消费者客户端</p>
+<p>这种负载均衡方式的缺点：</p>
+<ul>
+<li>共享消费主题工作的节点数，最多为该主题中的日志分区数</li>
+<li>如果某条消息处理缓慢，则它会阻塞该分区中后续消息的处理</li>
+</ul>
+<p>优劣：</p>
+<ul>
+<li>JMS/AMQP风格的消息代理：消息处理代价高昂，希望逐条并行处理，以及消息的顺序并没有那么重要的情况</li>
+<li>基于日志的方法：在消息吞吐量很高，处理迅速，顺序很重要的情况下</li>
+</ul>
+<h4 id="消费者偏移量"><a href="#消费者偏移量" class="headerlink" title="消费者偏移量"></a>消费者偏移量</h4><p>所有偏移量小于消费者的当前偏移量的消息已经被处理，而具有更大偏移量的消息还没有被看到</p>
+<p>P.S.</p>
+<p>如果消费者节点失效，则失效消费者的分区将指派给其他节点，并从最后记录的偏移量开始消费消息。如果消费者已经处理了后续的消息，但还没有记录它们的偏移量，那么重启后这些消息将被处理两次</p>
+<h4 id="磁盘空间使用"><a href="#磁盘空间使用" class="headerlink" title="磁盘空间使用"></a>磁盘空间使用</h4><p>为了回收磁盘空间，日志实际上被分割成段，并不时地将旧段删除或移动到归档存储</p>
+<p>在实际中，日志实现了一个有限大小的缓冲区，当缓冲区填满时会丢弃就消息，也被称为循环缓冲区(<code>circular buffer</code>)或环形缓冲区(<code>ring buffer</code>)。</p>
+<h4 id="当消费者跟不上生产者时"><a href="#当消费者跟不上生产者时" class="headerlink" title="当消费者跟不上生产者时"></a>当消费者跟不上生产者时</h4><p>基于日志的方法是缓冲的一种形式，具有很大，但大小固定的缓冲区(受可用磁盘空间的限制)</p>
+<p>如果消费者过慢，可以监控消费者落后日志头部的距离，如果落后太多就发出报警</p>
+<p>即使消费者真的落后太多开始丢失消息，也只有那个消费者受到影响;它不会中断其他消费者的服务，可以实验性的消费生产日志，进行开发，测试或者调试，不担心会中断生产服务。</p>
+<h4 id="重播旧信息"><a href="#重播旧信息" class="headerlink" title="重播旧信息"></a>重播旧信息</h4><p>基于日志的消息代理中，使用消息更像是从文件中读取数据:这是只读操作，不会更改日志。</p>
+<p>这一方面允许基于日志的消息传递进行更多的实验，更容易从错误和漏洞中恢复，使其成为在组织内继承数据流的良好工具</p>
+<h2 id="流与数据库"><a href="#流与数据库" class="headerlink" title="流与数据库"></a>流与数据库</h2><p>数据库和数据流之间的联系不仅仅是磁盘日志的物理存储 —— 而是更深层的联系</p>
+<h3 id="保持系统同步"><a href="#保持系统同步" class="headerlink" title="保持系统同步"></a>保持系统同步</h3><p>由于相同或相关的数据出现在了不同的地方，因此相互间需要保持同步</p>
+<p>对于数据仓库：</p>
+<p>批处理： 通常是先取得数据库的完整副本，然后执行转换，并批量加载到数据仓库中。</p>
+<p>对于数据库和搜索索引，有时候会使用双写(<code>dual write</code>)，代码在数据变更时明确写入每个系统中，例如，首先写入数据库，再更新搜索索引，再然后使缓存项失效</p>
+<p>双写的问题之竞争条件如下图所示</p>
+<p><img src="/imgs/ddia_streamdoublewrite.png" alt="流中的双写问题"></p>
+<p>在数据库中被置为A，在索引中最终被置为B</p>
+<p>双写的问题之容错问题：其中一个写入可能失败，而另外一个成功，这里需要原子操作</p>
+<h3 id="变更数据捕获"><a href="#变更数据捕获" class="headerlink" title="变更数据捕获"></a>变更数据捕获</h3><p>变更数据捕获(change data capture, CDC)</p>
+<blockquote>
+<p>这是一种观察写入数据库的所有数据变更，并将其提取并转换为可以复制到其他系统中的形式的过程.</p>
+</blockquote>
+<p><img src="/imgs/ddia_streamcdc.png" alt="变更数据捕获"></p>
+<h4 id="变更数据捕获的实现"><a href="#变更数据捕获的实现" class="headerlink" title="变更数据捕获的实现"></a>变更数据捕获的实现</h4><p>从本质上说，变更数据捕获使得一个数据库成为领导者(被捕获变化的数据库)，并将其他组件变为追随者。基于日志的消息代理非常适合从源数据库传输变更事件，因为它保留了消息的顺序。</p>
+<p>方法：</p>
+<ul>
+<li>数据库触发器可用来实现变更数据捕获，通过注册观察所有变更的触发器，并将相应的变更项写入变更日志表中，但是很脆弱，有显著的性能开销。</li>
+<li>解析复制日志是一种更稳健的方法 </li>
+</ul>
+<p>实例：</p>
+<ul>
+<li>LinkedIn的Databus，Facebook的Wormhole，Yahoo!的Sherpa大规模应用数据库触发</li>
+<li>Bottled Water使用解码WAL的API实现了PostgreSQL的CDC</li>
+<li>Maxwell和Debezium通过解析binlog实现了MySQL的CDC</li>
+<li>Mongoriver读取MongoDB oplog实现了CDC</li>
+<li>GoldenGate为Oracle实现了CDC</li>
+</ul>
+<p>变更数据捕获通常是异步的</p>
+<ul>
+<li>优势：添加缓慢的消费者不会过度影响记录系统</li>
+<li>劣势：所有复制延迟可能有的问题在这里都可能出现</li>
+</ul>
+<h4 id="初始快照"><a href="#初始快照" class="headerlink" title="初始快照"></a>初始快照</h4><p>拥有所有对数据库进行变更的日志，则可以通过重放该日志，来重建数据库的完整状 态。</p>
+<ul>
+<li>永远保留所有更改会耗费太多磁盘空间</li>
+<li>重放过于费时</li>
+</ul>
+<p>因此需要快照。</p>
+<p>数据库的快照必须与变更日志中的已知位置或偏移量相对应，以便在处理完快照后知道从哪里开始应用变更。</p>
+<h4 id="日志压缩"><a href="#日志压缩" class="headerlink" title="日志压缩"></a>日志压缩</h4><p>在基于日志的消息代理与变更数据捕获与日志存储中的日志压缩一致：</p>
+<ul>
+<li>存储引擎定期在日志中查找具有相同键的记录，丢掉所有重复的内容，并只保留每个键的最新更新。这个压缩与合并过程在后台运行</li>
+</ul>
+<p>实践：</p>
+<ul>
+<li>Apache Kafka支持这种日志压缩功能</li>
+</ul>
+<h4 id="变更流的API支持"><a href="#变更流的API支持" class="headerlink" title="变更流的API支持"></a>变更流的API支持</h4><p>数据库开始将变更流作为接口，例如：</p>
+<ul>
+<li>RethinkDB允许查询订阅通知，当查询结果变更时获得通知</li>
+<li>Firebase和CouchDB基于变更流进行同步，这个变更流同样可以用于应用</li>
+<li>Meteor使用MongoDB oplog订阅数据变更，并改变了用户接口</li>
+<li>VoltDB允许事务以流的形式连续地从数据库中导出数据</li>
+<li>Kafka Connect致力于将广泛的数据库系统的变更数据捕获工具与Kafka集成</li>
+</ul>
+<h4 id="事件溯源"><a href="#事件溯源" class="headerlink" title="事件溯源"></a>事件溯源</h4><p>事件溯源涉及到将所有对应用状态的变更存储为变更事件日志，与变更数据捕获的区别在于：</p>
+<ul>
+<li>在变更数据捕获中，应用以可变方式使用数据库，任意更新和删除记录</li>
+<li>在事件溯源中，应用逻辑显式构建在写入事件日志的不可变事件之上。在这种情况下，事件存储是仅追加写入的，更新与删除是不鼓励的或禁止的</li>
+</ul>
+<h4 id="从事件日志中派生出当前状态"><a href="#从事件日志中派生出当前状态" class="headerlink" title="从事件日志中派生出当前状态"></a>从事件日志中派生出当前状态</h4><p>事件日志本身并不是很有用，因为用户通常期望看到的是系统的当前状态，而不是变更历史。</p>
+<p>重放事件日志允许让你重新构建系统的当前状态，但是日志压缩需要采用不同的方式</p>
+<ul>
+<li>用于记录更新的CDC事件通常包含记录的完整新版本，因此主键的当前值完全由该主键的最近事件确定，而日志压缩可以丢弃相同主键的先前事件</li>
+<li>事件溯源在更高层次进行建模:事件通常表示用户操作的意图，而不是因为操作而发生的状态更新机制，因此不能进行同样的日志压缩</li>
+</ul>
+<h4 id="命令和事件"><a href="#命令和事件" class="headerlink" title="命令和事件"></a>命令和事件</h4><ul>
+<li>命令<br>来自用户的请求刚到达时，它一开始是一个命令</li>
+<li>事件<br>如果验证成功并且命令被接 受，则它变为一个持久化且不可变的事件</li>
+</ul>
+<h2 id="状态，流和不变性"><a href="#状态，流和不变性" class="headerlink" title="状态，流和不变性"></a>状态，流和不变性</h2><p>状态：   </p>
+<ul>
+<li>通常将数据库视为应用程序当前状态的存储</li>
+<li>本质：会变化</li>
+<li>数据库支持数据的增删改</li>
+</ul>
+<p><strong>如果存储了变更日志，重现状态就非常简单</strong></p>
+<blockquote>
+<p>事务日志记录了数据库的所有变更。高速追加下入是更改日志的唯一方法。从这个角度来看，数据库的内容其实是日志中记录最新值的缓存。日志才是真相，数据库是日志子集的缓存，这一缓存子集恰好来自日志中每条记录与索引值的最新值</p>
+</blockquote>
+<p>日志压缩是连接日志与数据库状态之间的桥梁:它只保留每条记录的最新版本，并丢弃被覆盖的版本</p>
+<h3 id="不可变事件的优点"><a href="#不可变事件的优点" class="headerlink" title="不可变事件的优点"></a>不可变事件的优点</h3><p>数据库中的不变性，如果发生错误，不是单纯的删除或者更改分类账中的错误交易，而是添加另外一笔以补偿错误。</p>
+<h3 id="从同一事件日志中派生出多个视图"><a href="#从同一事件日志中派生出多个视图" class="headerlink" title="从同一事件日志中派生出多个视图"></a>从同一事件日志中派生出多个视图</h3><p>通过从不变的事件日志中分离出可变的状态，你可以针对不同的读取方式，从相同的事件日志中衍生出几种不同的表现形式</p>
+<p>例如：</p>
+<ul>
+<li>分析型数据库Druid使用这种方式直接从Kafka摄取数据</li>
+<li>Pistachio是一个分布式的键值存储，使用Kafka作为提交日志</li>
+<li>Kafka Connect能将来自Kafka的数据导出到各种不同的数据库与索引</li>
+</ul>
+<p>通过将数据写入的形式与读取形式相分离，并允许几个不同的读取视图，能获得很大的灵活性。这个想法有时被称为<strong>命令查询责任分离</strong></p>
+<h3 id="并发控制"><a href="#并发控制" class="headerlink" title="并发控制"></a>并发控制</h3><p>事件溯源和变更数据捕获的缺点：<strong>用户会写入日志，然后从日志衍生视图中读取，结果发现他的写入还没有反映在读取视图中</strong></p>
+<ul>
+<li>解决方案一：将事件附加到日志时同步执行读取视图的更新，需要分布式事务</li>
+<li>解决方案二：可以设计一个自包含的事件以表示一个用户操作。然后用户操作就只需要在一个地方进行单次写入操作 —— 即将事件附加到日志中</li>
+<li>解决方案三：如果事件日志与应用状态以相同的方式分区，直接使用单线程日志消费者就不需要写入并发控制了</li>
+</ul>
+<h3 id="不变性的限制"><a href="#不变性的限制" class="headerlink" title="不变性的限制"></a>不变性的限制</h3><p>永远保持所有变更的不变历史取决于数据集的流失率</p>
+<h2 id="流处理-1"><a href="#流处理-1" class="headerlink" title="流处理"></a>流处理</h2><p>如何处理流：</p>
+<ul>
+<li>可以将事件中的数据写入数据库，缓存，搜索索引或类似的存储系统，然后能被其他客户端查询</li>
+<li>能以某种方式将事件推送给用户，例如发送邮件或者推送通知</li>
+<li>可以处理一个或多个输入流并产生一个或多个输出流</li>
+</ul>
+<h3 id="流处理的应用"><a href="#流处理的应用" class="headerlink" title="流处理的应用"></a>流处理的应用</h3><p>主要用于监控目的，例如</p>
+<ul>
+<li>欺诈检测系统需要确定信用卡的使用模式是否有意外地变化</li>
+<li>交易系统需要检查金融市场的价格变化</li>
+<li>制造系统需要监控工厂中机器的状态</li>
+<li>军事和情报系统需要跟踪潜在侵略者的活动</li>
+</ul>
+<h4 id="复合事件处理"><a href="#复合事件处理" class="headerlink" title="复合事件处理"></a>复合事件处理</h4><p>简称CEP(complex, event processing),与正则表达式允许你在字符串中搜索特定字符模式的方式类似，CEP允许你指定规则以在流中搜索某些事件模式</p>
+<ul>
+<li>通常使用高层次的声明式查询语言，例如SQL</li>
+<li>将查询提交引擎，引擎消费输入流，并在内部维护一个执行所需匹配的状态机</li>
+<li>发现匹配时发出一个复合事件，并附有监测到的事件模式详情</li>
+</ul>
+<p>CEP与普通数据库相比是颠倒的。</p>
+<ul>
+<li>普通数据库持久存储数据，查询到来时匹配数据，查询完成后丢弃查询</li>
+<li>CEP中查询是长期存储，来自输入流的事件不断流过它们，搜索匹配事件模式的查询</li>
+</ul>
+<p>实现：</p>
+<ul>
+<li>Esper</li>
+<li>IBM InfoSphere Streams</li>
+<li>Apama</li>
+<li>TIBCO StreamBase</li>
+<li>SQLstream</li>
+</ul>
+<h4 id="流分析"><a href="#流分析" class="headerlink" title="流分析"></a>流分析</h4><p>分析往往对找出特定事件序列并不关心，而更关注大量事件上的聚合与统计指标，如</p>
+<ul>
+<li>测量某种类型事件的速率</li>
+<li>滚动计算一段时间窗口内某个值的平均值</li>
+<li>将当前的统计值与先前的时间区间的值对比</li>
+</ul>
+<p>流分析系统有时会使用概率算法，例如</p>
+<ul>
+<li>Bloom filter，管理成员资格</li>
+<li>HyperLogLog，用于基数估计以及百分比估计算法</li>
+</ul>
+<p>流处理没有任何内在近似性，概率算法只是一种优化</p>
+<h4 id="维护物化视图"><a href="#维护物化视图" class="headerlink" title="维护物化视图"></a>维护物化视图</h4><p>在某个数据集上衍生出一个替代视图以便高效查询，并在底层数据变更时更新视图</p>
+<p>原则上讲，任何流处理组件都可以用于维护物化视图</p>
+<p>例如：</p>
+<ul>
+<li>Samza、Kafka Streams</li>
+</ul>
+<h4 id="在流上搜索"><a href="#在流上搜索" class="headerlink" title="在流上搜索"></a>在流上搜索</h4><p>也允许基于复杂标准(例如全文搜索查询)来搜索单个事件的需求。</p>
+<h4 id="消息传递与RPC"><a href="#消息传递与RPC" class="headerlink" title="消息传递与RPC"></a>消息传递与RPC</h4><p>消息传递系统可以作为RPC的替代方案，即作为一种服务间通信的机制</p>
+<p>例如Actor框架与流处理的区别</p>
+<ul>
+<li>Actor框架主要是管理模块通信的并发和分布式执行的一种机制;而流处理主要是一种数据管理技术</li>
+<li>Actor之间的交流往往是短暂的，一对一的;而事件日志则是持久的，多订阅者的</li>
+<li>Actor可以以任意方式进行通信(允许包括循环的请求/响应);而流处理通常配置在无环流水线中，其中每个流都是一个特定作业的输出，由良好定义的输入流中派生而来</li>
+</ul>
+<h4 id="时间推理"><a href="#时间推理" class="headerlink" title="时间推理"></a>时间推理</h4><p>流处理通常需要与时间打交道，尤其是用于分析目的时候，会频繁使用时间窗口，例如“过去五分钟的平均值”</p>
+<ul>
+<li>按时间分析中，批处理器是检查事件中嵌入的时间戳，不需要运行系统的时钟</li>
+<li>许多流处理框架使用处理机器上的本地系统时钟来确定窗口，然而存在延时时，就会失效。</li>
+</ul>
+<h4 id="事件时间与处理时间"><a href="#事件时间与处理时间" class="headerlink" title="事件时间与处理时间"></a>事件时间与处理时间</h4><p>事件时间与处理事件是两个概念，很多原因都会导致处理延迟。</p>
+<p><strong>消息延迟还可能导致无法预测消息顺序</strong></p>
+<h4 id="知道什么时候准备好了"><a href="#知道什么时候准备好了" class="headerlink" title="知道什么时候准备好了"></a>知道什么时候准备好了</h4><p>用事件时间来定义窗口的一个棘手的问题是，你永远也无法确定是不是已经收到了特定窗口的所有事件，还是说还有一些事件正在来的路上</p>
+<p>在一段时间没有看到任何新事件后，可以宣布窗口就绪，但是仍然可能因为“延迟”导致窗口完成之后到达的滞留事件，大体有两种选择：</p>
+<ul>
+<li>忽略这些滞留事件，并且将丢弃数量作为一个监控指标，并在大量丢消息时进行报警</li>
+<li>发布一个更正，一个包括滞留事件的更新窗口值</li>
+</ul>
+<h4 id="你用的是谁的时钟"><a href="#你用的是谁的时钟" class="headerlink" title="你用的是谁的时钟"></a>你用的是谁的时钟</h4><p>当事件可能在系统内多个地方进行缓冲时，为事件分配时间戳更加困难了</p>
+<p>例如：</p>
+<p>考虑一个移动应用向服务器上报关于用量的事件</p>
+<ul>
+<li>极大的滞留事件：可能在设备脱机状态时被使用，事件会被本地缓冲，并在下一次联网时上报</li>
+<li>时间戳不可信：事件时间戳实际是用户交互发生时间，即用户的时间</li>
+<li>可信的时间戳意义不大：服务器收到事件的时间准确，但是在描述用户交互方面意义不大</li>
+</ul>
+<p>解决方案：<br><strong>方法一</strong>：记录三个时间戳</p>
+<ul>
+<li>设备时钟：事件发生的时间</li>
+<li>设备时钟：事件发送服务器的时间</li>
+<li>服务器时钟：事件被服务器接收的时间</li>
+</ul>
+<p>用时钟3-时钟2，可以得到服务器与设备时钟间的偏移，在用于时间1，就可以估计真实发生的时间。(假设设备时钟不发生变化)</p>
+<h4 id="窗口的类型"><a href="#窗口的类型" class="headerlink" title="窗口的类型"></a>窗口的类型</h4><p>确定事件时间戳后，需要定义时间段的窗口，有几种窗口比较常用</p>
+<ul>
+<li>滚动窗口：固定长度，每个事件只属于一个窗口   <ul>
+<li>例如：一分钟的滚动窗口，10:03:00到10:03:59之间会被分组到一个窗口，10:04:00到10:04:59被分组到另一个窗口。</li>
+</ul>
+</li>
+<li>跳动窗口：跳动窗口也有着固定的长度，但允许窗口重叠以提供一些平滑<ul>
+<li>例如：一个带有1分钟跳跃步长的5分钟窗口将包含10:03:00到10:07:59之间的事件，先计算1分钟的滚动窗口，然后再在几个相邻窗口上进行聚合。</li>
+</ul>
+</li>
+<li>滑动窗口：滑动窗口包含了此间距在特定时长内的所有事件<ul>
+<li>例如：一个5分钟的滑动窗口应当覆盖 10:03:39到10:08:12的事件，通过维护一个按时间排序的事件缓冲区，并不断移除过期事件，可以实现滑动窗口</li>
+</ul>
+</li>
+<li>会话窗口：会话窗口没有固定的持续时间，将同一用户出现时间相近的所有事件分组在一起，而当用户一段时间没有活动时，窗口结束。</li>
+</ul>
+<h3 id="流式连接"><a href="#流式连接" class="headerlink" title="流式连接"></a>流式连接</h3><h4 id="流流连接-窗口连接"><a href="#流流连接-窗口连接" class="headerlink" title="流流连接(窗口连接)"></a>流流连接(窗口连接)</h4><p>例如：</p>
+<p><strong>目的</strong>    </p>
+<ul>
+<li>某网站上有搜索功能，想要找出搜索URL的近期趋势</li>
+</ul>
+<p><strong>场景</strong></p>
+<ul>
+<li>键入搜索查询时，会记录下一个包含查询与返回结果的事件</li>
+<li>点击搜索结果时，就会记录另一个记录点击事件</li>
+<li>需要将搜索动作与点击动作的事件连接，用于计算结果中每个URL的点击率</li>
+</ul>
+<p>搜索结果与点击事件的时间是高度可变的，需要选择合适的连接窗口，例如点击与搜索时间间隔在一小时以内</p>
+<p><strong>方法</strong></p>
+<ul>
+<li>按会话ID索引最近一小时内发生的所有事件。</li>
+<li>发生搜索事件或点击事件，会被添加到合适的索引中，流处理器会去检查另一个索引是否有相同ID事件到达。<ul>
+<li>如有匹配事件，就会发出一个表示搜索结果被点击的事件</li>
+<li>如果过期，就会发出一个表示搜索结果未被点击的事件</li>
+</ul>
+</li>
+</ul>
+<h4 id="流表连接-流扩展"><a href="#流表连接-流扩展" class="headerlink" title="流表连接(流扩展)"></a>流表连接(流扩展)</h4><p><strong>目的</strong></p>
+<p>用户活动事件与用户档案数据库的连接</p>
+<p><strong>场景</strong></p>
+<ul>
+<li>输入：包含用户ID的活动事件流</li>
+<li>输出：活动事件流，用户ID被扩展为用户档案信息</li>
+</ul>
+<p><strong>方法</strong></p>
+<ul>
+<li>一次处理一个活动事件，远程查询数据库并将用户档案信息添加到活动事件中</li>
+<li>将数据库副本加载到流处理器中，以便在本地进行查询而无需网络往返</li>
+<li>流处理器数据库的本地副本需要保持更新。可以通过变更数据捕获来解决</li>
+</ul>
+<h4 id="表表连接-维护物化视图"><a href="#表表连接-维护物化视图" class="headerlink" title="表表连接(维护物化视图)"></a>表表连接(维护物化视图)</h4><p><strong>目的</strong></p>
+<p>需要一个时间线缓存：发送推文的时候写入这些信息，读取时间线只需要简单查询即可</p>
+<p><strong>场景</strong></p>
+<ul>
+<li>当用户<code>u</code>发送新推文时，会被添加到每个关注<code>u</code>的时间线上</li>
+<li>用户删除推文时，推文将从所有用户的时间表中删除</li>
+<li>当用户<code>u1</code>开始关注用户<code>u2</code>时，将<code>u2</code>最近的推文添加<code>u1</code>的时间线上</li>
+<li>当用户<code>u1</code>取消关注用户<code>u2</code>时，<code>u2</code>的推文将从<code>u1</code>的时间线中移除</li>
+</ul>
+<p><strong>需求前提</strong></p>
+<ul>
+<li>推文事件流(发送与删除)</li>
+<li>关注关系事件流(关注与取消关注)</li>
+<li>维护数据库，包含每个用户的粉丝集合</li>
+</ul>
+<p><strong>方法</strong>    </p>
+<p>本质上是维护了一个连接两个表的物化视图</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> follows.follower_id <span class="keyword">AS</span> timeline_id,</span><br><span class="line">    array_agg(tweets.* <span class="keyword">ORDER</span> <span class="keyword">BY</span> tweets.timestamp <span class="keyword">DESC</span>)</span><br><span class="line"><span class="keyword">FROM</span> tweets</span><br><span class="line"><span class="keyword">JOIN</span> <span class="keyword">follows</span> <span class="keyword">ON</span> follows.followee_id = tweets.sender_id</span><br><span class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span> follows.follower_id</span><br></pre></td></tr></table></figure>
+<h4 id="连接的时间依赖性"><a href="#连接的时间依赖性" class="headerlink" title="连接的时间依赖性"></a>连接的时间依赖性</h4><p>流流，流表，表表的共通之处：都需要流处理器维护连接一侧的一些状态，然后当连接另一侧的消息到达时查询该状态。</p>
+<p><strong>问题</strong></p>
+<p>如果不同流中的事件发生在近似的时间范围内，则应该按照什么样的顺序进行处理？</p>
+<p>在数据仓库中，这个问题被称为缓慢变化的维度(slowly changing dimension, SCD)</p>
+<p><strong>方法</strong></p>
+<p>通常通过对特定版本的记录使用唯一的标识符来解决</p>
+<p>例如：每当税率改变时都会获得一个新的标识符，而发票在销售时会带有税率的标识符</p>
+<h3 id="容错"><a href="#容错" class="headerlink" title="容错"></a>容错</h3><p>等待某个任务完成之后再使其输出可见并不是一个可行选项，因为你永远无法处理完一个无限的流</p>
+<h4 id="微批量与存档点"><a href="#微批量与存档点" class="headerlink" title="微批量与存档点"></a>微批量与存档点</h4><p><strong>微批次</strong>：将流分成小块，并像微型批处理一样处理每个块</p>
+<ul>
+<li>Spark Streaming：批次大小通常为1秒，提供了一个与批次大小相等的滚动窗口</li>
+<li>Apache Flink：定期生成状态的滚动存档点并将其写入持久存储中。</li>
+</ul>
+<h4 id="原子提交再现"><a href="#原子提交再现" class="headerlink" title="原子提交再现"></a>原子提交再现</h4><p>需要确保事件处理的所有输出和副作用当且仅当处理成功时才会生效</p>
+<ul>
+<li>Google Cloud Dataflow和VoltDB使用了类似分布式事务中的XA方法</li>
+<li>Apache Kafka也计划加入类似的功能</li>
+</ul>
+<h4 id="幂等性"><a href="#幂等性" class="headerlink" title="幂等性"></a>幂等性</h4><p>幂等操作是多次重复执行与单次执行效果相同的操作</p>
+<p>即使一个操作不是天生幂等的，往往可以通过一些额外的元数据做成幂等的</p>
+<p>例如：</p>
+<p>在使用来自Kafka的消息时，每条消息都有一个持久的，单调递增的偏移量，写入外部数据库时可以带上这个偏移量，避免重复执行，实现幂等</p>
+<h4 id="失败后重建状态"><a href="#失败后重建状态" class="headerlink" title="失败后重建状态"></a>失败后重建状态</h4><p>任何需要状态的流处理，都必须确保失败之后能恢复其状态</p>
+<p><strong>方法</strong></p>
+<ul>
+<li>将状态保存在远程数据存储中，并进行复制，缺点是每个消息查询都需要远程数据库，可能会很慢</li>
+<li>在流处理器本地保存状态，并定期复制</li>
+</ul>
+<p><strong>实践</strong></p>
+<ul>
+<li>Flink定期捕获算子状态的快照，并将它们写入HDFS等持久存储中</li>
+<li>Samza和Kafka Streams通过将状态变更发送到具有日志压缩功能的专用Kafka主题来复制状态变更</li>
+<li>VoltDB通过在多个节点上对每个输入消息进行冗余处理来复制状态</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/18/ddia阅读笔记-七/" rel="next" title="ddia阅读笔记(七)">
+                <i class="fa fa-chevron-left"></i> ddia阅读笔记(七)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/02/go中的观察者模式/" rel="prev" title="go中的观察者模式">
+                go中的观察者模式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写在前面的话"><span class="nav-number">1.</span> <span class="nav-text">写在前面的话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#流处理"><span class="nav-number">2.</span> <span class="nav-text">流处理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#传递事件流"><span class="nav-number">2.1.</span> <span class="nav-text">传递事件流</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#消息系统"><span class="nav-number">2.1.1.</span> <span class="nav-text">消息系统</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#直接从生产者传递给消费者"><span class="nav-number">2.1.1.1.</span> <span class="nav-text">直接从生产者传递给消费者</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息代理"><span class="nav-number">2.1.2.</span> <span class="nav-text">消息代理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#消息代理与数据库对比"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">消息代理与数据库对比</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#多个消费者"><span class="nav-number">2.1.2.2.</span> <span class="nav-text">多个消费者</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#确认与重新交付"><span class="nav-number">2.1.2.3.</span> <span class="nav-text">确认与重新交付</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分区日志"><span class="nav-number">2.1.3.</span> <span class="nav-text">分区日志</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#使用日志进行消息存储"><span class="nav-number">2.1.3.1.</span> <span class="nav-text">使用日志进行消息存储</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#日志与传统消息相比"><span class="nav-number">2.1.3.2.</span> <span class="nav-text">日志与传统消息相比</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消费者偏移量"><span class="nav-number">2.1.3.3.</span> <span class="nav-text">消费者偏移量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#磁盘空间使用"><span class="nav-number">2.1.3.4.</span> <span class="nav-text">磁盘空间使用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#当消费者跟不上生产者时"><span class="nav-number">2.1.3.5.</span> <span class="nav-text">当消费者跟不上生产者时</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#重播旧信息"><span class="nav-number">2.1.3.6.</span> <span class="nav-text">重播旧信息</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#流与数据库"><span class="nav-number">2.2.</span> <span class="nav-text">流与数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#保持系统同步"><span class="nav-number">2.2.1.</span> <span class="nav-text">保持系统同步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#变更数据捕获"><span class="nav-number">2.2.2.</span> <span class="nav-text">变更数据捕获</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#变更数据捕获的实现"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">变更数据捕获的实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#初始快照"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">初始快照</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#日志压缩"><span class="nav-number">2.2.2.3.</span> <span class="nav-text">日志压缩</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#变更流的API支持"><span class="nav-number">2.2.2.4.</span> <span class="nav-text">变更流的API支持</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#事件溯源"><span class="nav-number">2.2.2.5.</span> <span class="nav-text">事件溯源</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#从事件日志中派生出当前状态"><span class="nav-number">2.2.2.6.</span> <span class="nav-text">从事件日志中派生出当前状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#命令和事件"><span class="nav-number">2.2.2.7.</span> <span class="nav-text">命令和事件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#状态，流和不变性"><span class="nav-number">2.3.</span> <span class="nav-text">状态，流和不变性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#不可变事件的优点"><span class="nav-number">2.3.1.</span> <span class="nav-text">不可变事件的优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从同一事件日志中派生出多个视图"><span class="nav-number">2.3.2.</span> <span class="nav-text">从同一事件日志中派生出多个视图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并发控制"><span class="nav-number">2.3.3.</span> <span class="nav-text">并发控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#不变性的限制"><span class="nav-number">2.3.4.</span> <span class="nav-text">不变性的限制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#流处理-1"><span class="nav-number">2.4.</span> <span class="nav-text">流处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#流处理的应用"><span class="nav-number">2.4.1.</span> <span class="nav-text">流处理的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#复合事件处理"><span class="nav-number">2.4.1.1.</span> <span class="nav-text">复合事件处理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#流分析"><span class="nav-number">2.4.1.2.</span> <span class="nav-text">流分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#维护物化视图"><span class="nav-number">2.4.1.3.</span> <span class="nav-text">维护物化视图</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#在流上搜索"><span class="nav-number">2.4.1.4.</span> <span class="nav-text">在流上搜索</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消息传递与RPC"><span class="nav-number">2.4.1.5.</span> <span class="nav-text">消息传递与RPC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#时间推理"><span class="nav-number">2.4.1.6.</span> <span class="nav-text">时间推理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#事件时间与处理时间"><span class="nav-number">2.4.1.7.</span> <span class="nav-text">事件时间与处理时间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#知道什么时候准备好了"><span class="nav-number">2.4.1.8.</span> <span class="nav-text">知道什么时候准备好了</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#你用的是谁的时钟"><span class="nav-number">2.4.1.9.</span> <span class="nav-text">你用的是谁的时钟</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#窗口的类型"><span class="nav-number">2.4.1.10.</span> <span class="nav-text">窗口的类型</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#流式连接"><span class="nav-number">2.4.2.</span> <span class="nav-text">流式连接</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#流流连接-窗口连接"><span class="nav-number">2.4.2.1.</span> <span class="nav-text">流流连接(窗口连接)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#流表连接-流扩展"><span class="nav-number">2.4.2.2.</span> <span class="nav-text">流表连接(流扩展)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#表表连接-维护物化视图"><span class="nav-number">2.4.2.3.</span> <span class="nav-text">表表连接(维护物化视图)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#连接的时间依赖性"><span class="nav-number">2.4.2.4.</span> <span class="nav-text">连接的时间依赖性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#容错"><span class="nav-number">2.4.3.</span> <span class="nav-text">容错</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#微批量与存档点"><span class="nav-number">2.4.3.1.</span> <span class="nav-text">微批量与存档点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#原子提交再现"><span class="nav-number">2.4.3.2.</span> <span class="nav-text">原子提交再现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#幂等性"><span class="nav-number">2.4.3.3.</span> <span class="nav-text">幂等性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#失败后重建状态"><span class="nav-number">2.4.3.4.</span> <span class="nav-text">失败后重建状态</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

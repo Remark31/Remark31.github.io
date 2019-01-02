@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="基础,概念,杂谈," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="写在前面的话本章是ddia的第十章，批处理本章的阅读是非常吃力和不解的，因为我的MapReduce只在读书时了解过一些概念，要强行来读这上面的文字是比较头疼的，只能大概的去想象描述的问题，在读完之后有时间需要去实践一下了解下MapReduce和Hadoop实际是怎么玩的。 整体来说本章描述的批处理的两个核心问题是分区和容错，MapReduce通过Mapper进行分区排序，确保将相关数据放在一起，而">
+<meta name="keywords" content="基础,概念,杂谈">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ddia阅读笔记(七)">
+<meta property="og:url" content="https://remark31.github.io/2018/12/18/ddia阅读笔记-七/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="写在前面的话本章是ddia的第十章，批处理本章的阅读是非常吃力和不解的，因为我的MapReduce只在读书时了解过一些概念，要强行来读这上面的文字是比较头疼的，只能大概的去想象描述的问题，在读完之后有时间需要去实践一下了解下MapReduce和Hadoop实际是怎么玩的。 整体来说本章描述的批处理的两个核心问题是分区和容错，MapReduce通过Mapper进行分区排序，确保将相关数据放在一起，而">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_mapreduce.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_reduceex1.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ddia_mapreduce_process.png">
+<meta property="og:updated_time" content="2019-01-02T12:37:07.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ddia阅读笔记(七)">
+<meta name="twitter:description" content="写在前面的话本章是ddia的第十章，批处理本章的阅读是非常吃力和不解的，因为我的MapReduce只在读书时了解过一些概念，要强行来读这上面的文字是比较头疼的，只能大概的去想象描述的问题，在读完之后有时间需要去实践一下了解下MapReduce和Hadoop实际是怎么玩的。 整体来说本章描述的批处理的两个核心问题是分区和容错，MapReduce通过Mapper进行分区排序，确保将相关数据放在一起，而">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/ddia_mapreduce.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/12/18/ddia阅读笔记-七/"/>
+
+
+
+
+
+  <title>ddia阅读笔记(七) | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/12/18/ddia阅读笔记-七/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ddia阅读笔记(七)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-18T14:57:51+08:00">
+                2018-12-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="写在前面的话"><a href="#写在前面的话" class="headerlink" title="写在前面的话"></a>写在前面的话</h1><p>本章是ddia的第十章，批处理<br>本章的阅读是非常吃力和不解的，因为我的MapReduce只在读书时了解过一些概念，要强行来读这上面的文字是比较头疼的，只能大概的去想象描述的问题，在读完之后有时间需要去实践一下了解下MapReduce和Hadoop实际是怎么玩的。</p>
+<p>整体来说本章描述的批处理的两个核心问题是<strong>分区</strong>和<strong>容错</strong>，MapReduce通过Mapper进行分区排序，确保将相关数据放在一起，而容错更多是使用物化中间状态，使得单个任务的恢复非常容易。</p>
+<p>其他部分还介绍了各种MapReduce的连接算法，很遗憾这部分我并没有看太明白，雾里看花，很遗憾。</p>
+<h1 id="批处理"><a href="#批处理" class="headerlink" title="批处理"></a>批处理</h1><p>三种不同类型的系统：</p>
+<ul>
+<li>服务(在线系统)<blockquote>
+<p>服务等待客户的请求或指令到达。每收到一个，服务会试图尽快处理它，并发回一个响应，核心指标是响应式时间</p>
+</blockquote>
+</li>
+<li>批处理系统(离线系统)<blockquote>
+<p>一个批处理系统有大量的输入数据，跑一个作业来处理它，生成一些输出数据。主要指标通常是吞吐量</p>
+</blockquote>
+</li>
+<li>流处理系统(准实时系统)<blockquote>
+<p>介于在线和离线(批处理)之间，流处理消费输入并产生输出，流式作业在事件发生后不久就会对事件进行操作。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="使用Unix工具进行批处理"><a href="#使用Unix工具进行批处理" class="headerlink" title="使用Unix工具进行批处理"></a>使用Unix工具进行批处理</h2><h3 id="Unix哲学"><a href="#Unix哲学" class="headerlink" title="Unix哲学"></a>Unix哲学</h3><ul>
+<li>让每个程序都做好一件事。要做一件新的工作，写一个新程序，而不是通过添加“功能”让老程序复杂化</li>
+<li>期待每个程序的输出成为另一个程序的输入。不要将无关信息混入输出。避免使用严格的列数据或二进制输入格式</li>
+<li>设计和构建软件，甚至是操作系统，要尽早尝试，最好在几周内完成。不要犹豫，扔掉笨拙的部分，重建它们</li>
+<li>优先使用工具来减轻编程任务，即使必须曲线救国编写工具，且在用完后很可能要扔掉大部分。</li>
+</ul>
+<p>简而言之：自动化，快速原型设计，增量式迭代，对实验友好，将大型项目分解成可管理的块</p>
+<h3 id="统一的接口"><a href="#统一的接口" class="headerlink" title="统一的接口"></a>统一的接口</h3><p>在Unix中，这样的接口是一个文件</p>
+<h3 id="逻辑与布线相分离"><a href="#逻辑与布线相分离" class="headerlink" title="逻辑与布线相分离"></a>逻辑与布线相分离</h3><p>Unix工具的另一特点是：标准输入(<code>stdin</code>)和标准输出(<code>stdout</code>)</p>
+<p><strong>将输入/输出布线与程序逻辑分开，可以将小工具合成更大的系统</strong></p>
+<h3 id="透明度和实验"><a href="#透明度和实验" class="headerlink" title="透明度和实验"></a>透明度和实验</h3><p>Unix的好处：</p>
+<ul>
+<li>输入文件通常被视为不可变的，可以任意尝试而不会损坏输入文件</li>
+<li>可以在任何时候结束管道，输出到less，调试非常有用</li>
+<li>可以将一个流水线阶段的输出写入文件，作为下一阶段的输入，而无需重新运行整个管道</li>
+</ul>
+<p>局限：</p>
+<ul>
+<li>只能在一台机器上运行</li>
+</ul>
+<h2 id="MapReduce和分布式文件系统"><a href="#MapReduce和分布式文件系统" class="headerlink" title="MapReduce和分布式文件系统"></a>MapReduce和分布式文件系统</h2><p>一个MapReduce作业可以和一个Unix进程相类比：</p>
+<ul>
+<li>接受一个或多个输入，产生一个或多个输出</li>
+<li>产生一个或多个输出</li>
+<li>在分布式文件系统上读写文件(HDFS)</li>
+</ul>
+<p>HDFS(Hadoop分布式文件系统)</p>
+<ul>
+<li>基于无共享原则<ul>
+<li>共享磁盘存储由集中式存储设备实现</li>
+<li>不需要特殊的硬件，只需要通过传统数据中心网络连接的计算机</li>
+</ul>
+</li>
+<li>在概念上创建了一个大型文件系统，可以使用所有运行有守护进程的机器的磁盘</li>
+</ul>
+<h3 id="MapReduce作业执行"><a href="#MapReduce作业执行" class="headerlink" title="MapReduce作业执行"></a>MapReduce作业执行</h3><p>处理模式：</p>
+<ul>
+<li>读取一组输入文件，分解成记录(<code>records</code>)</li>
+<li>调用mapper函数，从每条输入中提取一堆键值</li>
+<li>按键排序所有的键值对</li>
+<li>调用Reducer函数遍历排序后的键值对</li>
+</ul>
+<p><code>Map</code>和<code>Reduce</code>是编写自定义数据处理代码的地方</p>
+<p>需要实现两个回调函数<code>Mapper</code>和<code>Reducer</code>，其行为如下</p>
+<p>Mapper：</p>
+<ul>
+<li>Mapper会在每条输入记录上调用一次，其工作是从输入记录中提取键值</li>
+<li>可以生成任意数量的键值对</li>
+<li>每个记录都是独立处理的<br>Reducer：</li>
+<li>拉取由Mapper生成的键值对，收集属于同一个键的所有值，并使用在这组值列表上迭代调用Reducer</li>
+<li>Reducer可以产生输出记录</li>
+</ul>
+<h3 id="分布式执行MapReduce"><a href="#分布式执行MapReduce" class="headerlink" title="分布式执行MapReduce"></a>分布式执行MapReduce</h3><p><img src="/imgs/ddia_mapreduce.png" alt="分布式执行"></p>
+<p>原则：将计算放在数据附近</p>
+<ul>
+<li>在其中一台存储输入文件副本的机器上运行每个Mapper，会节省通过网络复制输入文件的开销，减少网络负载并增加局部性</li>
+</ul>
+<h3 id="MapReduce工作流"><a href="#MapReduce工作流" class="headerlink" title="MapReduce工作流"></a>MapReduce工作流</h3><p>通过目录名隐式实现的:</p>
+<ul>
+<li>第一个作业必须将其输出配置为HDFS中的指定目录，第二个作业必须将其输入配置为从同一个目录</li>
+<li>从MapReduce框架的角度来看，这是是两个独立的作业。</li>
+</ul>
+<p>工作流中的一项作业只有在先前的作业完成后才能开始。</p>
+<p>为了处理这些作业之间的依赖，产生了不少的工作流调度器</p>
+<ul>
+<li>Oozie，Azkaban，Luigi，Airflow和Pinball</li>
+</ul>
+<h3 id="Reduce端连接与分组"><a href="#Reduce端连接与分组" class="headerlink" title="Reduce端连接与分组"></a>Reduce端连接与分组</h3><p>在批处理的语境中讨论连接时，我们指的是在数据集中解析某种关联的全量存在</p>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><p><img src="/imgs/ddia_reduceex1.png" alt="MapReduce范例"></p>
+<p>场景：</p>
+<ul>
+<li>左侧是用户活动</li>
+<li>右侧是用户的档案</li>
+<li>分析任务需要将左右简单关联，例如确定哪些页面更受哪些年龄段的用户欢迎</li>
+</ul>
+<p>最简单方法：</p>
+<p>逐个遍历活动事件，为每个遇到的用户ID查询用户数据库</p>
+<ul>
+<li>缺点：<ul>
+<li>性能差：处理吞吐量受限于网络速度。</li>
+<li>非确定：查询远程数据可能导致变动。</li>
+</ul>
+</li>
+</ul>
+<h4 id="排序合并连接"><a href="#排序合并连接" class="headerlink" title="排序合并连接"></a>排序合并连接</h4><p><img src="/imgs/ddia_mapreduce_process.png" alt="合并连接"></p>
+<p>流程：</p>
+<ul>
+<li>通过键对Mapper输出进行分区，对键值进行排序(使有相同ID的结果彼此相邻)</li>
+<li>执行实际的连接逻辑，Reducer将出生日期存储在局部变量中，然后使用相同的用户ID遍历活动事件，输出观看网址和年龄的结果对</li>
+</ul>
+<p>排序合并连接：<code>Reducer</code>一次处理一个特定用户ID的所有记录，只需要将一条用户记录保存在内存中，不需要发出任何网络请求</p>
+<h4 id="把相关数据放在一起"><a href="#把相关数据放在一起" class="headerlink" title="把相关数据放在一起"></a>把相关数据放在一起</h4><p>使用MapReduce编程模型，能将计算的物理网络通信层面(从正确的机器获取数据)从应用逻辑中剥离出来(获取数据后执行处理)</p>
+<h4 id="GROUP-BY"><a href="#GROUP-BY" class="headerlink" title="GROUP BY"></a>GROUP BY</h4><p>使用MapReduce实现这种分组操作的最简单方法是设置Mapper，以便它们生成的键值对使用所需的分组键。然后分区和排序过程将所有具有相同分区键的记录导向同一个Reducer。因此在MapReduce之上实现分组和连接看上去非常相似。</p>
+<h4 id="处理倾斜"><a href="#处理倾斜" class="headerlink" title="处理倾斜"></a>处理倾斜</h4><p>对于某些热点对象，例如“社交网络中的名人”，可以使用一些算法补偿</p>
+<blockquote>
+<p>MapReduce作业只有在所有Mapper和Reducer都完成时才完成，所有后续作业必须等待最慢的Reducer才能启动</p>
+</blockquote>
+<p>例如 Pig中的倾斜连接</p>
+<ul>
+<li>首先运行抽样确定热键</li>
+<li>Mapper将热键关联记录随机发送到几个Reducer上</li>
+<li>与热键相关的记录需要被复制到所有处理该键的Reducer上</li>
+</ul>
+<p>Hive的偏斜优化</p>
+<ul>
+<li>在表格元数据中显式指定热键</li>
+<li>对于热键，使用Map端连接</li>
+</ul>
+<h3 id="Map端连接"><a href="#Map端连接" class="headerlink" title="Map端连接"></a>Map端连接</h3><p>如果能对输入数据作出假设，就可以使用Map端连接来加快连接速度</p>
+<h4 id="广播散列连接"><a href="#广播散列连接" class="headerlink" title="广播散列连接"></a>广播散列连接</h4><ul>
+<li>Mapper将较小输入整个加载到内存中。</li>
+<li>将较小输入存储在本地磁盘上的只读索引中</li>
+</ul>
+<h4 id="分区散列连接"><a href="#分区散列连接" class="headerlink" title="分区散列连接"></a>分区散列连接</h4><p>当连接两端输入有相同的分区数，且两侧的记录都是使用相同的键与相同的哈希函数做分区时</p>
+<p>散列连接方法可以独立应用于每个分区</p>
+<p>例如 可以根据用户ID的最后一位十进制数字来对活动事件和用户数据库进行分区</p>
+<h4 id="Map端合并连接"><a href="#Map端合并连接" class="headerlink" title="Map端合并连接"></a>Map端合并连接</h4><p>如：输入数据集以相同的方式分区和基于相同的键排序，Mapper可以执行归并操作：按键递增的顺序依次读取两个输入文件，将具有相同键的记录配对</p>
+<h4 id="MapReduce工作流与Map端连接"><a href="#MapReduce工作流与Map端连接" class="headerlink" title="MapReduce工作流与Map端连接"></a>MapReduce工作流与Map端连接</h4><ul>
+<li>Reduce端连接的输出是按照连接键进行分区和排序的</li>
+<li>Map端连接的输出则按照与较大输入相同的方式进行分区和排序</li>
+</ul>
+<h3 id="批处理的工作流的输出"><a href="#批处理的工作流的输出" class="headerlink" title="批处理的工作流的输出"></a>批处理的工作流的输出</h3><p>批处理不是事务，也不是分析，他的输出通常不是报表，而是一些其他类型的结构</p>
+<h4 id="建立搜索索引"><a href="#建立搜索索引" class="headerlink" title="建立搜索索引"></a>建立搜索索引</h4><p>MapReduce的初衷是为其搜索引擎建立索引</p>
+<p>可以用于对固定文档构建用于全文搜索的索引</p>
+<p>如果文档集合发生改变</p>
+<ul>
+<li>定期冲泡整个索引工作流</li>
+<li>增量建立索引</li>
+</ul>
+<h4 id="键值存储作为批处理输出"><a href="#键值存储作为批处理输出" class="headerlink" title="键值存储作为批处理输出"></a>键值存储作为批处理输出</h4><p>构建机器学习系统与推荐系统，这些输出通常是某种数据库</p>
+<p>批处理的输出回到web应用可用的数据库中：</p>
+<ul>
+<li><p>直接可能：<br>直接在Mapper或Reducer中使用你最爱数据库的客户端库，并从批处理作业直接写入数据库服务器，一次写入一条记录</p>
+</li>
+<li><p>坏处</p>
+<ul>
+<li>为每条记录发起网络请求效率很低</li>
+<li>MapReduce经常并行运行任务，可能导致该数据库可能被压垮</li>
+<li>需要操心作业部分成功对其他系统可见的结果</li>
+</ul>
+</li>
+<li><p>更好方案<br>在批处理作业内创建一个全新的数据库，并将其作为文件写入分布式系统中的作业输出目录，再批量加载到处理只读查询的服务器中</p>
+</li>
+</ul>
+<h4 id="批处理输出的哲学"><a href="#批处理输出的哲学" class="headerlink" title="批处理输出的哲学"></a>批处理输出的哲学</h4><ul>
+<li>如果输出错误或损坏，可以简单回滚重新运行纠正输出</li>
+<li>回滚很容易，利于敏捷开发</li>
+<li>如果map或Reduce任务失败，会重新调度容忍故障，自动重试</li>
+<li>同一组文件可以用作不同作业的输入</li>
+<li>将逻辑与布线(配置输入和输出目录)分离，可以重用代码</li>
+</ul>
+<h3 id="Hadoop与分布式数据库对比"><a href="#Hadoop与分布式数据库对比" class="headerlink" title="Hadoop与分布式数据库对比"></a>Hadoop与分布式数据库对比</h3><p>大规模并行处理数据库：专注于在一组机器上并行执行分析SQL查询<br>MapReduce：更像一个可以运行任意程序的通用操作系统</p>
+<h4 id="存储多样性"><a href="#存储多样性" class="headerlink" title="存储多样性"></a>存储多样性</h4><p>分布式文件系统中的文件只是字节序列，可以是任何数据模型和编码。</p>
+<p>因此，Hadoop通常被用于实现ETL过程</p>
+<p>事务处理系统中的数据以某种原始形式转储到分布式文件系统中，然后编写MapReduce作业来清理数据，将其转换为关系形式，并将其导入分布式数据仓库以进行分析</p>
+<h4 id="处理模型多样性"><a href="#处理模型多样性" class="headerlink" title="处理模型多样性"></a>处理模型多样性</h4><p>MapReduce使工程师能够轻松地在大型数据集上运行自己的代码<br>不同的处理模型都可以在共享的单个机器集群上运行，所有这些机器都可以访问分布式文件系统上的相同文件</p>
+<h4 id="针对频繁故障设计"><a href="#针对频繁故障设计" class="headerlink" title="针对频繁故障设计"></a>针对频繁故障设计</h4><p>当一个节点在执行查询时崩溃：</p>
+<ul>
+<li>大规模并行处理数据库：中止整个查询，让用户重新提交查询或自动重新运行，并且在内存中保留尽可能多的数据以避免从磁盘读取的开销</li>
+<li>MapReduce：可以容忍单个Map或Reduce任务的失败，以单个任务的粒度重试工作</li>
+</ul>
+<h2 id="MapReduce之后"><a href="#MapReduce之后" class="headerlink" title="MapReduce之后"></a>MapReduce之后</h2><p>MapReduce的直接使用是非常困难的，因此有很多高级编程模型被创造出来，例如</p>
+<ul>
+<li>Pig</li>
+<li>Hive</li>
+<li>Cascading</li>
+<li>Crunch</li>
+</ul>
+<h3 id="物化中间状态"><a href="#物化中间状态" class="headerlink" title="物化中间状态"></a>物化中间状态</h3><p>将中间状态写入文件的过程称为物化</p>
+<p>Unix管道并没有完全物化中间状态，只是使用了一个小的内存缓冲区，将输出增量的流向输入</p>
+<p>MapReduce的完全物化中间状态对比Unix管道的不足之处</p>
+<ul>
+<li>作业只有在前驱作业中所有任务完成时才会启动，Unix会将管道连接的进程同时启动，一旦生成输出就会消费。前驱任务的完全完成会拖慢整个工作流程的执行</li>
+<li>Mapper通常是多余的。如果Reducer和Mapper的输出有着相同的分区与排序方式，那么Reducer就可以直接串在一起，而不用与Mapper相互交织</li>
+<li>将中间状态存储在分布式文件系统中意味着这些文件被复制到多个节点。临时数据的复制是很过分的。</li>
+</ul>
+<h3 id="数据流引擎"><a href="#数据流引擎" class="headerlink" title="数据流引擎"></a>数据流引擎</h3><p>为了解决MapReduce的问题，新的批处理出现了，例如</p>
+<ul>
+<li>Spark</li>
+<li>Tez</li>
+<li>Flink</li>
+</ul>
+<p>共同特点：<strong>把整个工作流作为单个作业来处理，而不是把它分解为独立的子作业</strong></p>
+<h3 id="容错"><a href="#容错" class="headerlink" title="容错"></a>容错</h3><p>为了避免写入：如果一台机器发生故障，并且该机器上的中间状态丢失，则它会从其他仍然可用的数据重新计算</p>
+<p>如果中间状态数据要比源数据小得多，或者如果计算量非常大，那么将中间数据物化为文件可能要比重新计算廉价的多</p>
+<h2 id="图与迭代处理"><a href="#图与迭代处理" class="headerlink" title="图与迭代处理"></a>图与迭代处理</h2><p>可以在分布式文件系统中存储图(包含顶点和边的列表的文件)，但是这种“重复至完成”的想法不能用普通的MapReduce来表示，因为它只扫过一趟数据</p>
+<p>迭代的实现风格：</p>
+<ul>
+<li>外部调度程序运行批处理来计算算法的一个步骤</li>
+<li>当批处理过程完成时，调度器检查它是否完成</li>
+<li>如果尚未完成，则调度程序返回到步骤1并运行另一轮批处理</li>
+</ul>
+<h3 id="Pregel处理模型"><a href="#Pregel处理模型" class="headerlink" title="Pregel处理模型"></a>Pregel处理模型</h3><p>顶点在一次迭代到下一次迭代的过程中会记住它的状态，所以这个函数只需要处理新的传入消息。如果图的某个部分没有被发送消息，那里就不需要做任何工作</p>
+<h3 id="容错-1"><a href="#容错-1" class="headerlink" title="容错"></a>容错</h3><p>在迭代结束时，定期存档所有顶点的状态来实现的，即将其全部状态写入持久化存储</p>
+<p>如果某个节点发生故障并且其内存中的状态丢失，则最简单的解决方法是将整个图计算回滚到上一个存档点，然后重启计算</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/基础/" rel="tag"># 基础</a>
+          
+            <a href="/tags/概念/" rel="tag"># 概念</a>
+          
+            <a href="/tags/杂谈/" rel="tag"># 杂谈</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/26/ddia阅读笔记-六/" rel="next" title="ddia阅读笔记(六)">
+                <i class="fa fa-chevron-left"></i> ddia阅读笔记(六)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/12/28/ddia阅读笔记-八/" rel="prev" title="ddia阅读笔记(八)">
+                ddia阅读笔记(八) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写在前面的话"><span class="nav-number">1.</span> <span class="nav-text">写在前面的话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#批处理"><span class="nav-number">2.</span> <span class="nav-text">批处理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用Unix工具进行批处理"><span class="nav-number">2.1.</span> <span class="nav-text">使用Unix工具进行批处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Unix哲学"><span class="nav-number">2.1.1.</span> <span class="nav-text">Unix哲学</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#统一的接口"><span class="nav-number">2.1.2.</span> <span class="nav-text">统一的接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#逻辑与布线相分离"><span class="nav-number">2.1.3.</span> <span class="nav-text">逻辑与布线相分离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#透明度和实验"><span class="nav-number">2.1.4.</span> <span class="nav-text">透明度和实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MapReduce和分布式文件系统"><span class="nav-number">2.2.</span> <span class="nav-text">MapReduce和分布式文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MapReduce作业执行"><span class="nav-number">2.2.1.</span> <span class="nav-text">MapReduce作业执行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分布式执行MapReduce"><span class="nav-number">2.2.2.</span> <span class="nav-text">分布式执行MapReduce</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MapReduce工作流"><span class="nav-number">2.2.3.</span> <span class="nav-text">MapReduce工作流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reduce端连接与分组"><span class="nav-number">2.2.4.</span> <span class="nav-text">Reduce端连接与分组</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#示例"><span class="nav-number">2.2.4.1.</span> <span class="nav-text">示例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#排序合并连接"><span class="nav-number">2.2.4.2.</span> <span class="nav-text">排序合并连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#把相关数据放在一起"><span class="nav-number">2.2.4.3.</span> <span class="nav-text">把相关数据放在一起</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#GROUP-BY"><span class="nav-number">2.2.4.4.</span> <span class="nav-text">GROUP BY</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#处理倾斜"><span class="nav-number">2.2.4.5.</span> <span class="nav-text">处理倾斜</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Map端连接"><span class="nav-number">2.2.5.</span> <span class="nav-text">Map端连接</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#广播散列连接"><span class="nav-number">2.2.5.1.</span> <span class="nav-text">广播散列连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分区散列连接"><span class="nav-number">2.2.5.2.</span> <span class="nav-text">分区散列连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Map端合并连接"><span class="nav-number">2.2.5.3.</span> <span class="nav-text">Map端合并连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MapReduce工作流与Map端连接"><span class="nav-number">2.2.5.4.</span> <span class="nav-text">MapReduce工作流与Map端连接</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#批处理的工作流的输出"><span class="nav-number">2.2.6.</span> <span class="nav-text">批处理的工作流的输出</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#建立搜索索引"><span class="nav-number">2.2.6.1.</span> <span class="nav-text">建立搜索索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#键值存储作为批处理输出"><span class="nav-number">2.2.6.2.</span> <span class="nav-text">键值存储作为批处理输出</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#批处理输出的哲学"><span class="nav-number">2.2.6.3.</span> <span class="nav-text">批处理输出的哲学</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hadoop与分布式数据库对比"><span class="nav-number">2.2.7.</span> <span class="nav-text">Hadoop与分布式数据库对比</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#存储多样性"><span class="nav-number">2.2.7.1.</span> <span class="nav-text">存储多样性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#处理模型多样性"><span class="nav-number">2.2.7.2.</span> <span class="nav-text">处理模型多样性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#针对频繁故障设计"><span class="nav-number">2.2.7.3.</span> <span class="nav-text">针对频繁故障设计</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MapReduce之后"><span class="nav-number">2.3.</span> <span class="nav-text">MapReduce之后</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#物化中间状态"><span class="nav-number">2.3.1.</span> <span class="nav-text">物化中间状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据流引擎"><span class="nav-number">2.3.2.</span> <span class="nav-text">数据流引擎</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#容错"><span class="nav-number">2.3.3.</span> <span class="nav-text">容错</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#图与迭代处理"><span class="nav-number">2.4.</span> <span class="nav-text">图与迭代处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Pregel处理模型"><span class="nav-number">2.4.1.</span> <span class="nav-text">Pregel处理模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#容错-1"><span class="nav-number">2.4.2.</span> <span class="nav-text">容错</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

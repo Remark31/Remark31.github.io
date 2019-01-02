@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="golang,密码学," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言之前工作中很多初次接触密码学的小伙伴都会纠结于公钥，私钥，证书和签名分别是啥，怎么使用的，这里以golang为范例对这块的相关涉及到的内容进行一定的整理。 概念 私钥 只有自己知道的密钥叫私钥，能解开对应公钥加密的数据   公钥 公开的密钥叫公钥，能解开对应私钥加密的数据   证书 证书中心使用自己的私钥对需要颁布证书的公钥和相关信息一起加密，生成了证书，通过证书可以确定自己的公钥是否是正确的">
+<meta name="keywords" content="golang,密码学">
+<meta property="og:type" content="article">
+<meta property="og:title" content="公钥，私钥，签名与证书">
+<meta property="og:url" content="https://remark31.github.io/2018/06/28/公钥，私钥，签名与证书/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="前言之前工作中很多初次接触密码学的小伙伴都会纠结于公钥，私钥，证书和签名分别是啥，怎么使用的，这里以golang为范例对这块的相关涉及到的内容进行一定的整理。 概念 私钥 只有自己知道的密钥叫私钥，能解开对应公钥加密的数据   公钥 公开的密钥叫公钥，能解开对应私钥加密的数据   证书 证书中心使用自己的私钥对需要颁布证书的公钥和相关信息一起加密，生成了证书，通过证书可以确定自己的公钥是否是正确的">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/pubkeypem.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/privkeypem.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/encryptode.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/signverify.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/crt.png">
+<meta property="og:updated_time" content="2018-12-13T07:32:59.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="公钥，私钥，签名与证书">
+<meta name="twitter:description" content="前言之前工作中很多初次接触密码学的小伙伴都会纠结于公钥，私钥，证书和签名分别是啥，怎么使用的，这里以golang为范例对这块的相关涉及到的内容进行一定的整理。 概念 私钥 只有自己知道的密钥叫私钥，能解开对应公钥加密的数据   公钥 公开的密钥叫公钥，能解开对应私钥加密的数据   证书 证书中心使用自己的私钥对需要颁布证书的公钥和相关信息一起加密，生成了证书，通过证书可以确定自己的公钥是否是正确的">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/pubkeypem.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/06/28/公钥，私钥，签名与证书/"/>
+
+
+
+
+
+  <title>公钥，私钥，签名与证书 | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/06/28/公钥，私钥，签名与证书/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">公钥，私钥，签名与证书</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-06-28T20:30:24+08:00">
+                2018-06-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>之前工作中很多初次接触密码学的小伙伴都会纠结于公钥，私钥，证书和签名分别是啥，怎么使用的，这里以golang为范例对这块的相关涉及到的内容进行一定的整理。</p>
+<h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><ul>
+<li>私钥<ul>
+<li>只有自己知道的密钥叫私钥，能解开对应公钥加密的数据</li>
+</ul>
+</li>
+<li>公钥<ul>
+<li>公开的密钥叫公钥，能解开对应私钥加密的数据</li>
+</ul>
+</li>
+<li>证书<ul>
+<li>证书中心使用自己的私钥对需要颁布证书的公钥和相关信息一起加密，生成了证书，通过证书可以确定自己的公钥是否是正确的公钥。   </li>
+</ul>
+</li>
+<li>签名<ul>
+<li>将内容生成摘要hash后对这个摘要hash进行加密，这个就是签名，能够通过解开签名和对内容进行hash进行匹配确定内容是否被修改过。</li>
+</ul>
+</li>
+</ul>
+<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><p>接下来我们就开始在golang中开始玩起来</p>
+<h2 id="生成公钥-私钥"><a href="#生成公钥-私钥" class="headerlink" title="生成公钥/私钥"></a>生成公钥/私钥</h2><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"crypto/ecdsa"</span></span><br><span class="line">	<span class="string">"crypto/elliptic"</span></span><br><span class="line">	<span class="comment">// "crypto/rand"</span></span><br><span class="line">	<span class="string">"crypto/x509"</span></span><br><span class="line">	<span class="string">"encoding/pem"</span></span><br><span class="line">	<span class="string">"flag"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"os"</span></span><br><span class="line">	<span class="string">"strings"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	key := flag.String(<span class="string">"key"</span>, <span class="string">"yyyyyyyyyyyttttttttttttttttttttttqqqqq"</span>, <span class="string">"generate key"</span>)</span><br><span class="line"></span><br><span class="line">	flag.Parse()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> err := GenRsaKey(*key); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(<span class="string">"密钥文件生成失败！"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	log.Println(<span class="string">"密钥文件生成成功！"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GenRsaKey</span><span class="params">(key <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="comment">// 生成私钥文件</span></span><br><span class="line">	length := <span class="built_in">len</span>([]<span class="keyword">byte</span>(key))</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> curve elliptic.Curve</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> length &gt;= <span class="number">521</span>/<span class="number">8</span>+<span class="number">8</span> &#123;</span><br><span class="line">		curve = elliptic.P521()</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> length &gt;= <span class="number">384</span>/<span class="number">8</span>+<span class="number">8</span> &#123;</span><br><span class="line">		curve = elliptic.P384()</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> length &gt;= <span class="number">256</span>/<span class="number">8</span>+<span class="number">8</span> &#123;</span><br><span class="line">		curve = elliptic.P256()</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> length &gt;= <span class="number">224</span>/<span class="number">8</span>+<span class="number">8</span> &#123;</span><br><span class="line">		curve = elliptic.P224()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	privateKey, err := ecdsa.GenerateKey(curve, strings.NewReader(key))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"GenerateKey Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	bpkey, err := x509.MarshalECPrivateKey(privateKey)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"MarshalECPrivateKey Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	block := &amp;pem.Block&#123;</span><br><span class="line">		Type:  <span class="string">"Private Key"</span>,</span><br><span class="line">		Bytes: bpkey,</span><br><span class="line">	&#125;</span><br><span class="line">	file, err := os.Create(<span class="string">"private.pem"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"priv Create Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	err = pem.Encode(file, block)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"priv Encode Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 生成公钥文件</span></span><br><span class="line">	publicKey := &amp;privateKey.PublicKey</span><br><span class="line">	derPkix, err := x509.MarshalPKIXPublicKey(publicKey)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"MarshalPKIXPublicKey Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	block = &amp;pem.Block&#123;</span><br><span class="line">		Type:  <span class="string">"Public Key"</span>,</span><br><span class="line">		Bytes: derPkix,</span><br><span class="line">	&#125;</span><br><span class="line">	file, err = os.Create(<span class="string">"public.pem"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"pub Create Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	err = pem.Encode(file, block)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"pub Encode Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里我们选用的是椭圆加密算法ECC生成的公/私钥对，并且将其输出到了文件，如下图所示</p>
+<p>公钥</p>
+<p><img src="/imgs/pubkeypem.png" alt="公钥"></p>
+<p>私钥</p>
+<p><img src="/imgs/privkeypem.png" alt="私钥"></p>
+<h2 id="公-私钥加密与解密"><a href="#公-私钥加密与解密" class="headerlink" title="公/私钥加密与解密"></a>公/私钥加密与解密</h2><p>在golang中对ECC只默认实现了签名算法(ecdsa)，因此这里我们很遗憾要使用rsa进行加密与解密</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"crypto/rand"</span></span><br><span class="line">	<span class="string">"crypto/rsa"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> bits = <span class="number">2048</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 生成私钥</span></span><br><span class="line">	prvkey, err := rsa.GenerateKey(rand.Reader, bits)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"GenerateKey Error:  "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 生成公钥</span></span><br><span class="line">	pubkey := &amp;prvkey.PublicKey</span><br><span class="line"></span><br><span class="line">	msg := <span class="string">"lalala"</span></span><br><span class="line">	<span class="comment">// 公钥加密</span></span><br><span class="line"></span><br><span class="line">	data, err := rsa.EncryptPKCS1v15(rand.Reader, pubkey, []<span class="keyword">byte</span>(msg))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"EncryptPKCS1v15 Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	log.Println(<span class="string">"data :"</span>, <span class="keyword">string</span>(data))</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 私钥解密</span></span><br><span class="line"></span><br><span class="line">	ans, err := rsa.DecryptPKCS1v15(rand.Reader, prvkey, data)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"DecryptPKCS1v15 Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	log.Println(<span class="string">"data: "</span>, <span class="keyword">string</span>(ans))</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出结果如下图所示：</p>
+<p><img src="/imgs/encryptode.png" alt="加密解密"></p>
+<p>可以看到加密后各种乱码，解密后完全正常</p>
+<h2 id="签名与签名校验"><a href="#签名与签名校验" class="headerlink" title="签名与签名校验"></a>签名与签名校验</h2><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"bytes"</span></span><br><span class="line">	<span class="string">"compress/gzip"</span></span><br><span class="line">	<span class="string">"crypto/ecdsa"</span></span><br><span class="line">	<span class="string">"crypto/md5"</span></span><br><span class="line">	<span class="string">"crypto/x509"</span></span><br><span class="line">	<span class="string">"encoding/hex"</span></span><br><span class="line">	<span class="string">"encoding/pem"</span></span><br><span class="line">	<span class="string">"io/ioutil"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"math/big"</span></span><br><span class="line">	<span class="string">"strings"</span></span><br><span class="line">	<span class="comment">// "os"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> keyw = <span class="string">"yyyyyyyyyyyttttttttttttttttttttttqqqqq"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 读取pem文件</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ReadPem</span><span class="params">(path <span class="keyword">string</span>)</span> <span class="params">(*pem.Block, error)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 打开Pem文件</span></span><br><span class="line"></span><br><span class="line">	data, err := ioutil.ReadFile(path)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"ReadPem Open Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	pem, next := pem.Decode(data)</span><br><span class="line">	log.Println(<span class="string">"ReadPem next: "</span>, next)</span><br><span class="line">	<span class="keyword">return</span> pem, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 签名</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Sign</span><span class="params">(text []<span class="keyword">byte</span>, prikey *ecdsa.PrivateKey, key <span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	r, s, err := ecdsa.Sign(strings.NewReader(key), prikey, text)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"Sign Sign Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="string">""</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	rt, err := r.MarshalText()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"Sign MarshalText Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="string">""</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	st, err := s.MarshalText()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"Sign MarshalText Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="string">""</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> b bytes.Buffer</span><br><span class="line">	w := gzip.NewWriter(&amp;b)</span><br><span class="line">	<span class="keyword">defer</span> w.Close()</span><br><span class="line">	_, err = w.Write([]<span class="keyword">byte</span>(<span class="keyword">string</span>(rt) + <span class="string">"+"</span> + <span class="keyword">string</span>(st)))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"Sign Write Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="string">""</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	w.Flush()</span><br><span class="line">	<span class="keyword">return</span> hex.EncodeToString(b.Bytes()), <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 从证书中分解，获取数字证书r/s</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetSign</span><span class="params">(signature <span class="keyword">string</span>)</span> <span class="params">(rint, sint big.Int, err error)</span></span> &#123;</span><br><span class="line">	byterun, err := hex.DecodeString(signature)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"decrypt error, "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	r, err := gzip.NewReader(bytes.NewBuffer(byterun))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"decode error,"</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> r.Close()</span><br><span class="line">	buf := <span class="built_in">make</span>([]<span class="keyword">byte</span>, <span class="number">1024</span>)</span><br><span class="line">	count, err := r.Read(buf)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"decode read error,"</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	rs := strings.Split(<span class="keyword">string</span>(buf[:count]), <span class="string">"+"</span>)</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(rs) != <span class="number">2</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"GetSign Split Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	err = rint.UnmarshalText([]<span class="keyword">byte</span>(rs[<span class="number">0</span>]))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"GetSign UnmarshalText Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	err = sint.UnmarshalText([]<span class="keyword">byte</span>(rs[<span class="number">1</span>]))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"decrypt sint fail, "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 制作hash</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Hashtext</span><span class="params">(text, salt <span class="keyword">string</span>)</span> []<span class="title">byte</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	Md5Inst := md5.New()</span><br><span class="line">	Md5Inst.Write([]<span class="keyword">byte</span>(text))</span><br><span class="line">	result := Md5Inst.Sum([]<span class="keyword">byte</span>(salt))</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 校验</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">verify</span><span class="params">(text []<span class="keyword">byte</span>, signature <span class="keyword">string</span>, key ecdsa.PublicKey)</span> <span class="params">(<span class="keyword">bool</span>, error)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	rint, sint, err := GetSign(signature)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	result := ecdsa.Verify(&amp;key, text, &amp;rint, &amp;sint)</span><br><span class="line">	<span class="keyword">return</span> result, <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 获取公钥</span></span><br><span class="line">	pubpem, err := ReadPem(<span class="string">"public.pem"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"pubkey ReadPem Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	tpubkey, err := x509.ParsePKIXPublicKey(pubpem.Bytes)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"pubkey ParsePKIXPublicKey Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> pubkey *ecdsa.PublicKey</span><br><span class="line"></span><br><span class="line">	<span class="keyword">switch</span> tpubkey.(<span class="keyword">type</span>) &#123;</span><br><span class="line">	<span class="keyword">case</span> *ecdsa.PublicKey:</span><br><span class="line">		pubkey = tpubkey.(*ecdsa.PublicKey)</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		log.Println(<span class="string">"pubkey type Error"</span>)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取私钥</span></span><br><span class="line"></span><br><span class="line">	privpem, err := ReadPem(<span class="string">"private.pem"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"private ReadPem Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	privkey, err := x509.ParseECPrivateKey(privpem.Bytes)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"privkey ParseECPrivateKey Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	log.Println(<span class="string">"privatekey :"</span>, privkey)</span><br><span class="line">	log.Println(<span class="string">"publickey: "</span>, pubkey)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 验证开始</span></span><br><span class="line">	data := <span class="string">"yoyoyo"</span></span><br><span class="line"></span><br><span class="line">	Edata, err := Sign(Hashtext(data, <span class="string">""</span>), privkey, keyw)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(<span class="string">"Sign Error: "</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	log.Println(<span class="string">"Edata: "</span>, Edata)</span><br><span class="line">	tmp, err := verify(Hashtext(data, <span class="string">""</span>), Edata, *pubkey)</span><br><span class="line">	log.Println(<span class="string">"ans: "</span>, tmp)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里我们可以看到，我们从之前的pem文件中得到了公钥和私钥，对一个字符串使用了md5摘要，然后对此进行了签名，得到了Edata，最后再根据公钥和md5摘要对这个签名进行了校验，得到了正确的答案</p>
+<p><img src="/imgs/signverify.png" alt="签名与验签"></p>
+<h2 id="生成证书"><a href="#生成证书" class="headerlink" title="生成证书"></a>生成证书</h2><p>这里我们没有CA，所以我们可以采取使用自己私钥自签名生成证书的方式</p>
+<p>这里选用的是k8s的自签名生成证书的方式</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"bytes"</span></span><br><span class="line">	cryptorand <span class="string">"crypto/rand"</span></span><br><span class="line">	<span class="string">"crypto/rsa"</span></span><br><span class="line">	<span class="string">"crypto/x509"</span></span><br><span class="line">	<span class="string">"crypto/x509/pkix"</span></span><br><span class="line">	<span class="string">"encoding/pem"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"math/big"</span></span><br><span class="line">	<span class="string">"net"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ip := []<span class="keyword">byte</span>(<span class="string">"192.168.100.1"</span>)</span><br><span class="line">	alternateDNS := []<span class="keyword">string</span>&#123;<span class="string">"kubernetes.default.svc"</span>, <span class="string">"kubernetes.default"</span>, <span class="string">"kubernetes"</span>, <span class="string">"localhost"</span>&#125;</span><br><span class="line">	cert, key, _ := GenerateSelfSignedCertKey(<span class="string">"10.10.10.10"</span>, []net.IP&#123;ip&#125;, alternateDNS)</span><br><span class="line">	fmt.Println(<span class="keyword">string</span>(cert), <span class="keyword">string</span>(key))</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GenerateSelfSignedCertKey</span><span class="params">(host <span class="keyword">string</span>, alternateIPs []net.IP, alternateDNS []<span class="keyword">string</span>)</span> <span class="params">([]<span class="keyword">byte</span>, []<span class="keyword">byte</span>, error)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 生成私钥</span></span><br><span class="line">	priv, err := rsa.GenerateKey(cryptorand.Reader, <span class="number">2048</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// x509证书初始化</span></span><br><span class="line">	template := x509.Certificate&#123;</span><br><span class="line">		SerialNumber: big.NewInt(<span class="number">1</span>),</span><br><span class="line">		Subject: pkix.Name&#123;</span><br><span class="line">			CommonName: fmt.Sprintf(<span class="string">"%s@%d"</span>, host, time.Now().Unix()),</span><br><span class="line">		&#125;,</span><br><span class="line">		NotBefore: time.Now(),</span><br><span class="line">		NotAfter:  time.Now().Add(time.Hour * <span class="number">24</span> * <span class="number">365</span>),</span><br><span class="line"></span><br><span class="line">		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,</span><br><span class="line">		ExtKeyUsage:           []x509.ExtKeyUsage&#123;x509.ExtKeyUsageServerAuth&#125;,</span><br><span class="line">		BasicConstraintsValid: <span class="literal">true</span>,</span><br><span class="line">		IsCA: <span class="literal">true</span>,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> ip := net.ParseIP(host); ip != <span class="literal">nil</span> &#123;</span><br><span class="line">		template.IPAddresses = <span class="built_in">append</span>(template.IPAddresses, ip)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		template.DNSNames = <span class="built_in">append</span>(template.DNSNames, host)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	template.IPAddresses = <span class="built_in">append</span>(template.IPAddresses, alternateIPs...)</span><br><span class="line">	template.DNSNames = <span class="built_in">append</span>(template.DNSNames, alternateDNS...)</span><br><span class="line"></span><br><span class="line">	derBytes, err := x509.CreateCertificate(cryptorand.Reader, &amp;template, &amp;template, &amp;priv.PublicKey, priv)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Generate cert</span></span><br><span class="line">	certBuffer := bytes.Buffer&#123;&#125;</span><br><span class="line">	<span class="keyword">if</span> err := pem.Encode(&amp;certBuffer, &amp;pem.Block&#123;Type: <span class="string">"CERTIFICATE"</span>, Bytes: derBytes&#125;); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Generate key</span></span><br><span class="line">	keyBuffer := bytes.Buffer&#123;&#125;</span><br><span class="line">	<span class="keyword">if</span> err := pem.Encode(&amp;keyBuffer, &amp;pem.Block&#123;Type: <span class="string">"RSA PRIVATE KEY"</span>, Bytes: x509.MarshalPKCS1PrivateKey(priv)&#125;); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> certBuffer.Bytes(), keyBuffer.Bytes(), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>证书与私钥输出如下所示：</p>
+<p><img src="/imgs/crt.png" alt="证书"></p>
+<h1 id="综述"><a href="#综述" class="headerlink" title="综述"></a>综述</h1><p>经过这篇文章，相信已经对私钥，公钥，证书，签名这些概念有所了解了，在golang中如何调用也应该比较清楚了</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/golang/" rel="tag"># golang</a>
+          
+            <a href="/tags/密码学/" rel="tag"># 密码学</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/28/自己的p2p网络实现-一/" rel="next" title="自己的p2p网络实现(一)">
+                <i class="fa fa-chevron-left"></i> 自己的p2p网络实现(一)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/23/以太坊的网络层详细实现/" rel="prev" title="以太坊的网络层详细实现">
+                以太坊的网络层详细实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#概念"><span class="nav-number">2.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#例子"><span class="nav-number">3.</span> <span class="nav-text">例子</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#生成公钥-私钥"><span class="nav-number">3.1.</span> <span class="nav-text">生成公钥/私钥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#公-私钥加密与解密"><span class="nav-number">3.2.</span> <span class="nav-text">公/私钥加密与解密</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#签名与签名校验"><span class="nav-number">3.3.</span> <span class="nav-text">签名与签名校验</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#生成证书"><span class="nav-number">3.4.</span> <span class="nav-text">生成证书</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#综述"><span class="nav-number">4.</span> <span class="nav-text">综述</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

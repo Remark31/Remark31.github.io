@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="以太坊,p2p,网络," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="动机在了解了底层的kad网络后，明确了基础的网络存储方案以及发现方法，但是我们还是不清楚在以太坊中底层的网络层是如何运作的，毕竟上层应用其实根本不关注下层网络层的运转，而是直接调用各种节点信息进行点对点通信。 基础结构首先我们关注网络层的基础结构 123456789101112131415161718192021222324252627282930type Server struct &amp;#123;">
+<meta name="keywords" content="以太坊,p2p,网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="以太坊的网络层详细实现">
+<meta property="og:url" content="https://remark31.github.io/2018/07/23/以太坊的网络层详细实现/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="动机在了解了底层的kad网络后，明确了基础的网络存储方案以及发现方法，但是我们还是不清楚在以太坊中底层的网络层是如何运作的，毕竟上层应用其实根本不关注下层网络层的运转，而是直接调用各种节点信息进行点对点通信。 基础结构首先我们关注网络层的基础结构 123456789101112131415161718192021222324252627282930type Server struct &amp;#123;">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/p2pservices.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/listengoprocess.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/maingoprocess.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/addpeernum.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/addpeer.png">
+<meta property="og:updated_time" content="2018-12-13T07:32:59.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="以太坊的网络层详细实现">
+<meta name="twitter:description" content="动机在了解了底层的kad网络后，明确了基础的网络存储方案以及发现方法，但是我们还是不清楚在以太坊中底层的网络层是如何运作的，毕竟上层应用其实根本不关注下层网络层的运转，而是直接调用各种节点信息进行点对点通信。 基础结构首先我们关注网络层的基础结构 123456789101112131415161718192021222324252627282930type Server struct &amp;#123;">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/p2pservices.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2018/07/23/以太坊的网络层详细实现/"/>
+
+
+
+
+
+  <title>以太坊的网络层详细实现 | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/07/23/以太坊的网络层详细实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">以太坊的网络层详细实现</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-07-23T19:59:25+08:00">
+                2018-07-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="动机"><a href="#动机" class="headerlink" title="动机"></a>动机</h1><p>在了解了底层的kad网络后，明确了基础的网络存储方案以及发现方法，但是我们还是不清楚在以太坊中底层的网络层是如何运作的，毕竟上层应用其实根本不关注下层网络层的运转，而是直接调用各种节点信息进行点对点通信。</p>
+<h1 id="基础结构"><a href="#基础结构" class="headerlink" title="基础结构"></a>基础结构</h1><p>首先我们关注网络层的基础结构</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">	</span><br><span class="line">	Config <span class="comment">// 网络层的配置</span></span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	newTransport <span class="function"><span class="keyword">func</span><span class="params">(net.Conn)</span> <span class="title">transport</span>  // 测试使用的协议钩子</span></span><br><span class="line"><span class="function">	<span class="title">newPeerHook</span>  <span class="title">func</span><span class="params">(*Peer)</span>  // 测试使用的钩子</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">	<span class="title">lock</span>    <span class="title">sync</span>.<span class="title">Mutex</span> // 服务锁</span></span><br><span class="line"><span class="function">	<span class="title">running</span> <span class="title">bool</span>       // 是否运行的标志位</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">	<span class="title">ntab</span>         <span class="title">discoverTable</span>    // 发现表接口</span></span><br><span class="line"><span class="function">	<span class="title">listener</span>     <span class="title">net</span>.<span class="title">Listener</span>     // 网络监听接口</span></span><br><span class="line"><span class="function">	<span class="title">ourHandshake</span> *<span class="title">protoHandshake</span>  // 握手协议</span></span><br><span class="line"><span class="function">	<span class="title">lastLookup</span>   <span class="title">time</span>.<span class="title">Time</span>        // 上一次执行发现任务的时间</span></span><br><span class="line"><span class="function">	<span class="title">DiscV5</span>       *<span class="title">discv5</span>.<span class="title">Network</span>  // <span class="title">discv5</span>版本的发现网络</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">	<span class="title">peerOp</span>     <span class="title">chan</span> <span class="title">peerOpFunc</span>   // 传入相关操作<span class="title">peer</span>的函数</span></span><br><span class="line"><span class="function">	<span class="title">peerOpDone</span> <span class="title">chan</span> <span class="title">struct</span></span>&#123;&#125;     <span class="comment">// peer操作完成的标志位</span></span><br><span class="line"></span><br><span class="line">	quit          <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;   <span class="comment">// 退出标志位</span></span><br><span class="line">	addstatic     <span class="keyword">chan</span> *discover.Node  <span class="comment">//增加静态节点操作</span></span><br><span class="line">	removestatic  <span class="keyword">chan</span> *discover.Node  <span class="comment">//移除静态节点操作</span></span><br><span class="line">	posthandshake <span class="keyword">chan</span> *conn   <span class="comment">//发出握手连接操作</span></span><br><span class="line">	addpeer       <span class="keyword">chan</span> *conn   <span class="comment">//增加节点操作</span></span><br><span class="line">	delpeer       <span class="keyword">chan</span> peerDrop    <span class="comment">//删除节点操作</span></span><br><span class="line">	loopWG        sync.WaitGroup <span class="comment">// 用来等待协程完成</span></span><br><span class="line">	peerFeed      event.Feed   <span class="comment">// 发送事件通知</span></span><br><span class="line">	log           log.Logger   <span class="comment">// 日志</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Config <span class="keyword">struct</span> &#123;</span><br><span class="line">	PrivateKey *ecdsa.PrivateKey <span class="string">`toml:"-"`</span>  <span class="comment">// 私钥</span></span><br><span class="line"></span><br><span class="line">	MaxPeers <span class="keyword">int</span>  <span class="comment">// 允许的最大连接数量的peer</span></span><br><span class="line"></span><br><span class="line">	MaxPendingPeers <span class="keyword">int</span> <span class="string">`toml:",omitempty"`</span>   <span class="comment">// 允许的最大在握手等待阶段的节点数量</span></span><br><span class="line"></span><br><span class="line">	DialRatio <span class="keyword">int</span> <span class="string">`toml:",omitempty"`</span> <span class="comment">// 允许的正在连接的比例</span></span><br><span class="line"></span><br><span class="line">	NoDiscovery <span class="keyword">bool</span> <span class="comment">// 不发现标志位</span></span><br><span class="line"></span><br><span class="line">	DiscoveryV5 <span class="keyword">bool</span> <span class="string">`toml:",omitempty"`</span> <span class="comment">// 使用v5版本发现模式</span></span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	Name <span class="keyword">string</span> <span class="string">`toml:"-"`</span>  <span class="comment">// 当前节点的名称</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	BootstrapNodes []*discover.Node  <span class="comment">// 初始节点列表</span></span><br><span class="line"></span><br><span class="line">	BootstrapNodesV5 []*discv5.Node <span class="string">`toml:",omitempty"`</span>  <span class="comment">// v5版本初始节点列表</span></span><br><span class="line"></span><br><span class="line">	StaticNodes []*discover.Node  <span class="comment">// 预配置的静态节点列表，长期保持连接</span></span><br><span class="line"></span><br><span class="line">	TrustedNodes []*discover.Node <span class="comment">// 预先配置的信任节点列表，长期保持连接</span></span><br><span class="line"></span><br><span class="line">	NetRestrict *netutil.Netlist <span class="string">`toml:",omitempty"`</span>  <span class="comment">// 限制访问ip列表</span></span><br><span class="line"></span><br><span class="line">	NodeDatabase <span class="keyword">string</span> <span class="string">`toml:",omitempty"`</span>   <span class="comment">// 节点数据库路径</span></span><br><span class="line"></span><br><span class="line">	Protocols []Protocol <span class="string">`toml:"-"`</span>   <span class="comment">// 支持协议列表</span></span><br><span class="line"></span><br><span class="line">	ListenAddr <span class="keyword">string</span>   <span class="comment">// 监听地址</span></span><br><span class="line"></span><br><span class="line">	NAT nat.Interface <span class="string">`toml:",omitempty"`</span> <span class="comment">// NAT映射端口</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	Dialer NodeDialer <span class="string">`toml:"-"`</span>  <span class="comment">// 节点连接维护</span></span><br><span class="line"></span><br><span class="line">	NoDial <span class="keyword">bool</span> <span class="string">`toml:",omitempty"`</span>  <span class="comment">// 不与任何节点连接标志位</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// If EnableMsgEvents is set then the server will emit PeerEvents</span></span><br><span class="line">	<span class="comment">// whenever a message is sent to or received from a peer</span></span><br><span class="line">	EnableMsgEvents <span class="keyword">bool</span>  <span class="comment">//  允许节点的事件通知</span></span><br><span class="line"></span><br><span class="line">	Logger log.Logger <span class="string">`toml:",omitempty"`</span>  <span class="comment">// log</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从基础结构可以看出来，整个网络层核心做的事情主要有三件</p>
+<ul>
+<li>对网络发现表(K桶)的管理</li>
+<li>与节点连接进行管理</li>
+<li>对底层网络消息协议进行处理，并且执行对应操作</li>
+</ul>
+<h1 id="服务启动流程"><a href="#服务启动流程" class="headerlink" title="服务启动流程"></a>服务启动流程</h1><p>接下来我们关注一下整个server在启动时会做哪些事情，server的启动是通过<code>server.Start()</code>方法进行启动的，在这部分我们将对此进行分析</p>
+<p><img src="/imgs/p2pservices.png" alt="签名与验签"></p>
+<p>接下来我们就开始一个一个分析每部分做了啥</p>
+<h2 id="初始化数据"><a href="#初始化数据" class="headerlink" title="初始化数据"></a>初始化数据</h2><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 初始化</span></span><br><span class="line">    srv.lock.Lock()</span><br><span class="line">	<span class="keyword">defer</span> srv.lock.Unlock()</span><br><span class="line">	<span class="keyword">if</span> srv.running &#123;</span><br><span class="line">		<span class="keyword">return</span> errors.New(<span class="string">"server already running"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	srv.running = <span class="literal">true</span></span><br><span class="line">	srv.log = srv.Config.Logger</span><br><span class="line">	<span class="keyword">if</span> srv.log == <span class="literal">nil</span> &#123;</span><br><span class="line">		srv.log = log.New()</span><br><span class="line">	&#125;</span><br><span class="line">	srv.log.Info(<span class="string">"Starting P2P networking"</span>)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// static fields</span></span><br><span class="line">	<span class="keyword">if</span> srv.PrivateKey == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> fmt.Errorf(<span class="string">"Server.PrivateKey must be set to a non-nil key"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> srv.newTransport == <span class="literal">nil</span> &#123;</span><br><span class="line">		srv.newTransport = newRLPX</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> srv.Dialer == <span class="literal">nil</span> &#123;</span><br><span class="line">		srv.Dialer = TCPDialer&#123;&amp;net.Dialer&#123;Timeout: defaultDialTimeout&#125;&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	srv.quit = <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	srv.addpeer = <span class="built_in">make</span>(<span class="keyword">chan</span> *conn)</span><br><span class="line">	srv.delpeer = <span class="built_in">make</span>(<span class="keyword">chan</span> peerDrop)</span><br><span class="line">	srv.posthandshake = <span class="built_in">make</span>(<span class="keyword">chan</span> *conn)</span><br><span class="line">	srv.addstatic = <span class="built_in">make</span>(<span class="keyword">chan</span> *discover.Node)</span><br><span class="line">	srv.removestatic = <span class="built_in">make</span>(<span class="keyword">chan</span> *discover.Node)</span><br><span class="line">	srv.peerOp = <span class="built_in">make</span>(<span class="keyword">chan</span> peerOpFunc)</span><br><span class="line">	srv.peerOpDone = <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br></pre></td></tr></table></figure>
+<p>可以看到初始化的时期主要是对协议和初始连接进行了配置，设置默认协议为<code>newRLPX</code>，连接为<code>net.Dialer</code></p>
+<h2 id="发现机制"><a href="#发现机制" class="headerlink" title="发现机制"></a>发现机制</h2><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 发现机制</span></span><br><span class="line">    <span class="keyword">if</span> !srv.NoDiscovery || srv.DiscoveryV5 &#123;</span><br><span class="line">		addr, err := net.ResolveUDPAddr(<span class="string">"udp"</span>, srv.ListenAddr)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		conn, err = net.ListenUDP(<span class="string">"udp"</span>, addr)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		realaddr = conn.LocalAddr().(*net.UDPAddr)</span><br><span class="line">		<span class="keyword">if</span> srv.NAT != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> !realaddr.IP.IsLoopback() &#123;</span><br><span class="line">				<span class="keyword">go</span> nat.Map(srv.NAT, srv.quit, <span class="string">"udp"</span>, realaddr.Port, realaddr.Port, <span class="string">"ethereum discovery"</span>)</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// <span class="doctag">TODO:</span> react to external IP changes over time.</span></span><br><span class="line">			<span class="keyword">if</span> ext, err := srv.NAT.ExternalIP(); err == <span class="literal">nil</span> &#123;</span><br><span class="line">				realaddr = &amp;net.UDPAddr&#123;IP: ext, Port: realaddr.Port&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> !srv.NoDiscovery &amp;&amp; srv.DiscoveryV5 &#123;</span><br><span class="line">		unhandled = <span class="built_in">make</span>(<span class="keyword">chan</span> discover.ReadPacket, <span class="number">100</span>)</span><br><span class="line">		sconn = &amp;sharedUDPConn&#123;conn, unhandled&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// node table</span></span><br><span class="line">	<span class="keyword">if</span> !srv.NoDiscovery &#123;</span><br><span class="line">		cfg := discover.Config&#123;</span><br><span class="line">			PrivateKey:   srv.PrivateKey,</span><br><span class="line">			AnnounceAddr: realaddr,</span><br><span class="line">			NodeDBPath:   srv.NodeDatabase,</span><br><span class="line">			NetRestrict:  srv.NetRestrict,</span><br><span class="line">			Bootnodes:    srv.BootstrapNodes,</span><br><span class="line">			Unhandled:    unhandled,</span><br><span class="line">		&#125;</span><br><span class="line">		ntab, err := discover.ListenUDP(conn, cfg)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		srv.ntab = ntab</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> srv.DiscoveryV5 &#123;</span><br><span class="line">		<span class="keyword">var</span> (</span><br><span class="line">			ntab *discv5.Network</span><br><span class="line">			err  error</span><br><span class="line">		)</span><br><span class="line">		<span class="keyword">if</span> sconn != <span class="literal">nil</span> &#123;</span><br><span class="line">			ntab, err = discv5.ListenUDP(srv.PrivateKey, sconn, realaddr, <span class="string">""</span>, srv.NetRestrict) <span class="comment">//srv.NodeDatabase)</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			ntab, err = discv5.ListenUDP(srv.PrivateKey, conn, realaddr, <span class="string">""</span>, srv.NetRestrict) <span class="comment">//srv.NodeDatabase)</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err := ntab.SetFallbackNodes(srv.BootstrapNodesV5); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		srv.DiscV5 = ntab</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>发现机制在这个版本的以太坊中实现了两种，一种是普通版本的发现机制，另外一种是v5版本的发现机制，这个发现机制就是严格的按照KAD网络实现的一个基础K桶操作，具体内容可以看之前的kad网络实现机制</p>
+<h2 id="监听协程"><a href="#监听协程" class="headerlink" title="监听协程"></a>监听协程</h2><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(srv *Server)</span> <span class="title">listenLoop</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> srv.loopWG.Done()</span><br><span class="line">	srv.log.Info(<span class="string">"RLPx listener up"</span>, <span class="string">"self"</span>, srv.makeSelf(srv.listener, srv.ntab))</span><br><span class="line"></span><br><span class="line">	tokens := defaultMaxPendingPeers</span><br><span class="line">	<span class="keyword">if</span> srv.MaxPendingPeers &gt; <span class="number">0</span> &#123;</span><br><span class="line">		tokens = srv.MaxPendingPeers</span><br><span class="line">	&#125;</span><br><span class="line">	slots := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, tokens)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; tokens; i++ &#123;</span><br><span class="line">		slots &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="comment">// Wait for a handshake slot before accepting.</span></span><br><span class="line">		&lt;-slots</span><br><span class="line"></span><br><span class="line">		<span class="keyword">var</span> (</span><br><span class="line">			fd  net.Conn</span><br><span class="line">			err error</span><br><span class="line">		)</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			fd, err = srv.listener.Accept()</span><br><span class="line">			<span class="keyword">if</span> tempErr, ok := err.(tempError); ok &amp;&amp; tempErr.Temporary() &#123;</span><br><span class="line">				srv.log.Debug(<span class="string">"Temporary read error"</span>, <span class="string">"err"</span>, err)</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125; <span class="keyword">else</span> <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				srv.log.Debug(<span class="string">"Read error"</span>, <span class="string">"err"</span>, err)</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Reject connections that do not match NetRestrict.</span></span><br><span class="line">		<span class="keyword">if</span> srv.NetRestrict != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> tcp, ok := fd.RemoteAddr().(*net.TCPAddr); ok &amp;&amp; !srv.NetRestrict.Contains(tcp.IP) &#123;</span><br><span class="line">				srv.log.Debug(<span class="string">"Rejected conn (not whitelisted in NetRestrict)"</span>, <span class="string">"addr"</span>, fd.RemoteAddr())</span><br><span class="line">				fd.Close()</span><br><span class="line">				slots &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		fd = newMeteredConn(fd, <span class="literal">true</span>)</span><br><span class="line">		srv.log.Trace(<span class="string">"Accepted connection"</span>, <span class="string">"addr"</span>, fd.RemoteAddr())</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			srv.SetupConn(fd, inboundConn, <span class="literal">nil</span>)</span><br><span class="line">			slots &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>监听协程其实本质上是给一些连接比较慢的节点一些连接机会，容忍一些普通的错误，并且对于限制名单进行处理，如果不满足限制名单则关闭连接。对于这个连接机会同样开启了一个数量限制，等待连接中的连接数不能超过太多。当连接能够被允许时，则运行<code>srv.SetupConn</code>来接受连接，开始连接流程。</p>
+<p>简单流程图如下:</p>
+<p><img src="/imgs/listengoprocess.png" alt="签名与验签"></p>
+<h2 id="主协程"><a href="#主协程" class="headerlink" title="主协程"></a>主协程</h2><p>主协程做的事情稍微多一些，以下是简单的流程图</p>
+<p><img src="/imgs/maingoprocess.png" alt="签名与验签"></p>
+<p>调度任务的执行是比较简单的<br><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 调度任务</span></span><br><span class="line">    scheduleTasks := <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="comment">// Start from queue first.</span></span><br><span class="line">		queuedTasks = <span class="built_in">append</span>(queuedTasks[:<span class="number">0</span>], startTasks(queuedTasks)...)</span><br><span class="line">		<span class="comment">// Query dialer for new tasks and start as many as possible now.</span></span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(runningTasks) &lt; maxActiveDialTasks &#123;</span><br><span class="line">			nt := dialstate.newTasks(<span class="built_in">len</span>(runningTasks)+<span class="built_in">len</span>(queuedTasks), peers, time.Now())</span><br><span class="line">			queuedTasks = <span class="built_in">append</span>(queuedTasks, startTasks(nt)...)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当任务队列数量不满时，就会生成一个<code>newTasks</code>并且执行之，保证整个主协程一直有任务在执行</p>
+<p>协议分类执行的分支相对较多，以下是具体的分类协议</p>
+<ul>
+<li>服务退出</li>
+<li>增加静态节点</li>
+<li>移除静态节点</li>
+<li>节点操作</li>
+<li>任务完成</li>
+<li>握手连接</li>
+<li>增加节点</li>
+<li>删除节点</li>
+</ul>
+<h1 id="节点管理"><a href="#节点管理" class="headerlink" title="节点管理"></a>节点管理</h1><p>接下来我们关注整个流程中如何来管理节点的</p>
+<p>节点管理整体上来看是两个部分，扩充预备的节点数量以及对已经发现的节点进行存储</p>
+<h2 id="扩充节点数量"><a href="#扩充节点数量" class="headerlink" title="扩充节点数量"></a>扩充节点数量</h2><p>整体的服务中与节点相关的主要是如下接口</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> discoverTable <span class="keyword">interface</span> &#123;</span><br><span class="line">	Self() *discover.Node</span><br><span class="line">	Close()</span><br><span class="line">	Resolve(target discover.NodeID) *discover.Node</span><br><span class="line">	Lookup(target discover.NodeID) []*discover.Node</span><br><span class="line">	ReadRandomNodes([]*discover.Node) <span class="keyword">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>整体流程还是通过发现任务和KAD基础网络，在添加节点上最核心的方法在于lookup</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(tab *Table)</span> <span class="title">lookup</span><span class="params">(targetID NodeID, refreshIfEmpty <span class="keyword">bool</span>)</span> []*<span class="title">Node</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		target         = crypto.Keccak256Hash(targetID[:])</span><br><span class="line">		asked          = <span class="built_in">make</span>(<span class="keyword">map</span>[NodeID]<span class="keyword">bool</span>)</span><br><span class="line">		seen           = <span class="built_in">make</span>(<span class="keyword">map</span>[NodeID]<span class="keyword">bool</span>)</span><br><span class="line">		reply          = <span class="built_in">make</span>(<span class="keyword">chan</span> []*Node, alpha)</span><br><span class="line">		pendingQueries = <span class="number">0</span></span><br><span class="line">		result         *nodesByDistance</span><br><span class="line">	)</span><br><span class="line">	<span class="comment">// don't query further if we hit ourself.</span></span><br><span class="line">	<span class="comment">// unlikely to happen often in practice.</span></span><br><span class="line">	asked[tab.self.ID] = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		tab.mutex.Lock()</span><br><span class="line">		<span class="comment">// generate initial result set</span></span><br><span class="line">		result = tab.closest(target, bucketSize)</span><br><span class="line">		tab.mutex.Unlock()</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(result.entries) &gt; <span class="number">0</span> || !refreshIfEmpty &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// The result set is empty, all nodes were dropped, refresh.</span></span><br><span class="line">		<span class="comment">// We actually wait for the refresh to complete here. The very</span></span><br><span class="line">		<span class="comment">// first query will hit this case and run the bootstrapping</span></span><br><span class="line">		<span class="comment">// logic.</span></span><br><span class="line">		&lt;-tab.refresh()</span><br><span class="line">		refreshIfEmpty = <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="comment">// ask the alpha closest nodes that we haven't asked yet</span></span><br><span class="line">		<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(result.entries) &amp;&amp; pendingQueries &lt; alpha; i++ &#123;</span><br><span class="line">			n := result.entries[i]</span><br><span class="line">			<span class="keyword">if</span> !asked[n.ID] &#123;</span><br><span class="line">				asked[n.ID] = <span class="literal">true</span></span><br><span class="line">				pendingQueries++</span><br><span class="line">				<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">					<span class="comment">// Find potential neighbors to bond with</span></span><br><span class="line">					r, err := tab.net.findnode(n.ID, n.addr(), targetID)</span><br><span class="line">					<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">						<span class="comment">// Bump the failure counter to detect and evacuate non-bonded entries</span></span><br><span class="line">						fails := tab.db.findFails(n.ID) + <span class="number">1</span></span><br><span class="line">						tab.db.updateFindFails(n.ID, fails)</span><br><span class="line">						log.Trace(<span class="string">"Bumping findnode failure counter"</span>, <span class="string">"id"</span>, n.ID, <span class="string">"failcount"</span>, fails)</span><br><span class="line"></span><br><span class="line">						<span class="keyword">if</span> fails &gt;= maxFindnodeFailures &#123;</span><br><span class="line">							log.Trace(<span class="string">"Too many findnode failures, dropping"</span>, <span class="string">"id"</span>, n.ID, <span class="string">"failcount"</span>, fails)</span><br><span class="line">							tab.<span class="built_in">delete</span>(n)</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">					reply &lt;- tab.bondall(r)</span><br><span class="line">				&#125;()</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> pendingQueries == <span class="number">0</span> &#123;</span><br><span class="line">			<span class="comment">// we have asked all closest nodes, stop the search</span></span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// wait for the next reply</span></span><br><span class="line">		<span class="keyword">for</span> _, n := <span class="keyword">range</span> &lt;-reply &#123;</span><br><span class="line">			<span class="keyword">if</span> n != <span class="literal">nil</span> &amp;&amp; !seen[n.ID] &#123;</span><br><span class="line">				seen[n.ID] = <span class="literal">true</span></span><br><span class="line">				result.push(n, bucketSize)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		pendingQueries--</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result.entries</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>整体流程图如下</p>
+<p><img src="/imgs/addpeernum.png" alt="签名与验签"></p>
+<p>调用lookup的地方我们也能看到，是在发现任务时随机生成一个目标节点，然后去发现这个目标节点，通过找到周边节点来扩充节点的数量</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *discoverTask)</span> <span class="title">Do</span><span class="params">(srv *Server)</span></span> &#123;</span><br><span class="line">	<span class="comment">// newTasks generates a lookup task whenever dynamic dials are</span></span><br><span class="line">	<span class="comment">// necessary. Lookups need to take some time, otherwise the</span></span><br><span class="line">	<span class="comment">// event loop spins too fast.</span></span><br><span class="line">	next := srv.lastLookup.Add(lookupInterval)</span><br><span class="line">	<span class="keyword">if</span> now := time.Now(); now.Before(next) &#123;</span><br><span class="line">		time.Sleep(next.Sub(now))</span><br><span class="line">	&#125;</span><br><span class="line">	srv.lastLookup = time.Now()</span><br><span class="line">	<span class="keyword">var</span> target discover.NodeID</span><br><span class="line">	rand.Read(target[:])</span><br><span class="line">	t.results = srv.ntab.Lookup(target)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="节点存储"><a href="#节点存储" class="headerlink" title="节点存储"></a>节点存储</h2><p>当在内存中的发现节点连接时间超过最小连接时间后，会触发<code>copyBondedNodes</code>方法，将内存中的发现数据存储到leveldb中。</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(tab *Table)</span> <span class="title">copyBondedNodes</span><span class="params">()</span></span> &#123;</span><br><span class="line">	tab.mutex.Lock()</span><br><span class="line">	<span class="keyword">defer</span> tab.mutex.Unlock()</span><br><span class="line"></span><br><span class="line">	now := time.Now()</span><br><span class="line">	<span class="keyword">for</span> _, b := <span class="keyword">range</span> tab.buckets &#123;</span><br><span class="line">		<span class="keyword">for</span> _, n := <span class="keyword">range</span> b.entries &#123;</span><br><span class="line">			<span class="keyword">if</span> now.Sub(n.addedAt) &gt;= seedMinTableTime &#123;</span><br><span class="line">				tab.db.updateNode(n)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最终的存储结构如下代码所示</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db *nodeDB)</span> <span class="title">updateNode</span><span class="params">(node *Node)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	blob, err := rlp.EncodeToBytes(node)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> db.lvl.Put(makeKey(node.ID, nodeDBDiscoverRoot), blob, <span class="literal">nil</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，这个存储是完全周期性的将内存中满足条件(主要是连接时间)的节点存储到数据库中的。</p>
+<h1 id="协议处理"><a href="#协议处理" class="headerlink" title="协议处理"></a>协议处理</h1><p>协议处理分为两种类型，一种是初始创建连接时，这里的代表就是addpeer，另一种就是连接已经通顺之后的数据通信，例如KAD网络的基础操作PING,FINDNODE等</p>
+<h2 id="add-peer"><a href="#add-peer" class="headerlink" title="add peer"></a>add peer</h2><p>之前在服务启动的时候提到，当一个连接到来之后满足要求后会触发<code>SetupConn</code>方法，add peer就是在这个方法中完成的。<br>整体流程如下</p>
+<p><img src="/imgs/addpeer.png" alt="签名与验签"></p>
+<p>可以看到，add peer前期主要是做一些握手检查，然后在确认可以连接之后启动了peer协程，通过<code>readLoop</code>协程一直接收来自该peer的信息。</p>
+<h2 id="普通操作"><a href="#普通操作" class="headerlink" title="普通操作"></a>普通操作</h2><p>这里我们以findnode为例</p>
+<h3 id="发包"><a href="#发包" class="headerlink" title="发包"></a>发包</h3><p>发包的核心其实就在于<code>p2p.Send</code>方法</p>
+<h3 id="收取包"><a href="#收取包" class="headerlink" title="收取包"></a>收取包</h3><p>从<code>readloop</code>可以看到，这里调用的是协议<code>transport</code>中的<code>ReadMsg</code>方法，从这里可以辗转得到实际ReadMsg的方法为<code>func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error)</code></p>
+<p>这里就不展开了，通过ReadMsg的解包后进入了handle方法，如果是ping方法，就在这一层进行了处理，如果是子协议，就开始在更高层的protocal.Run方法进行处理，这里有兴趣可以关注<code>func NewProtocolManager(config *params.ChainConfig, mode downloader.SyncMode, networkId uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database) (*ProtocolManager, error)</code><br>这里所写的各种协议</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这里我们可以看到整体来说p2p的server层结构还是很清晰的，Server.go来管理整体的服务，Peer.go是对每个连接上的节点数据进行管理和处理，Message.goy终于处理整体的消息结构体，rlpx是最底层的协议，dail.go维护任务执行，discover模块实现了KAD网络。总的来说就是基于KAD网络的一个基础模块</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/以太坊/" rel="tag"># 以太坊</a>
+          
+            <a href="/tags/p2p/" rel="tag"># p2p</a>
+          
+            <a href="/tags/网络/" rel="tag"># 网络</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/28/公钥，私钥，签名与证书/" rel="next" title="公钥，私钥，签名与证书">
+                <i class="fa fa-chevron-left"></i> 公钥，私钥，签名与证书
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/08/以太坊节点id的生成/" rel="prev" title="以太坊节点id的生成">
+                以太坊节点id的生成 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#动机"><span class="nav-number">1.</span> <span class="nav-text">动机</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#基础结构"><span class="nav-number">2.</span> <span class="nav-text">基础结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#服务启动流程"><span class="nav-number">3.</span> <span class="nav-text">服务启动流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#初始化数据"><span class="nav-number">3.1.</span> <span class="nav-text">初始化数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#发现机制"><span class="nav-number">3.2.</span> <span class="nav-text">发现机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#监听协程"><span class="nav-number">3.3.</span> <span class="nav-text">监听协程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主协程"><span class="nav-number">3.4.</span> <span class="nav-text">主协程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#节点管理"><span class="nav-number">4.</span> <span class="nav-text">节点管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#扩充节点数量"><span class="nav-number">4.1.</span> <span class="nav-text">扩充节点数量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#节点存储"><span class="nav-number">4.2.</span> <span class="nav-text">节点存储</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#协议处理"><span class="nav-number">5.</span> <span class="nav-text">协议处理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-peer"><span class="nav-number">5.1.</span> <span class="nav-text">add peer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#普通操作"><span class="nav-number">5.2.</span> <span class="nav-text">普通操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#发包"><span class="nav-number">5.2.1.</span> <span class="nav-text">发包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#收取包"><span class="nav-number">5.2.2.</span> <span class="nav-text">收取包</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
