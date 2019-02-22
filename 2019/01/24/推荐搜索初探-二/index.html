@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="搜索推荐," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="写在前面的话本文是该系列的第二篇文章，详细一点的介绍了协同过滤的方法和原理，包括User CF和Item CF，并且给出了基于 Apache Mahout的一个实践。实践部分暂时还未关注，只是关注了目前的原理部分，感觉整体思路还是很清晰的，理解也不困难。 集体智慧和协同过滤集体智慧 集体智慧是指在大量的人群的行为和数据中收集答案，帮助你对整个人群得到统计意义上的结论，这些结论是我们在单个个体上无法">
+<meta name="keywords" content="搜索推荐">
+<meta property="og:type" content="article">
+<meta property="og:title" content="推荐搜索初探(二)">
+<meta property="og:url" content="https://remark31.github.io/2019/01/24/推荐搜索初探-二/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="写在前面的话本文是该系列的第二篇文章，详细一点的介绍了协同过滤的方法和原理，包括User CF和Item CF，并且给出了基于 Apache Mahout的一个实践。实践部分暂时还未关注，只是关注了目前的原理部分，感觉整体思路还是很清晰的，理解也不困难。 集体智慧和协同过滤集体智慧 集体智慧是指在大量的人群的行为和数据中收集答案，帮助你对整个人群得到统计意义上的结论，这些结论是我们在单个个体上无法">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/search_ojld1.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/search_ojld2.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/search_perxun.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/search_cosine.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/search_tanimoto.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/search_kneighborhoods.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/search_usercf.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/search_itemcf.png">
+<meta property="og:updated_time" content="2019-02-22T09:56:44.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="推荐搜索初探(二)">
+<meta name="twitter:description" content="写在前面的话本文是该系列的第二篇文章，详细一点的介绍了协同过滤的方法和原理，包括User CF和Item CF，并且给出了基于 Apache Mahout的一个实践。实践部分暂时还未关注，只是关注了目前的原理部分，感觉整体思路还是很清晰的，理解也不困难。 集体智慧和协同过滤集体智慧 集体智慧是指在大量的人群的行为和数据中收集答案，帮助你对整个人群得到统计意义上的结论，这些结论是我们在单个个体上无法">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/search_ojld1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2019/01/24/推荐搜索初探-二/"/>
+
+
+
+
+
+  <title>推荐搜索初探(二) | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2019/01/24/推荐搜索初探-二/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">推荐搜索初探(二)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-24T15:43:49+08:00">
+                2019-01-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="写在前面的话"><a href="#写在前面的话" class="headerlink" title="写在前面的话"></a>写在前面的话</h1><p>本文是该系列的第二篇文章，详细一点的介绍了协同过滤的方法和原理，包括User CF和Item CF，并且给出了基于 Apache Mahout的一个实践。实践部分暂时还未关注，只是关注了目前的原理部分，感觉整体思路还是很清晰的，理解也不困难。</p>
+<h1 id="集体智慧和协同过滤"><a href="#集体智慧和协同过滤" class="headerlink" title="集体智慧和协同过滤"></a>集体智慧和协同过滤</h1><h2 id="集体智慧"><a href="#集体智慧" class="headerlink" title="集体智慧"></a>集体智慧</h2><blockquote>
+<p>集体智慧是指在大量的人群的行为和数据中收集答案，帮助你对整个人群得到统计意义上的结论，这些结论是我们在单个个体上无法得到的，它往往是某种趋势或者人群中共性的部分。</p>
+</blockquote>
+<p><code>Wikipedia</code>和<code>Google</code>是两个典型的利用集体智慧的 Web 2.0 应用</p>
+<h2 id="什么是协同过滤"><a href="#什么是协同过滤" class="headerlink" title="什么是协同过滤"></a>什么是协同过滤</h2><p>协同过滤是利用集体智慧的一个典型方法。</p>
+<p>协同过滤一般是在海量的用户中发掘出一小部分和你品位比较类似的，在协同过滤中，这些用户成为邻居，然后根据他们喜欢的其他东西组织成一个排序的目录作为推荐给你。</p>
+<p>核心问题：</p>
+<ul>
+<li>如何确定一个用户是不是和你有相似的品位？</li>
+<li>如何将邻居们的喜好组织成一个排序的目录？</li>
+</ul>
+<h2 id="深入协同过滤的核心"><a href="#深入协同过滤的核心" class="headerlink" title="深入协同过滤的核心"></a>深入协同过滤的核心</h2><p>步骤</p>
+<ul>
+<li>收集用户偏好</li>
+<li>找到相似用户或物品</li>
+<li>计算推荐</li>
+</ul>
+<h3 id="收集用户偏好"><a href="#收集用户偏好" class="headerlink" title="收集用户偏好"></a>收集用户偏好</h3><p>用户行为和用户偏好</p>
+<table>
+<thead>
+<tr>
+<th>用户行为</th>
+<th>类型</th>
+<th>特征</th>
+<th>作用 </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>评分</td>
+<td>显式</td>
+<td>整数量化的偏好，可能的取值是 [0, n]；n 一般取值为 5 或者是 10</td>
+<td>通过用户对物品的评分，可以精确的得到用户的偏好</td>
+</tr>
+<tr>
+<td>投票</td>
+<td>显式</td>
+<td>布尔量化的偏好，取值是 0 或 1</td>
+<td>通过用户对物品的投票，可以较精确的得到用户的偏好</td>
+</tr>
+<tr>
+<td>转发</td>
+<td>显式</td>
+<td>布尔量化的偏好，取值是 0 或 1</td>
+<td>通过用户对物品的投票，可以精确的得到用户的偏好。如果是站内，同时可以推理得到被转发人的偏好（不精确）</td>
+</tr>
+<tr>
+<td>保存书签</td>
+<td>显式</td>
+<td>布尔量化的偏好，取值是 0 或 1</td>
+<td>通过用户对物品的投票，可以精确的得到用户的偏好。</td>
+</tr>
+<tr>
+<td>标记标签 (Tag)</td>
+<td>显式</td>
+<td>一些单词，需要对单词进行分析，得到偏好</td>
+<td>通过分析用户的标签，可以得到用户对项目的理解，同时可以分析出用户的情感：喜欢还是讨厌</td>
+</tr>
+<tr>
+<td>评论</td>
+<td>显式</td>
+<td>一段文字，需要进行文本分析，得到偏好</td>
+<td>通过分析用户的评论，可以得到用户的情感：喜欢还是讨厌</td>
+</tr>
+<tr>
+<td>点击流 ( 查看 )</td>
+<td>隐式</td>
+<td>一组用户的点击，用户对物品感兴趣，需要进行分析，得到偏好</td>
+<td>用户的点击一定程度上反映了用户的注意力，所以它也可以从一定程度上反映用户的喜好。</td>
+</tr>
+<tr>
+<td>页面停留时间</td>
+<td>隐式</td>
+<td>一组时间信息，噪音大，需要进行去噪，分析，得到偏好</td>
+<td>用户的页面停留时间一定程度上反映了用户的注意力和喜好，但噪音偏大，不好利用。</td>
+</tr>
+<tr>
+<td>购买</td>
+<td>隐式</td>
+<td>布尔量化的偏好，取值是 0 或 1</td>
+<td>用户的购买是很明确的说明这个项目它感兴趣。</td>
+</tr>
+</tbody>
+</table>
+<p>组合用户行为的方式</p>
+<ul>
+<li>将不同的行为分组：一般可以分为“查看”和“购买”等等，然后基于不同的行为，计算不同的用户 / 物品相似度。 类似于“购买了该图书的还购买了…”，“查看了该图书的还查看了…”</li>
+<li>根据不同行为反映用户喜好的程度将它们进行加权，得到用户对于物品的总体喜好</li>
+</ul>
+<p>收集完成后，还需要对数据进行预处理，核心就是减噪和归一化</p>
+<ul>
+<li>减噪：通过经典的数据挖掘算法过滤掉行为数据中的噪音，使分析更加精确</li>
+<li>归一化：如何将各个行为的数据统一在一个相同的取值范围中，从而使得加权求和得到的总体喜好更加精确，就需要进行归一化处理。最简单的归一化就是将各类数据除以此类中的最大值，以保证归一化后的数据取值在 [0,1] 范围中。</li>
+</ul>
+<p>完成预处理后，可以得到一个用户偏好的二维矩阵，一维是用户列表，一维是物品列表，值是用户对物品的偏好，一般是[0,1]或者[-1,1]的浮点数</p>
+<h3 id="找到相似的用户或物品"><a href="#找到相似的用户或物品" class="headerlink" title="找到相似的用户或物品"></a>找到相似的用户或物品</h3><p>得到用户喜好后，可以根据用户喜好计算相似用户和物品，然后基于相似用户或者物品进行推荐。</p>
+<p>这就引出问题了，如何计算相似度</p>
+<h4 id="相似度的计算"><a href="#相似度的计算" class="headerlink" title="相似度的计算"></a>相似度的计算</h4><p>本质上都是计算两个向量的距离</p>
+<h5 id="欧几里得距离"><a href="#欧几里得距离" class="headerlink" title="欧几里得距离"></a>欧几里得距离</h5><ul>
+<li>用于计算欧几里德空间中两个点的距离</li>
+<li>假设x,y是n维空间的两个点，那之间的欧几里得距离是：</li>
+</ul>
+<p><img src="/imgs/search_ojld1.png" alt="欧几里得距离"></p>
+<ul>
+<li>最后再进行转换</li>
+</ul>
+<p><img src="/imgs/search_ojld2.png" alt="欧几里得距离转换"></p>
+<h5 id="皮尔逊相关系数"><a href="#皮尔逊相关系数" class="headerlink" title="皮尔逊相关系数"></a>皮尔逊相关系数</h5><p>一般用于计算两个定距变量间联系的紧密程度，取值在[-1,+1]之间。</p>
+<p><img src="/imgs/search_perxun.png" alt="皮尔逊系数"></p>
+<p>其中，sx和sy是x和y的样品标准偏差</p>
+<h5 id="Cosine-相似度"><a href="#Cosine-相似度" class="headerlink" title="Cosine 相似度"></a>Cosine 相似度</h5><p>被广泛应用于计算文档数据的相似度</p>
+<p><img src="/imgs/search_cosine.png" alt="cosine相似度"></p>
+<h5 id="Tanimoto系数"><a href="#Tanimoto系数" class="headerlink" title="Tanimoto系数"></a>Tanimoto系数</h5><p>也称为Jaccard系数，是Cosine相似度的扩展，也多用于计算文档数据的相似度：</p>
+<p><img src="/imgs/search_tanimoto.png" alt="tanimoto系数"></p>
+<h4 id="相似邻居的计算"><a href="#相似邻居的计算" class="headerlink" title="相似邻居的计算"></a>相似邻居的计算</h4><p><img src="/imgs/search_kneighborhoods.png" alt="相似邻居计算"></p>
+<h5 id="固定数量的邻居：K-neighborhoods-或者-Fix-size-neighborhoods"><a href="#固定数量的邻居：K-neighborhoods-或者-Fix-size-neighborhoods" class="headerlink" title="固定数量的邻居：K-neighborhoods 或者 Fix-size neighborhoods"></a>固定数量的邻居：K-neighborhoods 或者 Fix-size neighborhoods</h5><p>方法：</p>
+<ul>
+<li>不论邻居远近，只选最近的K个作为邻居</li>
+</ul>
+<p>坏处：</p>
+<ul>
+<li>对于孤立点不友好，被迫选取一些不太相似的点作为邻居， 影响了邻居相似的程度</li>
+</ul>
+<h5 id="基于相似度门槛的邻居：Threshold-based-neighborhoods"><a href="#基于相似度门槛的邻居：Threshold-based-neighborhoods" class="headerlink" title="基于相似度门槛的邻居：Threshold-based neighborhoods"></a>基于相似度门槛的邻居：Threshold-based neighborhoods</h5><p>基于相似度门槛的邻居计算是对邻居的远近进行最大值的限制，落在以当前点为中心，距离为 K 的区域中的所有点都作为当前点的邻居，这种方法计算得到的邻居个数不确定，但相似度不会出现较大的误差。</p>
+<h3 id="计算推荐"><a href="#计算推荐" class="headerlink" title="计算推荐"></a>计算推荐</h3><h4 id="基于用户的CF-user-CF"><a href="#基于用户的CF-user-CF" class="headerlink" title="基于用户的CF(user CF)"></a>基于用户的CF(user CF)</h4><p>思想：</p>
+<ul>
+<li>基于用户对物品的偏好找到相邻邻居用户</li>
+<li>将邻居用户喜欢的推荐给当前用户</li>
+</ul>
+<p>计算：</p>
+<ul>
+<li>将一个用户对所有物品的偏好作为一个向量来计算用户之间的相似度</li>
+<li>找到 K 邻居后，根据邻居的相似度权重以及他们对物品的偏好</li>
+<li>预测当前用户没有偏好的未涉及物品，计算得到一个排序的物品列表作为推荐</li>
+</ul>
+<p><img src="/imgs/search_usercf.png" alt="user cf"></p>
+<h4 id="基于物品的CF-Item-CF"><a href="#基于物品的CF-Item-CF" class="headerlink" title="基于物品的CF(Item CF)"></a>基于物品的CF(Item CF)</h4><p>基于物品的 CF 的原理和基于用户的 CF 类似</p>
+<p>计算：</p>
+<ul>
+<li>将所有用户对某个物品的偏好作为一个向量来计算物品之间的相似度</li>
+<li>根据用户历史的偏好预测当前用户还没有表示偏好的物品</li>
+</ul>
+<p><img src="/imgs/search_itemcf.png" alt="item cf"></p>
+<h4 id="基于用户的CF-与-基于物品的CF-的对比"><a href="#基于用户的CF-与-基于物品的CF-的对比" class="headerlink" title="基于用户的CF 与 基于物品的CF 的对比"></a>基于用户的CF 与 基于物品的CF 的对比</h4><h5 id="计算复杂度"><a href="#计算复杂度" class="headerlink" title="计算复杂度"></a>计算复杂度</h5><p>在不同的系统中各有优势</p>
+<ul>
+<li>当用户数量大大超过物品数量时，Item CF表现更优秀</li>
+<li>当物品数量大大超过用户数量时，User CF表现更优秀</li>
+</ul>
+<h5 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h5><ul>
+<li>非社交网络网站中：内容内在联系是更有效的推荐原则，Item CF更为适用</li>
+<li>社交网络站点中：User CF是一个更不错的选择</li>
+</ul>
+<h5 id="推荐多样性和精度"><a href="#推荐多样性和精度" class="headerlink" title="推荐多样性和精度"></a>推荐多样性和精度</h5><p>推荐多样性的度量方法：</p>
+<ul>
+<li>从单个用户的角度度量：给定一个用户，查看系统给出的推荐列表是否多样，也即是比较推荐列表中物品之间两两的相似度。Item CF用户多样性显然不如User CF</li>
+<li>考虑系统的多样性，也被称为覆盖率：是指一个推荐系统是否能够提供给所有用户丰富的选择。Item CF系统多样性优于User CF，因为能推荐更多新颖的物品。</li>
+</ul>
+<p>举例：</p>
+<ul>
+<li>场景：某用户喜欢领域A、B、C，其中A是主要喜欢的</li>
+<li>User CF会推荐A、B、C中热门的物品给用户</li>
+<li>Item CF只会推荐A领域的东西给用户</li>
+</ul>
+<p>实际中，结合User CF和Item CF是最优的选择。</p>
+<h5 id="用户对推荐算法的适应度"><a href="#用户对推荐算法的适应度" class="headerlink" title="用户对推荐算法的适应度"></a>用户对推荐算法的适应度</h5><ul>
+<li>对于User CF：推荐的原则是假设用户会喜欢那些和他有相同喜好的用户喜欢的东西，因此用户的适应度是和他有多少共同喜好用户成正比</li>
+<li>对于Item CF：推荐的原则是假设用户会喜欢和他以前喜欢的东西相似的东西，因此用户的适应度是和他喜好物品的自相似度大小程度成正比。</li>
+</ul>
+<h1 id="基于-Apache-Mahout-实现高效的协同过滤推荐"><a href="#基于-Apache-Mahout-实现高效的协同过滤推荐" class="headerlink" title="基于 Apache Mahout 实现高效的协同过滤推荐"></a>基于 Apache Mahout 实现高效的协同过滤推荐</h1><p>本部分暂略</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/搜索推荐/" rel="tag"># 搜索推荐</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/21/区块链这两年/" rel="next" title="区块链这两年">
+                <i class="fa fa-chevron-left"></i> 区块链这两年
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/22/信息检索导论入门-一/" rel="prev" title="信息检索导论入门(一)">
+                信息检索导论入门(一) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写在前面的话"><span class="nav-number">1.</span> <span class="nav-text">写在前面的话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#集体智慧和协同过滤"><span class="nav-number">2.</span> <span class="nav-text">集体智慧和协同过滤</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#集体智慧"><span class="nav-number">2.1.</span> <span class="nav-text">集体智慧</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是协同过滤"><span class="nav-number">2.2.</span> <span class="nav-text">什么是协同过滤</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#深入协同过滤的核心"><span class="nav-number">2.3.</span> <span class="nav-text">深入协同过滤的核心</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#收集用户偏好"><span class="nav-number">2.3.1.</span> <span class="nav-text">收集用户偏好</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#找到相似的用户或物品"><span class="nav-number">2.3.2.</span> <span class="nav-text">找到相似的用户或物品</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#相似度的计算"><span class="nav-number">2.3.2.1.</span> <span class="nav-text">相似度的计算</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#欧几里得距离"><span class="nav-number">2.3.2.1.1.</span> <span class="nav-text">欧几里得距离</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#皮尔逊相关系数"><span class="nav-number">2.3.2.1.2.</span> <span class="nav-text">皮尔逊相关系数</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Cosine-相似度"><span class="nav-number">2.3.2.1.3.</span> <span class="nav-text">Cosine 相似度</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Tanimoto系数"><span class="nav-number">2.3.2.1.4.</span> <span class="nav-text">Tanimoto系数</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#相似邻居的计算"><span class="nav-number">2.3.2.2.</span> <span class="nav-text">相似邻居的计算</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#固定数量的邻居：K-neighborhoods-或者-Fix-size-neighborhoods"><span class="nav-number">2.3.2.2.1.</span> <span class="nav-text">固定数量的邻居：K-neighborhoods 或者 Fix-size neighborhoods</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#基于相似度门槛的邻居：Threshold-based-neighborhoods"><span class="nav-number">2.3.2.2.2.</span> <span class="nav-text">基于相似度门槛的邻居：Threshold-based neighborhoods</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#计算推荐"><span class="nav-number">2.3.3.</span> <span class="nav-text">计算推荐</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#基于用户的CF-user-CF"><span class="nav-number">2.3.3.1.</span> <span class="nav-text">基于用户的CF(user CF)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#基于物品的CF-Item-CF"><span class="nav-number">2.3.3.2.</span> <span class="nav-text">基于物品的CF(Item CF)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#基于用户的CF-与-基于物品的CF-的对比"><span class="nav-number">2.3.3.3.</span> <span class="nav-text">基于用户的CF 与 基于物品的CF 的对比</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#计算复杂度"><span class="nav-number">2.3.3.3.1.</span> <span class="nav-text">计算复杂度</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#适用场景"><span class="nav-number">2.3.3.3.2.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#推荐多样性和精度"><span class="nav-number">2.3.3.3.3.</span> <span class="nav-text">推荐多样性和精度</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#用户对推荐算法的适应度"><span class="nav-number">2.3.3.3.4.</span> <span class="nav-text">用户对推荐算法的适应度</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#基于-Apache-Mahout-实现高效的协同过滤推荐"><span class="nav-number">3.</span> <span class="nav-text">基于 Apache Mahout 实现高效的协同过滤推荐</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

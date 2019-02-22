@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="推荐搜索," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="写在前面的话本文是教材《信息检索导论》的第一章的内容，布尔检索，整体来说是比较简单的。 本章主要是两个部分:  倒排索引的构建 布尔查询的处理及优化  入门初步了解下，这次这个系列预计将本书的1~8章进行学习，good luck。 布尔检索信息检索是从大规模非结构化数据(通常是文本)的集合(通常保存在计算机上)中找出满足用户信息需求的资料(通常是文本)的过程。 一个信息检索的例子grepping:">
+<meta name="keywords" content="推荐搜索">
+<meta property="og:type" content="article">
+<meta property="og:title" content="信息检索导论入门(一)">
+<meta property="og:url" content="https://remark31.github.io/2019/02/22/信息检索导论入门-一/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="写在前面的话本文是教材《信息检索导论》的第一章的内容，布尔检索，整体来说是比较简单的。 本章主要是两个部分:  倒排索引的构建 布尔查询的处理及优化  入门初步了解下，这次这个系列预计将本书的1~8章进行学习，good luck。 布尔检索信息检索是从大规模非结构化数据(通常是文本)的集合(通常保存在计算机上)中找出满足用户信息需求的资料(通常是文本)的过程。 一个信息检索的例子grepping:">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_boolterm.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_invertindex.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_makeinvertindex.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_algmergeset.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_algmergesetop.png">
+<meta property="og:updated_time" content="2019-02-22T10:02:02.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="信息检索导论入门(一)">
+<meta name="twitter:description" content="写在前面的话本文是教材《信息检索导论》的第一章的内容，布尔检索，整体来说是比较简单的。 本章主要是两个部分:  倒排索引的构建 布尔查询的处理及优化  入门初步了解下，这次这个系列预计将本书的1~8章进行学习，good luck。 布尔检索信息检索是从大规模非结构化数据(通常是文本)的集合(通常保存在计算机上)中找出满足用户信息需求的资料(通常是文本)的过程。 一个信息检索的例子grepping:">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/ir_boolterm.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2019/02/22/信息检索导论入门-一/"/>
+
+
+
+
+
+  <title>信息检索导论入门(一) | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2019/02/22/信息检索导论入门-一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">信息检索导论入门(一)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-22T17:55:16+08:00">
+                2019-02-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="写在前面的话"><a href="#写在前面的话" class="headerlink" title="写在前面的话"></a>写在前面的话</h1><p>本文是教材《信息检索导论》的第一章的内容，布尔检索，整体来说是比较简单的。</p>
+<p>本章主要是两个部分:</p>
+<ul>
+<li>倒排索引的构建</li>
+<li>布尔查询的处理及优化</li>
+</ul>
+<p>入门初步了解下，这次这个系列预计将本书的1~8章进行学习，good luck。</p>
+<h1 id="布尔检索"><a href="#布尔检索" class="headerlink" title="布尔检索"></a>布尔检索</h1><p>信息检索是从大规模非结构化数据(通常是文本)的集合(通常保存在计算机上)中找出满足用户信息需求的资料(通常是文本)的过程。</p>
+<h2 id="一个信息检索的例子"><a href="#一个信息检索的例子" class="headerlink" title="一个信息检索的例子"></a>一个信息检索的例子</h2><h3 id="grepping-线性扫描"><a href="#grepping-线性扫描" class="headerlink" title="grepping:线性扫描"></a>grepping:线性扫描</h3><p>然而，在如下现实条件中，线性扫描不再适用</p>
+<ul>
+<li>大规模文件集条件下的快速查找</li>
+<li>灵活的匹配方式，例如 Romans NEAR countrymen</li>
+<li>需要对结果进行排序</li>
+</ul>
+<h3 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h3><p>以莎士比亚全集检索为例</p>
+<ul>
+<li>对每篇文章都记录是否包含某个词(词项文档关联矩阵)</li>
+<li>行向量：表明词在某文章中出现或不出现</li>
+<li>列向量：表明文章是否包含某词</li>
+</ul>
+<p><img src="/imgs/ir_boolterm.png" alt="词项文档举证"></p>
+<p>计算查询 <code>Brutus AND Caesar AND NOT Calpurnia</code> </p>
+<ul>
+<li>取出<code>Brutus</code>、<code>Caesar</code>以及对<code>Calpurnia</code>行向量取反，做与操作，就可以得到结果</li>
+</ul>
+<p>对于真实场景</p>
+<p>建立词项-文档矩阵过大，并且这是一个稀疏矩阵，因此只存储原始矩阵中1的位置会更好</p>
+<h3 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h3><p><img src="/imgs/ir_invertindex.png" alt="倒排索引表"></p>
+<p>如上图所示：</p>
+<ul>
+<li>左侧：词项词典</li>
+<li>右侧：倒排记录 e：倒排记录表，以文档id进行排序</li>
+</ul>
+<h2 id="构建倒排索引初体验"><a href="#构建倒排索引初体验" class="headerlink" title="构建倒排索引初体验"></a>构建倒排索引初体验</h2><p>步骤</p>
+<ul>
+<li>收集需要构建索引的文档</li>
+<li>将文档转化为词条列表</li>
+<li>语言学预处理，产生归一化词条</li>
+<li>对于词项建立倒排索引</li>
+</ul>
+<p>本部分假定词条已经产生，开始建立倒排索引</p>
+<ul>
+<li>将归一化词条按照字母顺序进行排序</li>
+<li>排序后进行合并，形成索引</li>
+<li>词典中还会记录每个词项的频率(也既是长度)</li>
+</ul>
+<p><img src="/imgs/ir_makeinvertindex.png" alt="构建倒排索引"></p>
+<ul>
+<li>词典通常放在内存中</li>
+<li>倒排记录表通常放在硬盘中<ul>
+<li>单链表</li>
+<li>变长数组</li>
+</ul>
+</li>
+</ul>
+<h2 id="布尔查询的处置"><a href="#布尔查询的处置" class="headerlink" title="布尔查询的处置"></a>布尔查询的处置</h2><h3 id="简单步骤"><a href="#简单步骤" class="headerlink" title="简单步骤"></a>简单步骤</h3><p>以简单的与操作为例<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Brutus AND Calpurnia</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>在词典中定位Brutus</li>
+<li>返回其倒排记录表</li>
+<li>在词典中定位Calpurnia</li>
+<li>返回其倒排记录表</li>
+<li>对两个倒排记录表求交集</li>
+</ul>
+<p>一个简单有效的求交集算法</p>
+<p><img src="/imgs/ir_algmergeset.png" alt="求交集"></p>
+<h3 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h3><p>以与操作为例</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Brutus AND Caesar AND Calpurnia</span><br></pre></td></tr></table></figure>
+<p>一个比较直接的思路是，选择频率较小的元素优先进行操作，这样得到的中间结果更小。</p>
+<p>算法如下：</p>
+<p><img src="/imgs/ir_algmergesetop.png" alt="优化求交集"></p>
+<ul>
+<li>选取频率最小的元素</li>
+<li>进行计算，并且得到剩下的元素</li>
+<li>重复前两步，直到剩下没有元素，返回结果</li>
+</ul>
+<h2 id="对基本布尔操作的扩展及有序检索"><a href="#对基本布尔操作的扩展及有序检索" class="headerlink" title="对基本布尔操作的扩展及有序检索"></a>对基本布尔操作的扩展及有序检索</h2><p>布尔操作的普遍问题：</p>
+<ul>
+<li>AND操作产生的结果正确率高，但是召回率偏低</li>
+<li>OR操作产生的结果召回率高，但是正确率低</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/推荐搜索/" rel="tag"># 推荐搜索</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/24/推荐搜索初探-二/" rel="next" title="推荐搜索初探(二)">
+                <i class="fa fa-chevron-left"></i> 推荐搜索初探(二)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写在前面的话"><span class="nav-number">1.</span> <span class="nav-text">写在前面的话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#布尔检索"><span class="nav-number">2.</span> <span class="nav-text">布尔检索</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一个信息检索的例子"><span class="nav-number">2.1.</span> <span class="nav-text">一个信息检索的例子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#grepping-线性扫描"><span class="nav-number">2.1.1.</span> <span class="nav-text">grepping:线性扫描</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#索引"><span class="nav-number">2.1.2.</span> <span class="nav-text">索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#倒排索引"><span class="nav-number">2.1.3.</span> <span class="nav-text">倒排索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构建倒排索引初体验"><span class="nav-number">2.2.</span> <span class="nav-text">构建倒排索引初体验</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#布尔查询的处置"><span class="nav-number">2.3.</span> <span class="nav-text">布尔查询的处置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#简单步骤"><span class="nav-number">2.3.1.</span> <span class="nav-text">简单步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#优化"><span class="nav-number">2.3.2.</span> <span class="nav-text">优化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对基本布尔操作的扩展及有序检索"><span class="nav-number">2.4.</span> <span class="nav-text">对基本布尔操作的扩展及有序检索</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
