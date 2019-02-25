@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="推荐搜索," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="写在前面的话本文主要内容是信息检索导论的第三章部分，包含如下内容：  词典搜索 容错(单词容错与上下文容错)  这里面提到了k-gram这种方法，直观上的感觉有点像之前的短语搜索，本章的内容整体来看是比较容易理解的 词典及容错式检索本章主要介绍对查询中存在拼写错误或存在不同形式具有鲁棒性的拼写校对技术 词典搜索的数据结构词汇表的查找通常使用一种叫做词典的结构  哈希表 搜索树  选择具体方案时需要">
+<meta name="keywords" content="推荐搜索">
+<meta property="og:type" content="article">
+<meta property="og:title" content="信息检索导论入门(三)">
+<meta property="og:url" content="https://remark31.github.io/2019/02/25/信息检索导论入门-三/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="写在前面的话本文主要内容是信息检索导论的第三章部分，包含如下内容：  词典搜索 容错(单词容错与上下文容错)  这里面提到了k-gram这种方法，直观上的感觉有点像之前的短语搜索，本章的内容整体来看是比较容易理解的 词典及容错式检索本章主要介绍对查询中存在拼写错误或存在不同形式具有鲁棒性的拼写校对技术 词典搜索的数据结构词汇表的查找通常使用一种叫做词典的结构  哈希表 搜索树  选择具体方案时需要">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_searchtree.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_permutindex.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_3gramindex.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_editdistance.png">
+<meta property="og:updated_time" content="2019-02-25T08:29:28.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="信息检索导论入门(三)">
+<meta name="twitter:description" content="写在前面的话本文主要内容是信息检索导论的第三章部分，包含如下内容：  词典搜索 容错(单词容错与上下文容错)  这里面提到了k-gram这种方法，直观上的感觉有点像之前的短语搜索，本章的内容整体来看是比较容易理解的 词典及容错式检索本章主要介绍对查询中存在拼写错误或存在不同形式具有鲁棒性的拼写校对技术 词典搜索的数据结构词汇表的查找通常使用一种叫做词典的结构  哈希表 搜索树  选择具体方案时需要">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/ir_searchtree.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2019/02/25/信息检索导论入门-三/"/>
+
+
+
+
+
+  <title>信息检索导论入门(三) | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2019/02/25/信息检索导论入门-三/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">信息检索导论入门(三)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-25T16:26:41+08:00">
+                2019-02-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="写在前面的话"><a href="#写在前面的话" class="headerlink" title="写在前面的话"></a>写在前面的话</h1><p>本文主要内容是信息检索导论的第三章部分，包含如下内容：</p>
+<ul>
+<li>词典搜索</li>
+<li>容错(单词容错与上下文容错)</li>
+</ul>
+<p>这里面提到了k-gram这种方法，直观上的感觉有点像之前的短语搜索，本章的内容整体来看是比较容易理解的</p>
+<h1 id="词典及容错式检索"><a href="#词典及容错式检索" class="headerlink" title="词典及容错式检索"></a>词典及容错式检索</h1><p>本章主要介绍对查询中存在拼写错误或存在不同形式具有鲁棒性的拼写校对技术</p>
+<h2 id="词典搜索的数据结构"><a href="#词典搜索的数据结构" class="headerlink" title="词典搜索的数据结构"></a>词典搜索的数据结构</h2><p>词汇表的查找通常使用一种叫做词典的结构</p>
+<ul>
+<li>哈希表</li>
+<li>搜索树</li>
+</ul>
+<p>选择具体方案时需要考虑</p>
+<ul>
+<li>关键字的数量</li>
+<li>关键字的数量是固定的还是变化的，在变化得情况下是只插入新关键字，还是同时删除旧的关键字</li>
+<li>不同关键字的相对访问频率如何</li>
+</ul>
+<p><strong>哈希表</strong></p>
+<p>方法：  </p>
+<ul>
+<li>每个词项通过哈希函数映射成一个整数</li>
+<li>映射函数目标空间需要大，减少哈希结果冲突的可能性</li>
+<li>对每个查询项进行哈希操作，解决潜在冲突</li>
+</ul>
+<p>劣势：   </p>
+<ul>
+<li>难以处理词项稍微变形的情况</li>
+<li>难以处理前缀型查询</li>
+<li>在词汇表增长的情况下，哈希函数会在几年内失效</li>
+</ul>
+<p><strong>搜索树</strong></p>
+<p><img src="/imgs/ir_searchtree.png" alt="搜索树"></p>
+<p><strong>二叉树的平衡性</strong>是实现高效搜索的关键</p>
+<p>方法：</p>
+<p>允许内部子树的数目在某个固定区间内变化，例如词典搜索中普遍使用的B-树</p>
+<h2 id="通配符查询"><a href="#通配符查询" class="headerlink" title="通配符查询"></a>通配符查询</h2><p>适用场景：</p>
+<ul>
+<li>对查询的拼写不太确定</li>
+<li>某个查询词项可能有不同的拼写版本</li>
+<li>查询某个词项的所有变形</li>
+<li>不确定一个外来词或短语的正确拼写形式</li>
+</ul>
+<p><strong>尾通配符查询</strong></p>
+<ul>
+<li>按照字符在字典树中获得所有满足的词的集合</li>
+<li>按照集合对倒排索引中找到所有的词</li>
+</ul>
+<p><strong>通配符不在尾部</strong></p>
+<p>引入词典的反向B-树，例如，<code>lemon</code>在反向B-树的路径就是<code>n-o-m-e-l</code>。</p>
+<p>方法：</p>
+<ul>
+<li>执行正向B-树，得到集合|W|</li>
+<li>执行反向B-树，得到集合|R|</li>
+<li>对|W|与|R|求交集，即可</li>
+<li>对交集在倒排索引中进行查找即可</li>
+</ul>
+<h3 id="一般通配符查询"><a href="#一般通配符查询" class="headerlink" title="一般通配符查询"></a>一般通配符查询</h3><h4 id="轮排索引"><a href="#轮排索引" class="headerlink" title="轮排索引"></a>轮排索引</h4><ul>
+<li>引入结束符号<code>$</code></li>
+<li>构建轮排索引</li>
+<li>将通配符轮排到结尾</li>
+<li>在轮排索引中查询该字符串</li>
+<li>对于多个通配符进行后续过滤</li>
+</ul>
+<p><img src="/imgs/ir_permutindex.png" alt="轮排索引"></p>
+<p>轮排索引的缺点在于词典会变得非常大，因为保存了轮排的结果</p>
+<h4 id="支持通配符查询的k-gram索引"><a href="#支持通配符查询的k-gram索引" class="headerlink" title="支持通配符查询的k-gram索引"></a>支持通配符查询的k-gram索引</h4><p>k-gram</p>
+<blockquote>
+<p>表示由k个字符组成的序列</p>
+</blockquote>
+<p>k-gram索引</p>
+<blockquote>
+<p>词典由词汇表中所有词项的所有k-gram形式构成<br>每个倒排记录由包含该k-gram的词项组成</p>
+</blockquote>
+<p><img src="/imgs/ir_3gramindex.png" alt="3gram"></p>
+<p>查询方法：</p>
+<p>例如词语<code>re*ve</code>：   </p>
+<ul>
+<li>即可构造bool查询”$re” AND “ve$”</li>
+<li>后过滤，使用原始的查询字符串对结果进行过滤</li>
+</ul>
+<h2 id="拼写校正"><a href="#拼写校正" class="headerlink" title="拼写校正"></a>拼写校正</h2><p>本部分关注查询的拼写校正问题</p>
+<h3 id="拼写校正的实现"><a href="#拼写校正的实现" class="headerlink" title="拼写校正的实现"></a>拼写校正的实现</h3><p>基本原则</p>
+<ul>
+<li>对于一个拼写错误的查询，在其可能错误的拼写中，选择最“近”的一个</li>
+<li>当两个正确拼写查询临近度差不多时，选择更常见的那个。</li>
+</ul>
+<p>通常的用户返回：</p>
+<ol>
+<li>查询carot，返回carot文档，也返回拼写校正后的文档（如carrot和tarot等）</li>
+<li>当carot不在字典中，采用方法1</li>
+<li>当原始查询返回结果少于预定，采用方法1</li>
+<li>搜索界面中给用户提供拼写建议，询问用户“你是否在查找carrot”</li>
+</ol>
+<h3 id="拼写校正的方法"><a href="#拼写校正的方法" class="headerlink" title="拼写校正的方法"></a>拼写校正的方法</h3><ul>
+<li>词项独立校正：校正词项是独立的，每次只考虑一个词项的改正</li>
+<li>上下文敏感校正</li>
+</ul>
+<h3 id="编辑距离"><a href="#编辑距离" class="headerlink" title="编辑距离"></a>编辑距离</h3><p>编辑距离</p>
+<blockquote>
+<p>将s1替换成s2需要的最小操作数</p>
+</blockquote>
+<p>编辑操作包括</p>
+<ul>
+<li>字符插入</li>
+<li>字符删除</li>
+<li>字符替换</li>
+</ul>
+<p>还可以考虑编辑权重，例如s替换成p将比s替换成a权重更小，因为s与a更接近</p>
+<p><img src="/imgs/ir_editdistance.png" alt="编辑距离算法"></p>
+<p>字符串距离编辑算法如上所示</p>
+<p>这里的做法和最长子序列的做法很接近</p>
+<p>首先寻找通项公式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Aij = min(Aij-1 +1, Ai-1j + 1, Ai-1j-1 + tmp)</span><br></pre></td></tr></table></figure>
+<p>其中</p>
+<ul>
+<li>Aij表示字符串s1的前i个字母与s2的前j个字母的距离</li>
+<li>当s1的i字母与s2的字母相同时，tmp取值为0，否则为1</li>
+</ul>
+<p>即可通过一个二维矩阵计算出字母间的距离。</p>
+<p><a href="https://leetcode-cn.com/problems/edit-distance/comments/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/edit-distance/comments/</a></p>
+<p>在字符表中寻找编辑最小字符串的方法：</p>
+<ul>
+<li>穷举法(计算表中每个字符到查询字符的距离，再选最小)</li>
+<li>限制在有相同首字母的字符串上</li>
+<li>利用轮排索引</li>
+</ul>
+<h3 id="拼写校正中的k-gram索引"><a href="#拼写校正中的k-gram索引" class="headerlink" title="拼写校正中的k-gram索引"></a>拼写校正中的k-gram索引</h3><p>方法：</p>
+<ul>
+<li>查询匹配某个固定数量的k-gram即可</li>
+<li>通过雅可比系数进行修正</li>
+</ul>
+<p>雅可比系数计算公式：|A 交集 B| / |A 并集 B|</p>
+<p>例如</p>
+<ul>
+<li>查询词为bord，那么其2-gram为 bo, or和rd</li>
+<li>假设词库中的总长度为8</li>
+<li>对于匹配到的boardroom，其雅可比系数为2/(8+3-2)</li>
+</ul>
+<h3 id="上下文敏感的拼写校正"><a href="#上下文敏感的拼写校正" class="headerlink" title="上下文敏感的拼写校正"></a>上下文敏感的拼写校正</h3><p><strong>一种简单的实现方式：</strong></p>
+<p>对每个单词都去匹配可能的拼写正确词</p>
+<p><strong>一种启发式方式：</strong></p>
+<p>对词语扩展时只保留词库中的高频组合结果</p>
+<h3 id="基于发音的校正技术"><a href="#基于发音的校正技术" class="headerlink" title="基于发音的校正技术"></a>基于发音的校正技术</h3><p>思路：</p>
+<p>对于每个词项，进行一个语音哈希操作，发音相似的词项都被映射为同一个词</p>
+<p>通过语音哈希的算法被称为<code>soundex</code>算法，算法构建如下：</p>
+<ul>
+<li>将所有词项转变为四字符的简化形式。基于这些简化形式建立原始的倒排索引，称为soundex索引</li>
+<li>对查询词项进行相同操作</li>
+<li>当查询进行soundex匹配时，在soundex索引中进行</li>
+</ul>
+<p>四字符的转化方法如下：</p>
+<ul>
+<li>保留词项的首字母</li>
+<li>对后续字母进行转化<ul>
+<li>将后续的所有的A、E、I、O、U、H、W及Y变为0</li>
+<li>B、F、P和V转为1</li>
+<li>C、G、J、K、Q、S、X和Z转为2</li>
+<li>D、T转为3</li>
+<li>L转为4</li>
+<li>M、N转为5</li>
+<li>R转为6</li>
+</ul>
+</li>
+<li>将连续出现的两个字母转化为1个字母</li>
+<li>在结果字符串中删除0，并在字符串结尾补足0，返回前4位，该结果为一个字母，3个数字</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/推荐搜索/" rel="tag"># 推荐搜索</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/23/信息检索导论入门-二/" rel="next" title="信息检索导论入门(二)">
+                <i class="fa fa-chevron-left"></i> 信息检索导论入门(二)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写在前面的话"><span class="nav-number">1.</span> <span class="nav-text">写在前面的话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#词典及容错式检索"><span class="nav-number">2.</span> <span class="nav-text">词典及容错式检索</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#词典搜索的数据结构"><span class="nav-number">2.1.</span> <span class="nav-text">词典搜索的数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通配符查询"><span class="nav-number">2.2.</span> <span class="nav-text">通配符查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一般通配符查询"><span class="nav-number">2.2.1.</span> <span class="nav-text">一般通配符查询</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#轮排索引"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">轮排索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#支持通配符查询的k-gram索引"><span class="nav-number">2.2.1.2.</span> <span class="nav-text">支持通配符查询的k-gram索引</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#拼写校正"><span class="nav-number">2.3.</span> <span class="nav-text">拼写校正</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#拼写校正的实现"><span class="nav-number">2.3.1.</span> <span class="nav-text">拼写校正的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#拼写校正的方法"><span class="nav-number">2.3.2.</span> <span class="nav-text">拼写校正的方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编辑距离"><span class="nav-number">2.3.3.</span> <span class="nav-text">编辑距离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#拼写校正中的k-gram索引"><span class="nav-number">2.3.4.</span> <span class="nav-text">拼写校正中的k-gram索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#上下文敏感的拼写校正"><span class="nav-number">2.3.5.</span> <span class="nav-text">上下文敏感的拼写校正</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于发音的校正技术"><span class="nav-number">2.3.6.</span> <span class="nav-text">基于发音的校正技术</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
