@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="区块链,比特币," />
+  <meta name="keywords" content="推荐搜索," />
 
 
 
@@ -79,18 +79,22 @@
 
 
 
-<meta name="description" content="什么是bmtbmt的全称是Binary Merkle Tree, 是一种二叉的默克尔树，他具有如下的特点：  是一棵二叉树 叶子节点的数据是自定义的，在比特币中既是交易的hash 非叶子节点的值是由他的左儿子和右儿子进行组合后hash后得到的  bmt的作用主要是用于验证数据，对于一个bmt包含的交易，只需要验证根节点的hash，如果根节点的hash数据正确，那么整个bmt所对应的交易都是正确的，">
-<meta name="keywords" content="区块链,比特币">
+<meta name="description" content="写在前面的话本文是《信息检索导论入门》第四章，本文主要的内容如下：  讨论了在大文件读写下的索引构建的方法  BSBI，基于块的索引排序 SPIMI，内存式单遍扫描索引算法   分布式索引构建  动态索引构建 索引的权限构建  整体内容不算多，还比较好理解，除了mapReduce那部分，确实没玩过。 索引构建硬件基础本部分内容参见计算机体系结构，更详尽一点 简而言之  访问内存远快于访问磁盘 进行">
+<meta name="keywords" content="推荐搜索">
 <meta property="og:type" content="article">
-<meta property="og:title" content="默克尔树的重复交易攻击">
-<meta property="og:url" content="https://remark31.github.io/2018/06/06/默克尔树的重复交易攻击/index.html">
+<meta property="og:title" content="信息检索导论入门(四)">
+<meta property="og:url" content="https://remark31.github.io/2019/02/26/信息检索导论入门-四/index.html">
 <meta property="og:site_name" content="Remark31">
-<meta property="og:description" content="什么是bmtbmt的全称是Binary Merkle Tree, 是一种二叉的默克尔树，他具有如下的特点：  是一棵二叉树 叶子节点的数据是自定义的，在比特币中既是交易的hash 非叶子节点的值是由他的左儿子和右儿子进行组合后hash后得到的  bmt的作用主要是用于验证数据，对于一个bmt包含的交易，只需要验证根节点的hash，如果根节点的hash数据正确，那么整个bmt所对应的交易都是正确的，">
+<meta property="og:description" content="写在前面的话本文是《信息检索导论入门》第四章，本文主要的内容如下：  讨论了在大文件读写下的索引构建的方法  BSBI，基于块的索引排序 SPIMI，内存式单遍扫描索引算法   分布式索引构建  动态索引构建 索引的权限构建  整体内容不算多，还比较好理解，除了mapReduce那部分，确实没玩过。 索引构建硬件基础本部分内容参见计算机体系结构，更详尽一点 简而言之  访问内存远快于访问磁盘 进行">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-06-06T13:29:30.000Z">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_mergeindex.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_spimi.png">
+<meta property="og:image" content="https://remark31.github.io/imgs/ir_logmerge.png">
+<meta property="og:updated_time" content="2019-02-26T09:29:16.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="默克尔树的重复交易攻击">
-<meta name="twitter:description" content="什么是bmtbmt的全称是Binary Merkle Tree, 是一种二叉的默克尔树，他具有如下的特点：  是一棵二叉树 叶子节点的数据是自定义的，在比特币中既是交易的hash 非叶子节点的值是由他的左儿子和右儿子进行组合后hash后得到的  bmt的作用主要是用于验证数据，对于一个bmt包含的交易，只需要验证根节点的hash，如果根节点的hash数据正确，那么整个bmt所对应的交易都是正确的，">
+<meta name="twitter:title" content="信息检索导论入门(四)">
+<meta name="twitter:description" content="写在前面的话本文是《信息检索导论入门》第四章，本文主要的内容如下：  讨论了在大文件读写下的索引构建的方法  BSBI，基于块的索引排序 SPIMI，内存式单遍扫描索引算法   分布式索引构建  动态索引构建 索引的权限构建  整体内容不算多，还比较好理解，除了mapReduce那部分，确实没玩过。 索引构建硬件基础本部分内容参见计算机体系结构，更详尽一点 简而言之  访问内存远快于访问磁盘 进行">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/ir_mergeindex.png">
 
 
 
@@ -120,13 +124,13 @@
 
 
 
-  <link rel="canonical" href="https://remark31.github.io/2018/06/06/默克尔树的重复交易攻击/"/>
+  <link rel="canonical" href="https://remark31.github.io/2019/02/26/信息检索导论入门-四/"/>
 
 
 
 
 
-  <title>默克尔树的重复交易攻击 | Remark31</title>
+  <title>信息检索导论入门(四) | Remark31</title>
   
 
 
@@ -243,7 +247,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/06/06/默克尔树的重复交易攻击/">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2019/02/26/信息检索导论入门-四/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Remark">
@@ -260,7 +264,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">默克尔树的重复交易攻击</h1>
+          <h1 class="post-title" itemprop="name headline">信息检索导论入门(四)</h1>
         
 
         <div class="post-meta">
@@ -272,8 +276,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-06-06T19:45:10+08:00">
-                2018-06-06
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-26T17:26:06+08:00">
+                2019-02-26
               </time>
             
 
@@ -315,20 +319,110 @@
       
 
       
-        <h1 id="什么是bmt"><a href="#什么是bmt" class="headerlink" title="什么是bmt"></a>什么是bmt</h1><p>bmt的全称是Binary Merkle Tree, 是一种二叉的默克尔树，他具有如下的特点：</p>
+        <h1 id="写在前面的话"><a href="#写在前面的话" class="headerlink" title="写在前面的话"></a>写在前面的话</h1><p>本文是《信息检索导论入门》第四章，本文主要的内容如下：</p>
 <ul>
-<li>是一棵二叉树</li>
-<li>叶子节点的数据是自定义的，在比特币中既是交易的hash</li>
-<li>非叶子节点的值是由他的左儿子和右儿子进行组合后hash后得到的</li>
+<li><p>讨论了在大文件读写下的索引构建的方法</p>
+<ul>
+<li>BSBI，基于块的索引排序</li>
+<li>SPIMI，内存式单遍扫描索引算法</li>
 </ul>
-<p>bmt的作用主要是用于验证数据，对于一个bmt包含的交易，只需要验证根节点的hash，如果根节点的hash数据正确，那么整个bmt所对应的交易都是正确的，可以方便存储和做一些轻节点的验证</p>
-<h1 id="为什么会被重复交易攻击"><a href="#为什么会被重复交易攻击" class="headerlink" title="为什么会被重复交易攻击"></a>为什么会被重复交易攻击</h1><p>这里就要牵涉到比特币中bmt实现的机制了，代码如下所示</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">uint256 <span class="title">ComputeMerkleRoot</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;uint256&gt; hashes, <span class="keyword">bool</span>* mutated)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">bool</span> mutation = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">while</span> (hashes.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mutated) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">size_t</span> pos = <span class="number">0</span>; pos + <span class="number">1</span> &lt; hashes.size(); pos += <span class="number">2</span>) &#123;</span><br><span class="line">                <span class="comment">// 此处就在校验我们的重复交易攻击了</span></span><br><span class="line">                <span class="keyword">if</span> (hashes[pos] == hashes[pos + <span class="number">1</span>]) mutation = <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (hashes.size() &amp; <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="comment">// 如果hash列表是奇数，则会重复插入尾部的值</span></span><br><span class="line">            hashes.push_back(hashes.back());</span><br><span class="line">        &#125;</span><br><span class="line">        SHA256D64(hashes[<span class="number">0</span>].begin(), hashes[<span class="number">0</span>].begin(), hashes.size() / <span class="number">2</span>);</span><br><span class="line">        hashes.resize(hashes.size() / <span class="number">2</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (mutated) *mutated = mutation;</span><br><span class="line">    <span class="keyword">if</span> (hashes.size() == <span class="number">0</span>) <span class="keyword">return</span> uint256();</span><br><span class="line">    <span class="keyword">return</span> hashes[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到由于尾部的重复插入，会导致比特币对于如下两种默克尔树是完全无法验证的，因为是一样的。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">在比特币中相同的默克尔树</span><br><span class="line">                   A               A</span><br><span class="line">                 /  \            /   \</span><br><span class="line">               B     C         B       C</span><br><span class="line">              / \    |        / \     / \</span><br><span class="line">             D   E   F       D   E   F   F</span><br><span class="line">            / \ / \ / \     / \ / \ / \ / \</span><br><span class="line">            1 2 3 4 5 6     1 2 3 4 5 6 5 6</span><br></pre></td></tr></table></figure>
-<p>可以看到，右侧的树在叶子节点上重复出现了5，6两个交易，但是这两种交易得到的默克尔树的根节点确是一样的。</p>
-<h1 id="如何解决"><a href="#如何解决" class="headerlink" title="如何解决"></a>如何解决</h1><p>因为每个叶子节点都是交易的hash，那如果要实现这样的重复交易攻击，必然交易的txid必须是一样的。因此比特币是在验证默克尔树的时候就做了处理，剔除了每个块中txid一样的交易，从源头上保证了这样的默克尔树不会产生。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (mutated)</span><br><span class="line">            <span class="keyword">return</span> state.DoS(<span class="number">100</span>, <span class="literal">false</span>, REJECT_INVALID, <span class="string">"bad-txns-duplicate"</span>, <span class="literal">true</span>, <span class="string">"duplicate transaction"</span>);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>分布式索引构建</p>
+</li>
+<li>动态索引构建</li>
+<li>索引的权限构建</li>
+</ul>
+<p>整体内容不算多，还比较好理解，除了mapReduce那部分，确实没玩过。</p>
+<h1 id="索引构建"><a href="#索引构建" class="headerlink" title="索引构建"></a>索引构建</h1><h2 id="硬件基础"><a href="#硬件基础" class="headerlink" title="硬件基础"></a>硬件基础</h2><p>本部分内容参见计算机体系结构，更详尽一点</p>
+<p>简而言之</p>
+<ul>
+<li>访问内存远快于访问磁盘</li>
+<li>进行磁盘读写时，磁头移动到数据所在磁道需要一段时间，大概5ms(寻道时间)</li>
+<li>操作系统以数据块为读写单位</li>
+<li>数据从磁盘读写数据到内存是由数据总线完成，这意味着在I/O处理时处理器可以处理数据</li>
+<li>IR系统的内存通常几十G，硬盘比内存大几个数量级</li>
+</ul>
+<h2 id="基于块的排序索引方法"><a href="#基于块的排序索引方法" class="headerlink" title="基于块的排序索引方法"></a>基于块的排序索引方法</h2><p>为使构建更加高效，使用ID来代替字符串作为索引</p>
+<p>BSBI( blocked sort-based indexing algorithm，基于块的索引排序技术) </p>
+<ul>
+<li>将文档分割成几个大小相等的部分</li>
+<li>将每个部分的词项ID-文档ID对排序</li>
+<li>将中间产生的临时文件存在磁盘</li>
+<li>将所有中间文件合并成最终索引</li>
+</ul>
+<p>合并方法：</p>
+<ul>
+<li>先将每个临时文件进行合并，成一个部分倒排索引</li>
+<li>使用堆每次输入最小的词项进行排序归并，将结果写入磁盘</li>
+</ul>
+<p><img src="/imgs/ir_mergeindex.png" alt="合并索引"></p>
+<p>问题：<br>需要构建词项ID与词项的对应表，这个表如果过大将无法放在内存中</p>
+<h2 id="内存单遍扫描索引构建方法"><a href="#内存单遍扫描索引构建方法" class="headerlink" title="内存单遍扫描索引构建方法"></a>内存单遍扫描索引构建方法</h2><p>SPIMI(single-pass in-memory indexing，内存式单遍扫描索引算法) </p>
+<p>将每个快的词典写入磁盘，对于下个快就采用新的词典</p>
+<p><img src="/imgs/ir_spimi.png" alt="单遍扫描索引构建方法"></p>
+<p>算法说明：</p>
+<ul>
+<li>算法逐一处理词项-文档ID对。<ul>
+<li>词项第一次出现则加入词典，建立新的倒排索引记录表</li>
+<li>返回其倒排记录表</li>
+</ul>
+</li>
+<li>直接在记录表插入词项-文档ID(可能需要动态调整大小)</li>
+<li>内存耗尽前进行词典顺序排序</li>
+<li>写入磁盘</li>
+</ul>
+<p>优势：</p>
+<ul>
+<li>不需要对词项ID-文档进行排序</li>
+<li>所有操作和文档大小成线性关系</li>
+</ul>
+<h2 id="分布式索引构建方法"><a href="#分布式索引构建方法" class="headerlink" title="分布式索引构建方法"></a>分布式索引构建方法</h2><p>对于很大的索引，无法在单台机器上完成，就需要引入集群构建分布式索引，这里介绍的是MapReduce的一个应用</p>
+<p>此处详见ddia的流处理的部分，更加详尽</p>
+<h2 id="动态索引构建方法"><a href="#动态索引构建方法" class="headerlink" title="动态索引构建方法"></a>动态索引构建方法</h2><p>需求：对于索引需要动态更新</p>
+<p>简单方法：</p>
+<ul>
+<li>周期性的对文档集从头到尾进行索引构建</li>
+</ul>
+<p>新需求：及时能查询到新文档</p>
+<ul>
+<li>保持大的主索引</li>
+<li>小的用于存储更新文档的索引存放在内存中</li>
+<li>检索遍历两个索引并将结果合并</li>
+<li>文档删除记录一个无效标记用于过滤</li>
+<li>文档更新用先删除后插入实现</li>
+<li>辅助索引变大就进行合并</li>
+</ul>
+<p>合并方法：</p>
+<p>对数合并</p>
+<p><img src="/imgs/ir_logmerge.png" alt="对数合并"></p>
+<p>算法描述：</p>
+<ul>
+<li>将索引增加到内存索引Z0中</li>
+<li>当len(Z0) = n时，进行合并</li>
+<li>当Ii在index中存在，则进行合并</li>
+<li>当Ii在index中不存在，则合并，并且添加到index中</li>
+</ul>
+<p>劣势：</p>
+<ul>
+<li>会增加全局统计信息的复杂度</li>
+<li>维护，查询，分布等的复杂度都会增加</li>
+</ul>
+<h2 id="其它索引类型"><a href="#其它索引类型" class="headerlink" title="其它索引类型"></a>其它索引类型</h2><p>这里讨论的方法都能用于位置索引上</p>
+<p>安全性讨论：</p>
+<ul>
+<li>限制不同用户搜索不同内容</li>
+<li>文档本身也有是否需要公开的限制</li>
+</ul>
+<p>方法：</p>
+<ul>
+<li>通过ACL(access control list，访问控制表)实现</li>
+<li>ACL生成一个用户访问文档权限的倒排记录表</li>
+<li>搜索结果和这边表求交集运算</li>
+</ul>
+<p>劣势：</p>
+<ul>
+<li>维护表较为困难</li>
+</ul>
 
       
     </div>
@@ -346,9 +440,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/区块链/" rel="tag"># 区块链</a>
-          
-            <a href="/tags/比特币/" rel="tag"># 比特币</a>
+            <a href="/tags/推荐搜索/" rel="tag"># 推荐搜索</a>
           
         </div>
       
@@ -361,8 +453,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/06/05/kad网络学习/" rel="next" title="kad网络学习">
-                <i class="fa fa-chevron-left"></i> kad网络学习
+              <a href="/2019/02/25/信息检索导论入门-三/" rel="next" title="信息检索导论入门(三)">
+                <i class="fa fa-chevron-left"></i> 信息检索导论入门(三)
               </a>
             
           </div>
@@ -370,10 +462,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/06/07/libp2p节点id的生成/" rel="prev" title="libp2p节点id的生成">
-                libp2p节点id的生成 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -496,7 +584,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是bmt"><span class="nav-number">1.</span> <span class="nav-text">什么是bmt</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#为什么会被重复交易攻击"><span class="nav-number">2.</span> <span class="nav-text">为什么会被重复交易攻击</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何解决"><span class="nav-number">3.</span> <span class="nav-text">如何解决</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写在前面的话"><span class="nav-number">1.</span> <span class="nav-text">写在前面的话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#索引构建"><span class="nav-number">2.</span> <span class="nav-text">索引构建</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#硬件基础"><span class="nav-number">2.1.</span> <span class="nav-text">硬件基础</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于块的排序索引方法"><span class="nav-number">2.2.</span> <span class="nav-text">基于块的排序索引方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存单遍扫描索引构建方法"><span class="nav-number">2.3.</span> <span class="nav-text">内存单遍扫描索引构建方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式索引构建方法"><span class="nav-number">2.4.</span> <span class="nav-text">分布式索引构建方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#动态索引构建方法"><span class="nav-number">2.5.</span> <span class="nav-text">动态索引构建方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其它索引类型"><span class="nav-number">2.6.</span> <span class="nav-text">其它索引类型</span></a></li></ol></li></ol></div>
             
 
           </div>
