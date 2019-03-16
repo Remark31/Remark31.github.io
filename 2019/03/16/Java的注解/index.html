@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="java," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言在初学各种Java框架时，对Java的注解表示十分不理解，使用各种框架时注解又是跑不掉的玩意，正好趁这个机会好好研究下注解到底是个啥 初识注解注解本质上也是一种属性，类似于一个function，可以定义返回值属性是string，权限是public/private，是不是static等等，同样的可以定义注解。 1234567891011121314public class AnnotationD">
+<meta name="keywords" content="java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java的注解">
+<meta property="og:url" content="https://remark31.github.io/2019/03/16/Java的注解/index.html">
+<meta property="og:site_name" content="Remark31">
+<meta property="og:description" content="前言在初学各种Java框架时，对Java的注解表示十分不理解，使用各种框架时注解又是跑不掉的玩意，正好趁这个机会好好研究下注解到底是个啥 初识注解注解本质上也是一种属性，类似于一个function，可以定义返回值属性是string，权限是public/private，是不是static等等，同样的可以定义注解。 1234567891011121314public class AnnotationD">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-03-16T12:32:37.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java的注解">
+<meta name="twitter:description" content="前言在初学各种Java框架时，对Java的注解表示十分不理解，使用各种框架时注解又是跑不掉的玩意，正好趁这个机会好好研究下注解到底是个啥 初识注解注解本质上也是一种属性，类似于一个function，可以定义返回值属性是string，权限是public/private，是不是static等等，同样的可以定义注解。 1234567891011121314public class AnnotationD">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://remark31.github.io/2019/03/16/Java的注解/"/>
+
+
+
+
+
+  <title>Java的注解 | Remark31</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Remark31</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">https://github.com/Remark31</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2019/03/16/Java的注解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Remark">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Remark31">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java的注解</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-16T19:26:50+08:00">
+                2019-03-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在初学各种Java框架时，对Java的注解表示十分不理解，使用各种框架时注解又是跑不掉的玩意，正好趁这个机会好好研究下注解到底是个啥</p>
+<h1 id="初识注解"><a href="#初识注解" class="headerlink" title="初识注解"></a>初识注解</h1><p>注解本质上也是一种属性，类似于一个function，可以定义返回值属性是string，权限是public/private，是不是static等等，同样的可以定义注解。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationDemo</span> </span>&#123;</span><br><span class="line">    <span class="comment">//@Test注解修饰方法A</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">A</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Test....."</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//一个方法上可以拥有多个不同的注解</span></span><br><span class="line">    <span class="meta">@Deprecated</span></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"uncheck"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">B</span><span class="params">()</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="细看注解"><a href="#细看注解" class="headerlink" title="细看注解"></a>细看注解</h1><p>注解的定义一般如下所示，例如@Test注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Test &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中</p>
+<h2 id="Target"><a href="#Target" class="headerlink" title="Target"></a>Target</h2><p>Target规定了注解可以用到的地方，所有可用的枚举类型如下所示：</p>
+<ul>
+<li>TYPE：类、接口、枚举</li>
+<li>FIELD：字段（域）、枚举实例</li>
+<li>METHOD：方法</li>
+<li>PARAMETER：参数</li>
+<li>CONSTRUCTOR：构造函数</li>
+<li>LOCAL_VARIABLE：局部变量</li>
+<li>ANNOTATION_TYPE：注解</li>
+<li>PACKAGE：包</li>
+<li>TYPE_PARAMETER：类型参数</li>
+<li>TYPE_USE：类型使用</li>
+</ul>
+<p>如果不规定Target，那么该注解可以用于任何地方</p>
+<h2 id="Retention"><a href="#Retention" class="headerlink" title="Retention"></a>Retention</h2><p>约束注解的生命周期</p>
+<ul>
+<li>SOURCE：编译后就被丢弃（不会出现在.class文件中）</li>
+<li>CLASS：会出现在.class中，但是会被VM丢弃</li>
+<li>RUNTIME：运行中也会出现</li>
+</ul>
+<h2 id="一个简单的例子"><a href="#一个简单的例子" class="headerlink" title="一个简单的例子"></a>一个简单的例子</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//定义注解</span></span><br><span class="line"><span class="meta">@Target</span>(ElementType.FIELD)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@interface</span> IntegerVaule&#123;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> 0</span>;</span><br><span class="line">    <span class="function">String <span class="title">name</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//使用注解</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">QuicklyWay</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//当只想给value赋值时,可以使用以下快捷方式</span></span><br><span class="line">    <span class="meta">@IntegerVaule</span>(<span class="number">20</span>)</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> age;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//当name也需要赋值时必须采用key=value的方式赋值</span></span><br><span class="line">    <span class="meta">@IntegerVaule</span>(value = <span class="number">10000</span>,name = <span class="string">"MONEY"</span>)</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> money;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到注解定义中可以存放很多的变量，这部分存储的变量是可以被反射获取到的。</p>
+<h1 id="Java的一些内置注解"><a href="#Java的一些内置注解" class="headerlink" title="Java的一些内置注解"></a>Java的一些内置注解</h1><ul>
+<li><p>@Override：覆盖父类方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.SOURCE)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Override &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>@Deprecated：标明过时方法</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>(value=&#123;CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, PARAMETER, TYPE&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Deprecated &#123;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>@SuppressWarnnings：有选择的关闭编译器对类、方法、成员变量、变量初始化的警告</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(&#123;TYPE, FIELD, METHOD, PARAMETER, CONSTRUCTOR, LOCAL_VARIABLE&#125;)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.SOURCE)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> SuppressWarnings &#123;</span><br><span class="line">    String[] value();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>@Documented 被修饰的注解会生成到javadoc中</p>
+</li>
+<li><p>@Inherited 可以让注解被子类的Class对象使用getAnnotations()获取父类被@Inherited修饰的注解</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">instanceA.getClass().getAnnotations()</span><br></pre></td></tr></table></figure>
+<h1 id="使用注解的一个例子"><a href="#使用注解的一个例子" class="headerlink" title="使用注解的一个例子"></a>使用注解的一个例子</h1><p>整体这个例子就是使用注解来创建出构建表的SQL语句</p>
+<p>注解的定义</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 表</span></span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> DBTable &#123;</span><br><span class="line">    <span class="function">String <span class="title">name</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// varchar类型</span></span><br><span class="line"><span class="meta">@Target</span>(ElementType.FIELD)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> SQLString &#123;</span><br><span class="line"></span><br><span class="line">    <span class="function">String <span class="title">name</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line">    <span class="comment">// 长度</span></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> 0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">Constraints <span class="title">constraints</span><span class="params">()</span> <span class="keyword">default</span> @Constraints</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 整数类型</span></span><br><span class="line"><span class="meta">@Target</span>(ElementType.FIELD)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> SQLInteger &#123;</span><br><span class="line">    <span class="function">String <span class="title">name</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line">    <span class="function">Constraints <span class="title">constraints</span><span class="params">()</span> <span class="keyword">default</span> @Constraints</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 表的约束</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Target</span>(ElementType.FIELD)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Constraints &#123;</span><br><span class="line">    <span class="comment">// 是否主键</span></span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">primaryKey</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">false</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 是否为空</span></span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">allowNull</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">false</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 是否唯一</span></span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">unique</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">false</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">package</span> annotation.createsql.model;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> annotation.createsql.annotation.Constraints;</span><br><span class="line"><span class="keyword">import</span> annotation.createsql.annotation.DBTable;</span><br><span class="line"><span class="keyword">import</span> annotation.createsql.annotation.SQLInteger;</span><br><span class="line"><span class="keyword">import</span> annotation.createsql.annotation.SQLString;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 表的实际定义</span></span><br><span class="line"><span class="meta">@DBTable</span>( name = <span class="string">"member"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Member</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SQLString</span>(name = <span class="string">"ID"</span>, value=<span class="number">50</span>, constraints = <span class="meta">@Constraints</span>(primaryKey = <span class="keyword">true</span>))</span><br><span class="line">    <span class="keyword">private</span> String id;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SQLString</span>(name = <span class="string">"NAME"</span>, value = <span class="number">100</span>)</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SQLInteger</span>(name = <span class="string">"AGE"</span>)</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> age;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SQLString</span>(name = <span class="string">"DESCRIPTION"</span> , value = <span class="number">200</span>)</span><br><span class="line">    <span class="keyword">private</span> String description;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="java">
+<span class="keyword">package</span> annotation.createsql.constructor;
+
+
+<span class="keyword">import</span> annotation.createsql.annotation.Constraints;
+<span class="keyword">import</span> annotation.createsql.annotation.DBTable;
+<span class="keyword">import</span> annotation.createsql.annotation.SQLInteger;
+<span class="keyword">import</span> annotation.createsql.annotation.SQLString;
+<span class="keyword">import</span> annotation.createsql.model.Member;
+
+<span class="keyword">import</span> java.lang.annotation.Annotation;
+<span class="keyword">import</span> java.lang.reflect.Field;
+<span class="keyword">import</span> java.util.ArrayList;
+<span class="keyword">import</span> java.util.List;
+
+<span class="comment">/**</span>
+<span class="comment"> * 根据注解构建表</span>
+<span class="comment"> *</span>
+<span class="comment"> * <span class="doctag">@author</span> remark</span>
+<span class="comment"> * <span class="doctag">@version</span> 2019年03月10日23:11:08</span>
+<span class="comment"> */</span>
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TableCreator</span> </span>{
+
+    <span class="comment">/**</span>
+<span class="comment">     * 创建表</span>
+<span class="comment">     * <span class="doctag">@param</span> className</span>
+<span class="comment">     * <span class="doctag">@return</span></span>
+<span class="comment">     * <span class="doctag">@throws</span> ClassNotFoundException</span>
+<span class="comment">     */</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">createTableSql</span><span class="params">(String className)</span> <span class="keyword">throws</span> ClassNotFoundException </span>{
+        Class&lt;?&gt; cl = Class.forName(className);
+        DBTable dbTable = cl.getAnnotation(DBTable.class);
+        <span class="keyword">if</span> (dbTable == <span class="keyword">null</span>) {
+            System.out.println(<span class="string">"No DBTable annotations in class "</span> + className);
+            <span class="keyword">return</span> <span class="keyword">null</span>;
+        }
+
+        <span class="comment">// 表名</span>
+        String tableName = dbTable.name();
+        <span class="keyword">if</span> (tableName.length() &lt; <span class="number">1</span>) {
+            tableName = cl.getName().toUpperCase();
+        }
+
+        List&lt;String&gt; columnsDefs = <span class="keyword">new</span> ArrayList&lt;&gt;();
+        <span class="comment">// 获取成员字段</span>
+
+        <span class="keyword">for</span>(Field field: cl.getDeclaredFields()) {
+            String columnsName = <span class="keyword">null</span>;
+
+            Annotation[] annos = field.getDeclaredAnnotations();
+
+            <span class="keyword">if</span> (annos.length &lt; <span class="number">1</span>) {
+                <span class="keyword">continue</span>;
+            }
+
+            <span class="keyword">if</span> (annos[<span class="number">0</span>] <span class="keyword">instanceof</span> SQLInteger) {
+                SQLInteger sqlInteger = (SQLInteger) annos[<span class="number">0</span>];
+
+                columnsName = sqlInteger.name();
+
+                <span class="keyword">if</span> (columnsName.length() &lt; <span class="number">1</span>) {
+                    columnsName = field.getName().toUpperCase();
+                }
+
+                columnsDefs.add(columnsName + <span class="string">" INT"</span> + getConstraints(sqlInteger.constraints()));
+
+            }
+
+            <span class="keyword">if</span> (annos[<span class="number">0</span>] <span class="keyword">instanceof</span> SQLString) {
+                SQLString sqlString = (SQLString) annos[<span class="number">0</span>];
+
+                columnsName = sqlString.name();
+                <span class="keyword">if</span> (columnsName.length() &lt; <span class="number">1</span>) {
+                    columnsName = field.getName().toUpperCase();
+                }
+
+                columnsDefs.add(columnsName + <span class="string">"VARCHAR("</span> + sqlString.value() + <span class="string">")"</span> + getConstraints(sqlString.constraints()));
+            }
+
+
+
+        }
+
+        StringBuilder createCommand = <span class="keyword">new</span> StringBuilder(<span class="string">"CREATE TABLE "</span> + tableName + <span class="string">"("</span>);
+
+        <span class="keyword">for</span>(String columnDef : columnsDefs){
+            createCommand.append(<span class="string">"\n"</span> + columnDef + <span class="string">","</span>);
+        }
+
+
+
+        String tableCreate = createCommand.substring(
+                <span class="number">0</span>, createCommand.length() - <span class="number">1</span>) + <span class="string">");"</span>;
+
+
+        <span class="keyword">return</span> tableCreate;
+    }
+
+    <span class="comment">/**</span>
+<span class="comment">     * 获取限制条件</span>
+<span class="comment">     * <span class="doctag">@return</span></span>
+<span class="comment">     */</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">getConstraints</span><span class="params">(Constraints constraints)</span> </span>{
+        String cons = <span class="string">""</span>;
+        <span class="keyword">if</span>( !constraints.allowNull()) {
+            cons += <span class="string">" NOT NULL"</span>;
+        }
+        <span class="keyword">if</span> ( constraints.primaryKey()){
+            cons += <span class="string">" PRIMARY KEY"</span>;
+        }
+        <span class="keyword">if</span> ( constraints.unique()) {
+            cons += <span class="string">" UNIQUE"</span>;
+        }
+
+        <span class="keyword">return</span> cons;
+    }
+
+
+
+    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>{
+        Member member = <span class="keyword">new</span> Member();
+
+        String className = member.getClass().getName();
+
+        System.out.println(<span class="string">"Table Creation SQL for "</span> +
+                className + <span class="string">" is :\n"</span> + createTableSql(className));
+    }
+}
+
+</code></pre>
+<p>其实注解就是作为一个配置项被使用的，通过反射获取配置，然后进行一个通用的处理。看上去非常的方便。实际上在框架中去理解注解的功能，如果没有相关文档就非常困难了，注解的定义处只会存下一个配置，实际使用的反射的地方是很难找寻到的，但对于框架来说，这简直不能太美好。</p>
+<p>一时注解一时爽，一直注解一直爽。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/java/" rel="tag"># java</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/28/信息检索导论入门-六/" rel="next" title="信息检索导论入门(六)">
+                <i class="fa fa-chevron-left"></i> 信息检索导论入门(六)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Remark</p>
+              <p class="site-description motion-element" itemprop="description">三尺微命，一介书生</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#初识注解"><span class="nav-number">2.</span> <span class="nav-text">初识注解</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#细看注解"><span class="nav-number">3.</span> <span class="nav-text">细看注解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Target"><span class="nav-number">3.1.</span> <span class="nav-text">Target</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Retention"><span class="nav-number">3.2.</span> <span class="nav-text">Retention</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个简单的例子"><span class="nav-number">3.3.</span> <span class="nav-text">一个简单的例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java的一些内置注解"><span class="nav-number">4.</span> <span class="nav-text">Java的一些内置注解</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用注解的一个例子"><span class="nav-number">5.</span> <span class="nav-text">使用注解的一个例子</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Remark</span>
+
+  
+</div>
+
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
