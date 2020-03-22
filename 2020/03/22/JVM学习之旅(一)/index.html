@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="区块链,p2p网络,ipfs," />
+  <meta name="keywords" content="Java," />
 
 
 
@@ -79,20 +79,20 @@
 
 
 
-<meta name="description" content="最近对各种区块链的p2p网络的节点id的生成过程产生了兴趣，最近从ipfs的libp2p开始分析。 节点的表现形式我们首先从go-libp2p提供的example里面中的host.go入手： 123456789101112131415161718192021222324252627282930313233343536373839404142434445package mainimport (	&quot;c">
-<meta name="keywords" content="区块链,p2p网络,ipfs">
+<meta name="description" content="写在前面的话蛋疼了这么久，终于又开始了新一年的学习了，目前也在搞蛋疼的2020年KPI的规划，有句港句，我觉得挺傻逼的。大公司KPI毛病一如既往… 本章主要做的事情就是在我的电脑上把jvm的编译调试环境搭起来了，主要还是借鉴各种网上的经验吧… 走进JAVA自己编译JDK 首先下载并解压源码  可以到某度网盘上去下载，更快   编译  设定好对应的环境变量 123456789101112131415">
+<meta name="keywords" content="Java">
 <meta property="og:type" content="article">
-<meta property="og:title" content="libp2p节点id的生成">
-<meta property="og:url" content="https://remark31.github.io/2018/06/07/libp2p节点id的生成/index.html">
+<meta property="og:title" content="JVM学习之旅(一)">
+<meta property="og:url" content="https://remark31.github.io/2020/03/22/JVM学习之旅(一)/index.html">
 <meta property="og:site_name" content="Remark31">
-<meta property="og:description" content="最近对各种区块链的p2p网络的节点id的生成过程产生了兴趣，最近从ipfs的libp2p开始分析。 节点的表现形式我们首先从go-libp2p提供的example里面中的host.go入手： 123456789101112131415161718192021222324252627282930313233343536373839404142434445package mainimport (	&quot;c">
+<meta property="og:description" content="写在前面的话蛋疼了这么久，终于又开始了新一年的学习了，目前也在搞蛋疼的2020年KPI的规划，有句港句，我觉得挺傻逼的。大公司KPI毛病一如既往… 本章主要做的事情就是在我的电脑上把jvm的编译调试环境搭起来了，主要还是借鉴各种网上的经验吧… 走进JAVA自己编译JDK 首先下载并解压源码  可以到某度网盘上去下载，更快   编译  设定好对应的环境变量 123456789101112131415">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://remark31.github.io/imgs/libp2p_host_test.jpeg">
-<meta property="og:updated_time" content="2018-12-13T07:32:59.000Z">
+<meta property="og:image" content="https://remark31.github.io/imgs/learnjvm_1.png">
+<meta property="og:updated_time" content="2020-03-22T10:44:46.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="libp2p节点id的生成">
-<meta name="twitter:description" content="最近对各种区块链的p2p网络的节点id的生成过程产生了兴趣，最近从ipfs的libp2p开始分析。 节点的表现形式我们首先从go-libp2p提供的example里面中的host.go入手： 123456789101112131415161718192021222324252627282930313233343536373839404142434445package mainimport (	&quot;c">
-<meta name="twitter:image" content="https://remark31.github.io/imgs/libp2p_host_test.jpeg">
+<meta name="twitter:title" content="JVM学习之旅(一)">
+<meta name="twitter:description" content="写在前面的话蛋疼了这么久，终于又开始了新一年的学习了，目前也在搞蛋疼的2020年KPI的规划，有句港句，我觉得挺傻逼的。大公司KPI毛病一如既往… 本章主要做的事情就是在我的电脑上把jvm的编译调试环境搭起来了，主要还是借鉴各种网上的经验吧… 走进JAVA自己编译JDK 首先下载并解压源码  可以到某度网盘上去下载，更快   编译  设定好对应的环境变量 123456789101112131415">
+<meta name="twitter:image" content="https://remark31.github.io/imgs/learnjvm_1.png">
 
 
 
@@ -122,13 +122,13 @@
 
 
 
-  <link rel="canonical" href="https://remark31.github.io/2018/06/07/libp2p节点id的生成/"/>
+  <link rel="canonical" href="https://remark31.github.io/2020/03/22/JVM学习之旅(一)/"/>
 
 
 
 
 
-  <title>libp2p节点id的生成 | Remark31</title>
+  <title>JVM学习之旅(一) | Remark31</title>
   
 
 
@@ -245,7 +245,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2018/06/07/libp2p节点id的生成/">
+    <link itemprop="mainEntityOfPage" href="https://remark31.github.io/2020/03/22/JVM学习之旅(一)/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Remark">
@@ -262,7 +262,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">libp2p节点id的生成</h1>
+          <h1 class="post-title" itemprop="name headline">JVM学习之旅(一)</h1>
         
 
         <div class="post-meta">
@@ -274,8 +274,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-06-07T12:58:54+08:00">
-                2018-06-07
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-22T18:41:33+08:00">
+                2020-03-22
               </time>
             
 
@@ -317,15 +317,24 @@
       
 
       
-        <p>最近对各种区块链的p2p网络的节点id的生成过程产生了兴趣，最近从ipfs的libp2p开始分析。</p>
-<h1 id="节点的表现形式"><a href="#节点的表现形式" class="headerlink" title="节点的表现形式"></a>节点的表现形式</h1><p>我们首先从go-libp2p提供的example里面中的host.go入手：</p>
-<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"context"</span></span><br><span class="line">	<span class="string">"strings"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line">	libp2p <span class="string">"github.com/libp2p/go-libp2p"</span></span><br><span class="line">	crypto <span class="string">"gx/ipfs/QmaPbCnUMBohSGo3KnxEa2bHqyJVVeEEcwtqJAYxerieBo/go-libp2p-crypto"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	</span><br><span class="line">	ctx, cancel := context.WithCancel(context.Background())</span><br><span class="line">	<span class="keyword">defer</span> cancel()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 完全使用默认配置，生成一个libp2p节点</span></span><br><span class="line">	h, err := libp2p.New(ctx)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"Hello World, my hosts ID is %s\n"</span>, h.ID())</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建自己的私钥，并且指定监听模式以及端口生成libp2p节点</span></span><br><span class="line">    a := strings.NewReader(<span class="string">"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"</span>)</span><br><span class="line">    </span><br><span class="line">	priv, _, err := crypto.GenerateEd25519Key(a)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	h2, err := libp2p.New(ctx,</span><br><span class="line">		<span class="comment">//使用私钥</span></span><br><span class="line">		libp2p.Identity(priv),</span><br><span class="line"></span><br><span class="line">		<span class="comment">//指定监听端口</span></span><br><span class="line">		libp2p.ListenAddrStrings(<span class="string">"/ip4/0.0.0.0/tcp/9000"</span>),</span><br><span class="line">	)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"Hello World, my second hosts ID is %s\n"</span>, h2.ID())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在如上的范例中生成了两个libp2p的节点，我们运行两次后看下生成的ID分别是啥</p>
-<p><img src="/imgs/libp2p_host_test.jpeg" alt="libp2p_host测试图"></p>
-<p>从这里可以看到，节点ID的结果与私钥是一一对应的，接下来我们就开始探寻libp2p中节点id到底是如何生成的</p>
-<h1 id="节点id生成的方法"><a href="#节点id生成的方法" class="headerlink" title="节点id生成的方法"></a>节点id生成的方法</h1><p>对libp2p.New代码进行一阵分析，可以看到peer.ID的生成是通过私钥得到对应公钥，然后再通过公钥获得的，核心方法如下所示：</p>
-<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">type</span> ID <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">IDFromPublicKey</span><span class="params">(pk ic.PubKey)</span> <span class="params">(ID, error)</span></span> &#123;</span><br><span class="line">	b, err := pk.Bytes()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">""</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> alg <span class="keyword">uint64</span> = mh.SHA2_256</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(b) &lt;= MaxInlineKeyLength &#123;</span><br><span class="line">		alg = mh.ID</span><br><span class="line">	&#125;</span><br><span class="line">	hash, _ := mh.Sum(b, alg, <span class="number">-1</span>)</span><br><span class="line">	<span class="keyword">return</span> ID(hash), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>其中，mh是libp2p自己的hash库 <code>mh &quot;github.com/multiformats/go-multihash&quot;</code>，其实就是单纯的将公钥的hash计算出作为libp2p的节点hash，是个简单易懂的策略，和以太坊的非常类似。</p>
+        <h1 id="写在前面的话"><a href="#写在前面的话" class="headerlink" title="写在前面的话"></a>写在前面的话</h1><p>蛋疼了这么久，终于又开始了新一年的学习了，目前也在搞蛋疼的2020年KPI的规划，有句港句，我觉得挺傻逼的。大公司KPI毛病一如既往…</p>
+<p>本章主要做的事情就是在我的电脑上把jvm的编译调试环境搭起来了，主要还是借鉴各种网上的经验吧…</p>
+<h1 id="走进JAVA"><a href="#走进JAVA" class="headerlink" title="走进JAVA"></a>走进JAVA</h1><h2 id="自己编译JDK"><a href="#自己编译JDK" class="headerlink" title="自己编译JDK"></a>自己编译JDK</h2><ul>
+<li>首先下载并解压源码</li>
+</ul>
+<p>可以到某度网盘上去下载，更快 </p>
+<ul>
+<li>编译</li>
+</ul>
+<p>设定好对应的环境变量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">export LANG=C</span><br><span class="line"># JDK安装路径</span><br><span class="line">export ALT_BOOTDIR=/Library/Java/JavaVirtualMachines/open_jdk8/Contents/Home</span><br><span class="line"># Mac平台，C编译器不再是GCC，是clang</span><br><span class="line">export CC=clang</span><br><span class="line"># 跳过clang的一些严格的语法检查，不然会将N多的警告作为Error</span><br><span class="line">export COMPILER_WARNINGS_FATAL=false</span><br><span class="line"># 链接时使用的参数</span><br><span class="line">export LFLAGS=&apos;-Xlinker -lstdc++&apos;</span><br><span class="line"># 是否使用clang</span><br><span class="line">export USE_CLANG=true</span><br><span class="line"># 使用64位数据模型</span><br><span class="line">export LP64=1</span><br><span class="line"># 告诉编译平台是64位，不然会按32位来编译</span><br><span class="line">export ARCH_DATA_MODEL=64</span><br><span class="line"># 允许自动下载依赖</span><br><span class="line">export ALLOW_DOWNLOADS=true</span><br><span class="line"># 并行编译的线程数，编译时间长，为了不影响其他工作，我选择为2</span><br><span class="line">export HOTSPOT_BUILD_JOBS=2</span><br><span class="line"># 是否跳过与先前版本的比较</span><br><span class="line">export SKIP_COMPARE_IMAGES=true</span><br><span class="line"># 是否使用预编译头文件，加快编译速度</span><br><span class="line">export USE_PRECOMPILED_HEADER=true</span><br><span class="line"># 是否使用增量编译</span><br><span class="line">export INCREMENTAL_BUILD=true</span><br><span class="line"># 编译内容</span><br><span class="line">export BUILD_LANGTOOLS=true</span><br><span class="line">export BUILD_JAXP=true</span><br><span class="line">export BUILD_JAXWS=true</span><br><span class="line">export BUILD_CORBA=true</span><br><span class="line">export BUILD_HOTSPOT=true</span><br><span class="line">export BUILD_JDK=true</span><br><span class="line"># 编译版本</span><br><span class="line">export SKIP_DEBUG_BUILD=true</span><br><span class="line">export SKIP_FASTDEBUG_BUILD=false</span><br><span class="line">export DEBUG_NAME=debug</span><br><span class="line"># 避开javaws和浏览器Java插件之类的部分的build</span><br><span class="line">export BUILD_DEPLOY=false</span><br><span class="line">export BUILD_INSTALL=false</span><br><span class="line">unset JAVA_HOME</span><br></pre></td></tr></table></figure>
+<p>如果在./configure时有检查报错，则去common/autoconf/generated-configure.sh下移除掉对应的检测(一般都是过度检测)</p>
+<p>最后<code>bash ./configure</code>和<code>make all</code>二连开始编译jdk</p>
+<p>编译完成后，需要将编译出来的jdk放入环境变量中;</p>
+<p>由于现在基本都使用的idea，就直接在idea中增加自己编译出来的jdk，并且让项目开始使用新jdk</p>
+<p>为了表明是自己新的jdk，在jdk/java.c中的JAVAMAIN方法中新增加了自己的printf方法，最终打印如下</p>
+<p><img src="/imgs/learnjvm_1.png" alt="jvm结果"></p>
+<p>到这里，JVM的学习之旅算是正式开始了</p>
 
       
     </div>
@@ -343,11 +352,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/区块链/" rel="tag"># 区块链</a>
-          
-            <a href="/tags/p2p网络/" rel="tag"># p2p网络</a>
-          
-            <a href="/tags/ipfs/" rel="tag"># ipfs</a>
+            <a href="/tags/Java/" rel="tag"># Java</a>
           
         </div>
       
@@ -360,8 +365,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/06/06/默克尔树的重复交易攻击/" rel="next" title="默克尔树的重复交易攻击">
-                <i class="fa fa-chevron-left"></i> 默克尔树的重复交易攻击
+              <a href="/2020/01/11/JAVA并发编程-十三/" rel="next" title="JAVA并发编程(十三)">
+                <i class="fa fa-chevron-left"></i> JAVA并发编程(十三)
               </a>
             
           </div>
@@ -369,10 +374,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/06/11/以太坊之区块交易的广播/" rel="prev" title="以太坊之区块交易的广播">
-                以太坊之区块交易的广播 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -495,7 +496,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#节点的表现形式"><span class="nav-number">1.</span> <span class="nav-text">节点的表现形式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#节点id生成的方法"><span class="nav-number">2.</span> <span class="nav-text">节点id生成的方法</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#写在前面的话"><span class="nav-number">1.</span> <span class="nav-text">写在前面的话</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#走进JAVA"><span class="nav-number">2.</span> <span class="nav-text">走进JAVA</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#自己编译JDK"><span class="nav-number">2.1.</span> <span class="nav-text">自己编译JDK</span></a></li></ol></li></ol></div>
             
 
           </div>
