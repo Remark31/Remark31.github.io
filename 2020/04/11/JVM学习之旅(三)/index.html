@@ -82,15 +82,15 @@
 <meta name="description" content="写在前面的话本章主要进行的是垃圾回收器与分配策略，之前一直听说的young GC和full GC这些问题迎刃而解，挺好的一章，学到不少 垃圾收集器与内存分配策略概述随线程而生而灭  程序计数器 虚拟机栈 本地方法栈  垃圾回收  堆  对象生存判断引用计数法方法 给对象添加计数器 每当有引用则+1，释放则-1  问题不能解决循环引用 可达性分析算法方法 设置GC ROOTS作为起始点 从这些节点向">
 <meta name="keywords" content="Java">
 <meta property="og:type" content="article">
-<meta property="og:title" content="JVM学习之旅(二)">
+<meta property="og:title" content="JVM学习之旅(三)">
 <meta property="og:url" content="https://remark31.github.io/2020/04/11/JVM学习之旅(三)/index.html">
 <meta property="og:site_name" content="Remark31">
 <meta property="og:description" content="写在前面的话本章主要进行的是垃圾回收器与分配策略，之前一直听说的young GC和full GC这些问题迎刃而解，挺好的一章，学到不少 垃圾收集器与内存分配策略概述随线程而生而灭  程序计数器 虚拟机栈 本地方法栈  垃圾回收  堆  对象生存判断引用计数法方法 给对象添加计数器 每当有引用则+1，释放则-1  问题不能解决循环引用 可达性分析算法方法 设置GC ROOTS作为起始点 从这些节点向">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://remark31.github.io/imgs/learnjvm_gcset.png">
-<meta property="og:updated_time" content="2020-04-11T11:49:01.000Z">
+<meta property="og:updated_time" content="2020-04-11T11:52:09.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="JVM学习之旅(二)">
+<meta name="twitter:title" content="JVM学习之旅(三)">
 <meta name="twitter:description" content="写在前面的话本章主要进行的是垃圾回收器与分配策略，之前一直听说的young GC和full GC这些问题迎刃而解，挺好的一章，学到不少 垃圾收集器与内存分配策略概述随线程而生而灭  程序计数器 虚拟机栈 本地方法栈  垃圾回收  堆  对象生存判断引用计数法方法 给对象添加计数器 每当有引用则+1，释放则-1  问题不能解决循环引用 可达性分析算法方法 设置GC ROOTS作为起始点 从这些节点向">
 <meta name="twitter:image" content="https://remark31.github.io/imgs/learnjvm_gcset.png">
 
@@ -128,7 +128,7 @@
 
 
 
-  <title>JVM学习之旅(二) | Remark31</title>
+  <title>JVM学习之旅(三) | Remark31</title>
   
 
 
@@ -262,7 +262,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">JVM学习之旅(二)</h1>
+          <h1 class="post-title" itemprop="name headline">JVM学习之旅(三)</h1>
         
 
         <div class="post-meta">
